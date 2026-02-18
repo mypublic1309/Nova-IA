@@ -166,7 +166,7 @@ def inject_custom_css():
             border-radius: 10px !important;
         }
 
-        /* CIBLE SPÉCIFIQUE POUR LA ZONE DE TEXTE (CAHIER DES CHARGES) */
+        /* ZONE DE TEXTE ARC-EN-CIEL */
         .stTextArea textarea {
             background-color: rgba(0, 0, 0, 0.6) !important;
             color: white !important;
@@ -178,7 +178,7 @@ def inject_custom_css():
         
         .stTextArea textarea:focus {
             transform: scale(1.01);
-            animation: border-rainbow 1.5s linear infinite; /* Accélère quand on tape */
+            animation: border-rainbow 1.5s linear infinite;
         }
 
         /* --- LOGO STRIP --- */
@@ -341,7 +341,6 @@ def inject_custom_css():
 # ==========================================
 
 def show_auth_page():
-    """Page de connexion Simplifiée (ID + WhatsApp)."""
     st.markdown("<h1 class='main-title'>ESPACE NOVA AI</h1>", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -394,7 +393,6 @@ def show_auth_page():
                     st.error("Champs obligatoires.")
 
 def main_dashboard():
-    """Tableau de bord principal."""
     user = st.session_state["current_user"]
     db = st.session_state["db"]
     
@@ -412,7 +410,6 @@ def main_dashboard():
                 st.rerun()
         
         st.divider()
-        
         st.markdown(f"""
             <div class="info-card">
                 <span class="info-title">🚀 LIVRAISON NOVA</span>
@@ -423,7 +420,6 @@ def main_dashboard():
                 </span>
             </div>
         """, unsafe_allow_html=True)
-        
         st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">💬 Support Nova</a>', unsafe_allow_html=True)
 
     st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
@@ -450,12 +446,12 @@ def main_dashboard():
                 "Type d'intervention", 
                 [
                     "📊 Data & Excel Analytics", 
-                    "📝 exposer complet IA", 
-                    "⚙️ word/excel/powerpoint", 
+                    "📝 Exposé complet IA", 
+                    "⚙️ Pack Office (Word/Excel/PPT)", 
                     "🎨 Création Design IA",
-                    "📚 création d’affiche publicitaire et reçus",
-                    "👔  création CV et lettre de motivation,",
-                    "📄 fichier PDF"
+                    "📚 Affiches & Reçus",
+                    "👔 CV & Lettre de Motivation",
+                    "📄 Conversion & Fichier PDF"
                 ]
             )
         with col_wa:
@@ -562,7 +558,7 @@ def main_dashboard():
                                 <div class="spinner" style="width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #f1c40f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                             </div>
                         </div>
-                        <style>@keyframes spin {{ 0%% {{ transform: rotate(0deg); }} 100%% {{ transform: rotate(360deg); }} }}</style>
+                        <style>@keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style>
                     """, unsafe_allow_html=True)
             
             if not user_links and not user_reqs:
@@ -581,6 +577,8 @@ def main_dashboard():
     with st.expander("🛠 Console Admin Nova"):
         if st.text_input("Master Key", type="password") == ADMIN_CODE:
             current_db = st.session_state["db"]
+            if not current_db["demandes"]:
+                st.write("Aucune demande en attente.")
             for i, req in enumerate(current_db["demandes"]):
                 st.write(f"📦 **{req['user']}** - {req['service']}")
                 url_dl = st.text_input(f"Lien {req['id']}", key=f"url_{i}")
@@ -602,6 +600,7 @@ def main_dashboard():
 
 inject_custom_css()
 
+# Gestion de la persistance via localStorage
 components.html("""
     <script>
     const user = localStorage.getItem('nova_user');
@@ -620,9 +619,7 @@ components.html("""
     </script>
 """, height=0)
 
-if st.session_state["view"] == "auth":
+if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
 else:
     main_dashboard()
-
-
