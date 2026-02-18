@@ -53,7 +53,7 @@ if "current_user" not in st.session_state:
     st.session_state["current_user"] = None
 
 if "view" not in st.session_state:
-    st.session_state["view"] = "home"
+    st.session_state["view"] = "auth"
 
 if "is_glowing" not in st.session_state:
     st.session_state["is_glowing"] = False
@@ -330,6 +330,17 @@ def inject_custom_css():
         .stProgress > div > div > div > div {
             background-image: linear-gradient(to right, #00d2ff , #3a7bd5);
         }
+        
+        /* AUTH PAGE SPECIFIC */
+        .auth-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
         </style>
     """, unsafe_allow_html=True)
     
@@ -341,39 +352,40 @@ def inject_custom_css():
 # ==========================================
 
 def show_auth_page():
-    st.markdown("<h1 class='main-title'>ESPACE NOVA AI</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title'>⚡ ACCÈS NOVA AI</h1>", unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
+    # Sélecteur élégant Inscription/Connexion
+    mode = st.radio("", ["SE CONNECTER", "CRÉER UN COMPTE"], horizontal=True, label_visibility="collapsed")
     
-    with col1:
-        st.markdown("""
-        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid rgba(0,210,255,0.2);">
-            <h3 style="color:white; margin-top:0;">🔐 Accès Membre</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        with st.form("login"):
-            uid = st.text_input("Identifiant Nova")
-            wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
-            if st.form_submit_button("S'IDENTIFIER"):
+    st.markdown("<div class='auth-container'>", unsafe_allow_html=True)
+    
+    if mode == "SE CONNECTER":
+        st.markdown("<h3 style='text-align:center; color:white;'>🔐 Connexion Membre</h3>", unsafe_allow_html=True)
+        with st.form("login_form"):
+            uid = st.text_input("Identifiant Nova", placeholder="Votre ID unique")
+            wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 225...")
+            submit = st.form_submit_button("ENTRER DANS L'ESPACE")
+            
+            if submit:
                 db = st.session_state["db"]
                 if uid in db["users"] and db["users"][uid]["whatsapp"] == wa_auth:
                     st.session_state["current_user"] = uid
                     st.session_state["view"] = "home"
                     st.query_params["user_id"] = uid
+                    st.success("Connexion réussie...")
+                    time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("❌ Identifiant ou numéro inconnu.")
-
-    with col2:
-        st.markdown("""
-        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.2);">
-            <h3 style="color:white; margin-top:0;">✨ Nouveau Compte</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        with st.form("signup"):
-            new_uid = st.text_input("Identifiant au choix")
-            new_wa = st.text_input("Votre WhatsApp (Sera votre clé d'accès)")
-            if st.form_submit_button("REJOINDRE NOVA AI"):
+                    st.error("⚠️ Identifiants invalides.")
+                    
+    else:
+        st.markdown("<h3 style='text-align:center; color:white;'>✨ Nouveau Compte</h3>", unsafe_allow_html=True)
+        with st.form("signup_form"):
+            new_uid = st.text_input("Choisir un Identifiant", placeholder="Nom ou Pseudo unique")
+            new_wa = st.text_input("Numéro WhatsApp", placeholder="Votre clé de sécurité (ex: 225...)")
+            submit = st.form_submit_button("REJOINDRE LA PUISSANCE NOVA")
+            
+            if submit:
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
@@ -386,11 +398,16 @@ def show_auth_page():
                         st.session_state["view"] = "home"
                         save_db(db)
                         st.query_params["user_id"] = new_uid
+                        st.success("Bienvenue chez Nova AI !")
+                        time.sleep(1)
                         st.rerun()
                     else:
-                        st.warning("⚠️ Identifiant déjà utilisé.")
+                        st.warning("Cet identifiant est déjà pris.")
                 else:
-                    st.error("Champs obligatoires.")
+                    st.error("Tous les champs sont requis.")
+                    
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:rgba(255,255,255,0.4); margin-top:20px;'>Besoin d'aide ? Contactez le support Nova.</p>", unsafe_allow_html=True)
 
 def main_dashboard():
     user = st.session_state["current_user"]
