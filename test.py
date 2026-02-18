@@ -450,12 +450,12 @@ def main_dashboard():
                 "Type d'intervention", 
                 [
                     "📊 Data & Excel Analytics", 
-                    "📝 Rédaction IA Haute Précision", 
-                    "⚙️ Développement & Scripts", 
+                    "📝 exposer complet IA", 
+                    "⚙️ word/excel/powerpoint", 
                     "🎨 Création Design IA",
-                    "📚 Recherche Académique",
-                    "👔 Optimisation Carrière (CV)",
-                    "📄 Ingénierie Documentaire"
+                    "📚 création d’affiche publicitaire et reçus",
+                    "👔  création CV et lettre de motivation,",
+                    "📄 fichier PDF"
                 ]
             )
         with col_wa:
@@ -624,3 +624,4 @@ if st.session_state["view"] == "auth":
     show_auth_page()
 else:
     main_dashboard()
+
