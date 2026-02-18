@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 # CONFIGURATION ET CONSTANTES
 # ==========================================
 st.set_page_config(
-    page_title="Nova AI - Performance Illimitée", 
+    page_title="L’IA bureautique NoVA AI", 
     page_icon="⚡", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -624,4 +624,5 @@ if st.session_state["view"] == "auth":
     show_auth_page()
 else:
     main_dashboard()
+
 
