@@ -446,7 +446,7 @@ def main_dashboard():
                 "Type d'intervention", 
                 [
                     "📊 Data & Excel Analytics", 
-                    "📝 Exposé complet IA", 
+                    "📝 Exposé scolaire complet IA", 
                     "⚙️ Pack Office (Word/Excel/PPT)", 
                     "🎨 Création Design IA",
                     "📚 Affiches & Reçus",
@@ -623,3 +623,4 @@ if st.session_state["view"] == "auth" and st.session_state["current_user"] is No
     show_auth_page()
 else:
     main_dashboard()
+
