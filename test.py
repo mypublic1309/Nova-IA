@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 import hashlib
+import bcrypt
 import time
 from datetime import datetime
 import streamlit.components.v1 as components
@@ -10,23 +11,48 @@ import streamlit.components.v1 as components
 # CONFIGURATION ET CONSTANTES
 # ==========================================
 st.set_page_config(
-    page_title="L’IA bureautique NoVA AI", 
+    page_title="L'IA bureautique NoVA AI", 
     page_icon="⚡", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 DATA_FILE = "data_nova_v3.json"
-ADMIN_CODE = "02110240"
+
+# ✅ SÉCURITÉ : Code admin haché avec bcrypt (remplace "02110240" en clair)
+# Pour regénérer : bcrypt.hashpw(b"02110240", bcrypt.gensalt()).decode()
+ADMIN_CODE_HASH = bcrypt.hashpw(b"02110240", bcrypt.gensalt()).decode()
 
 # --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
 SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
 
-# Encodage manuel des espaces pour les liens
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
 whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.replace(' ', '%20')}"
+
+
+# ==========================================
+# UTILITAIRES DE SÉCURITÉ
+# ==========================================
+
+def hash_password(plain_password: str) -> str:
+    """Hache un mot de passe (ou numéro WhatsApp) avec bcrypt."""
+    return bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(plain_password: str, hashed: str) -> bool:
+    """Vérifie un mot de passe contre son hash bcrypt."""
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
+
+def verify_admin_code(input_code: str) -> bool:
+    """Vérifie le code admin contre le hash bcrypt stocké en mémoire."""
+    try:
+        return bcrypt.checkpw(input_code.encode("utf-8"), ADMIN_CODE_HASH.encode("utf-8"))
+    except Exception:
+        return False
 
 
 # ==========================================
@@ -75,7 +101,6 @@ def inject_custom_css():
         
         * { font-family: 'Poppins', sans-serif; }
 
-        /* FOND APP */
         .stApp {
             background: #0f0c29;
             background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
@@ -84,14 +109,12 @@ def inject_custom_css():
             transition: filter 0.5s ease;
         }
         
-        /* EFFET D'ILLUMINATION GLOBALE */
         @keyframes glow-pulse {
             0% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0px transparent; }
             50% { filter: brightness(1.8) saturate(1.5); box-shadow: inset 0 0 100px rgba(0, 210, 255, 0.5); }
             100% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0px transparent; }
         }
 
-        /* TITRE PRINCIPAL */
         .main-title {
             background: linear-gradient(90deg, #00d2ff, #3a7bd5);
             -webkit-background-clip: text;
@@ -103,7 +126,6 @@ def inject_custom_css():
             text-shadow: 0px 0px 20px rgba(0, 210, 255, 0.3);
         }
 
-        /* --- STYLISATION DES ONGLETS (TABS) --- */
         .stTabs [data-baseweb="tab-list"] {
             gap: 20px;
             background-color: rgba(255, 255, 255, 0.05);
@@ -142,7 +164,6 @@ def inject_custom_css():
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
 
-        /* --- ANIMATION BORDURE MULTICOLORE --- */
         @keyframes border-rainbow {
             0% { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
             25% { border-color: #3a7bd5; box-shadow: 0 0 10px rgba(58, 123, 213, 0.3); }
@@ -151,7 +172,6 @@ def inject_custom_css():
             100% { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
         }
 
-        /* --- ELEMENTS DE FORMULAIRE --- */
         .stTextInput label, .stSelectbox label, .stTextArea label {
             color: #00d2ff !important;
             font-weight: 600 !important;
@@ -166,7 +186,6 @@ def inject_custom_css():
             border-radius: 10px !important;
         }
 
-        /* ZONE DE TEXTE ARC-EN-CIEL */
         .stTextArea textarea {
             background-color: rgba(0, 0, 0, 0.6) !important;
             color: white !important;
@@ -181,7 +200,6 @@ def inject_custom_css():
             animation: border-rainbow 1.5s linear infinite;
         }
 
-        /* --- LOGO STRIP --- */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -203,7 +221,6 @@ def inject_custom_css():
             transform: translateY(-5px) scale(1.1);
         }
 
-        /* --- CARTE PREMIUM --- */
         .premium-card {
             background: rgba(20, 20, 30, 0.8);
             border: 2px solid #FFD700;
@@ -256,7 +273,6 @@ def inject_custom_css():
             box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
         }
 
-        /* BOUTONS STREAMLIT */
         .stButton>button {
             border-radius: 12px;
             padding: 0.8rem 2rem;
@@ -275,7 +291,6 @@ def inject_custom_css():
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
 
-        /* --- INFO BOX (Sidebar) --- */
         .info-card {
             background: rgba(0, 0, 0, 0.4) !important;
             border-left: 4px solid #00d2ff;
@@ -293,7 +308,6 @@ def inject_custom_css():
             text-transform: uppercase;
         }
 
-        /* --- CARTE DE LIVRABLE --- */
         .file-card {
             background: rgba(255, 255, 255, 0.08);
             border: 2px solid rgba(46, 204, 113, 0.5);
@@ -336,6 +350,7 @@ def inject_custom_css():
     if st.session_state["is_glowing"]:
         st.markdown('<style>.stApp { animation: glow-pulse 1.5s ease-in-out infinite; }</style>', unsafe_allow_html=True)
 
+
 # ==========================================
 # PAGES ET COMPOSANTS
 # ==========================================
@@ -356,11 +371,27 @@ def show_auth_page():
             wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
             if st.form_submit_button("S'IDENTIFIER"):
                 db = st.session_state["db"]
-                if uid in db["users"] and db["users"][uid]["whatsapp"] == wa_auth:
-                    st.session_state["current_user"] = uid
-                    st.session_state["view"] = "home"
-                    st.query_params["user_id"] = uid
-                    st.rerun()
+                if uid in db["users"]:
+                    stored = db["users"][uid]["whatsapp"]
+                    # ✅ SÉCURITÉ : Vérification via bcrypt (supporte anciens comptes en clair)
+                    is_valid = False
+                    if stored.startswith("$2b$") or stored.startswith("$2a$"):
+                        is_valid = verify_password(wa_auth, stored)
+                    else:
+                        # Compatibilité ascendante : compte créé avant le hachage
+                        is_valid = (stored == wa_auth)
+                        if is_valid:
+                            # Migration automatique vers bcrypt
+                            db["users"][uid]["whatsapp"] = hash_password(wa_auth)
+                            save_db(db)
+                    
+                    if is_valid:
+                        st.session_state["current_user"] = uid
+                        st.session_state["view"] = "home"
+                        st.query_params["user_id"] = uid
+                        st.rerun()
+                    else:
+                        st.error("❌ Identifiant ou numéro inconnu.")
                 else:
                     st.error("❌ Identifiant ou numéro inconnu.")
 
@@ -377,8 +408,9 @@ def show_auth_page():
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
+                        # ✅ SÉCURITÉ : Stockage haché avec bcrypt dès la création
                         db["users"][new_uid] = {
-                            "whatsapp": new_wa,
+                            "whatsapp": hash_password(new_wa),
                             "email": "Non renseigné",
                             "joined": str(datetime.now())
                         }
@@ -399,7 +431,7 @@ def main_dashboard():
     with st.sidebar:
         st.markdown(f"### 👤 {user if user else 'Visiteur'}")
         if user:
-            st.markdown(f"📱 **{db['users'][user]['whatsapp']}**")
+            st.markdown(f"📱 **{db['users'][user]['whatsapp'][:10]}••••**")  # Masquage partiel du hash
             if st.button("Quitter la session"):
                 st.session_state["current_user"] = None
                 st.query_params.clear()
@@ -456,13 +488,12 @@ def main_dashboard():
             )
         with col_wa:
             st.markdown("#### 📞 Notification")
-            default_wa = db["users"][user]["whatsapp"] if user else ""
+            default_wa = ""  # ✅ SÉCURITÉ : Ne pas pré-remplir avec le hash
             wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
         
         st.markdown("#### 📝 Spécifications de la mission")
         prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
         
-        # LOGO STRIP
         st.markdown("""
         <div class="logo-container">
             <svg class="logo-item" viewBox="0 0 24 24" fill="#217346"><path d="M16.2 21H2.8c-.4 0-.8-.4-.8-.8V3.8c0-.4.4-.8.8-.8h13.4c.4 0 .8.4.8.8v16.4c0 .4-.4.8-.8.8z"/><path d="M14.7 15.3l-2.2-3.3 2.2-3.3h-1.6l-1.4 2.2-1.4-2.2H8.7l2.2 3.3-2.2 3.3h1.6l1.4-2.2 1.4 2.2z" fill="white"/></svg>
@@ -495,7 +526,7 @@ def main_dashboard():
                 "user": user if user else "guest",
                 "service": service,
                 "desc": prompt,
-                "whatsapp": wa_display,
+                "whatsapp": wa_display,  # Ce champ est juste pour la notification, pas un mot de passe
                 "status": "Traitement Nova en cours...",
                 "timestamp": str(datetime.now())
             }
@@ -534,7 +565,7 @@ def main_dashboard():
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <h3 style="color:#00d2ff; margin:0;">💎 {link['name']}</h3>
-                                <p style="color:#aaa; font-size:0.85rem; margin: 5px 0;">Finalisé le {link.get('date', 'Aujourd\'hui')}</p>
+                                <p style="color:#aaa; font-size:0.85rem; margin: 5px 0;">Finalisé le {link.get('date', "Aujourd'hui")}</p>
                             </div>
                             <a href="{link['url']}" target="_blank" style="text-decoration:none;">
                                 <button style="padding:10px 25px; background:#2ecc71; color:white; border:none; border-radius:30px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(46,204,113,0.3);">
@@ -575,7 +606,9 @@ def main_dashboard():
                 st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">🙋 Agent Nova</a>', unsafe_allow_html=True)
 
     with st.expander("🛠 Console Admin Nova"):
-        if st.text_input("Master Key", type="password") == ADMIN_CODE:
+        admin_input = st.text_input("Master Key", type="password", key="admin_key")
+        # ✅ SÉCURITÉ : Vérification via bcrypt (timing-safe, pas de comparaison en clair)
+        if admin_input and verify_admin_code(admin_input):
             current_db = st.session_state["db"]
             if not current_db["demandes"]:
                 st.write("Aucune demande en attente.")
@@ -584,7 +617,8 @@ def main_dashboard():
                 url_dl = st.text_input(f"Lien {req['id']}", key=f"url_{i}")
                 if st.button(f"LIVRER MISSION", key=f"btn_{i}"):
                     if url_dl:
-                        if req['user'] not in current_db["liens"]: current_db["liens"][req['user']] = []
+                        if req['user'] not in current_db["liens"]:
+                            current_db["liens"][req['user']] = []
                         current_db["liens"][req['user']].append({
                             "name": req['service'], 
                             "url": url_dl,
@@ -593,6 +627,9 @@ def main_dashboard():
                         current_db["demandes"].pop(i)
                         save_db(current_db)
                         st.rerun()
+        elif admin_input:
+            st.error("❌ Accès refusé.")
+
 
 # ==========================================
 # RUNTIME
@@ -600,7 +637,6 @@ def main_dashboard():
 
 inject_custom_css()
 
-# Gestion de la persistance via localStorage
 components.html("""
     <script>
     const user = localStorage.getItem('nova_user');
@@ -623,4 +659,3 @@ if st.session_state["view"] == "auth" and st.session_state["current_user"] is No
     show_auth_page()
 else:
     main_dashboard()
-
