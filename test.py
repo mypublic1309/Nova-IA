@@ -58,6 +58,9 @@ if "view" not in st.session_state:
 if "is_glowing" not in st.session_state:
     st.session_state["is_glowing"] = False
 
+if "show_premium_modal" not in st.session_state:
+    st.session_state["show_premium_modal"] = False
+
 # Reconnaissance automatique via URL (Session persistante)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
@@ -427,157 +430,126 @@ def main_dashboard():
     st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
 
     # ==========================================
-    # CARTE PREMIUM AVEC MODALE
+    # CARTE PREMIUM + FENÊTRE INTERNE (session_state)
     # ==========================================
-    wa_jour = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l'abonnement%20Nova%20Premium%20Journalier%20%C3%A0%20600%20FC."
-    wa_10j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l'abonnement%20Nova%20Premium%2010%20Jours%20%C3%A0%201000%20FC."
-    wa_30j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l'abonnement%20Nova%20Premium%2030%20Jours%20%C3%A0%202500%20FC."
+    wa_jour = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%20Journalier%20%C3%A0%20600%20FC."
+    wa_10j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2010%20Jours%20%C3%A0%201000%20FC."
+    wa_30j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2030%20Jours%20%C3%A0%202500%20FC."
 
-    st.markdown(f"""
+    # --- Bouton d'ouverture de la fenêtre premium ---
+    st.markdown("""
         <div class="premium-card">
             <div class="premium-title">⭐ ACCÉLÉRATEUR NOVA PREMIUM ⭐</div>
             <div class="premium-desc">
                 Passez au niveau supérieur : IA illimitée et puissance de calcul <b>10<sup>10</sup></b>.
             </div>
-            <button class="btn-gold" onclick="document.getElementById('nova-premium-modal').style.display='flex'">
-                💎 ACTIVER NOVA PREMIUM
-            </button>
         </div>
+    """, unsafe_allow_html=True)
 
-        <!-- MODALE PREMIUM -->
-        <div id="nova-premium-modal" style="
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(6px);
-        ">
+    col_btn_center = st.columns([1, 2, 1])[1]
+    with col_btn_center:
+        if st.button("💎 ACTIVER NOVA PREMIUM", key="open_premium"):
+            st.session_state["show_premium_modal"] = True
+            st.rerun()
+
+    # --- Fenêtre interne des formules (affichée si show_premium_modal = True) ---
+    if st.session_state["show_premium_modal"]:
+        st.markdown("""
             <div style="
                 background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
                 border: 2px solid #FFD700;
                 border-radius: 24px;
-                padding: 40px 30px;
-                max-width: 860px;
-                width: 95%;
-                position: relative;
-                box-shadow: 0 0 60px rgba(255,215,0,0.3);
+                padding: 35px 25px 30px 25px;
+                margin: 10px 0 30px 0;
+                box-shadow: 0 0 60px rgba(255,215,0,0.25);
             ">
-                <!-- BOUTON FERMER -->
-                <button onclick="document.getElementById('nova-premium-modal').style.display='none'" style="
-                    position: absolute;
-                    top: 15px; right: 20px;
-                    background: rgba(255,255,255,0.1);
-                    border: none;
-                    color: white;
-                    font-size: 1.5rem;
-                    cursor: pointer;
-                    border-radius: 50%;
-                    width: 38px; height: 38px;
-                    line-height: 38px;
-                    text-align: center;
-                    transition: background 0.2s;
-                " onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
-
-                <h2 style="text-align:center; color:#FFD700; font-size:1.8rem; font-weight:800; margin-bottom:8px; letter-spacing:1px;">
+                <h2 style="text-align:center; color:#FFD700; font-size:1.7rem; font-weight:800; margin-bottom:6px; letter-spacing:1px;">
                     ⭐ CHOISISSEZ VOTRE FORMULE NOVA PREMIUM
                 </h2>
-                <p style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:30px; font-size:0.95rem;">
+                <p style="text-align:center; color:rgba(255,255,255,0.55); margin-bottom:30px; font-size:0.95rem;">
                     Sélectionnez le plan qui correspond à vos besoins
                 </p>
-
-                <!-- 3 CARTES -->
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-
-                    <!-- CARTE 1 : JOURNALIER -->
-                    <div style="
-                        flex: 1; min-width: 220px; max-width: 260px;
-                        background: rgba(255,255,255,0.05);
-                        border: 1px solid rgba(255,215,0,0.3);
-                        border-radius: 18px;
-                        padding: 28px 20px;
-                        text-align: center;
-                        transition: transform 0.3s, box-shadow 0.3s;
-                        cursor: pointer;
-                    " onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 10px 30px rgba(255,215,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                        <div style="font-size:2.5rem; margin-bottom:10px;">🌅</div>
-                        <div style="color:#FFD700; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">Journalier</div>
-                        <div style="color:white; font-size:2rem; font-weight:800; margin: 10px 0;">600 FC</div>
-                        <div style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin-bottom:18px;">/ par jour</div>
-                        <div style="background:rgba(255,215,0,0.1); border-radius:10px; padding:10px; margin-bottom:20px;">
-                            <span style="color:#FFD700; font-size:0.9rem;">⚡ 1,5 génération IA / jour</span>
-                        </div>
-                        <a href="{wa_jour}" target="_blank" style="
-                            display:block; background:linear-gradient(45deg,#FFD700,#FF8C00);
-                            color:#000; font-weight:800; padding:10px; border-radius:50px;
-                            text-decoration:none; font-size:0.95rem;
-                        ">Choisir</a>
-                    </div>
-
-                    <!-- CARTE 2 : 10 JOURS (MIS EN AVANT) -->
-                    <div style="
-                        flex: 1; min-width: 220px; max-width: 260px;
-                        background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(58,123,213,0.15));
-                        border: 2px solid #00d2ff;
-                        border-radius: 18px;
-                        padding: 28px 20px;
-                        text-align: center;
-                        transition: transform 0.3s, box-shadow 0.3s;
-                        cursor: pointer;
-                        position: relative;
-                    " onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 10px 30px rgba(0,210,255,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                        <div style="
-                            position:absolute; top:-12px; left:50%; transform:translateX(-50%);
-                            background:linear-gradient(90deg,#00d2ff,#3a7bd5);
-                            color:white; font-size:0.75rem; font-weight:800;
-                            padding:4px 16px; border-radius:20px; white-space:nowrap;
-                        ">⭐ POPULAIRE</div>
-                        <div style="font-size:2.5rem; margin-bottom:10px;">🔟</div>
-                        <div style="color:#00d2ff; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">10 Jours</div>
-                        <div style="color:white; font-size:2rem; font-weight:800; margin: 10px 0;">1 000 FC</div>
-                        <div style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin-bottom:18px;">/ 10 jours</div>
-                        <div style="background:rgba(0,210,255,0.1); border-radius:10px; padding:10px; margin-bottom:20px;">
-                            <span style="color:#00d2ff; font-size:0.9rem;">⚡ 4 générations IA / jour</span>
-                        </div>
-                        <a href="{wa_10j}" target="_blank" style="
-                            display:block; background:linear-gradient(45deg,#00d2ff,#3a7bd5);
-                            color:#fff; font-weight:800; padding:10px; border-radius:50px;
-                            text-decoration:none; font-size:0.95rem;
-                        ">Choisir</a>
-                    </div>
-
-                    <!-- CARTE 3 : 30 JOURS -->
-                    <div style="
-                        flex: 1; min-width: 220px; max-width: 260px;
-                        background: rgba(255,255,255,0.05);
-                        border: 1px solid rgba(46,204,113,0.4);
-                        border-radius: 18px;
-                        padding: 28px 20px;
-                        text-align: center;
-                        transition: transform 0.3s, box-shadow 0.3s;
-                        cursor: pointer;
-                    " onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 10px 30px rgba(46,204,113,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                        <div style="font-size:2.5rem; margin-bottom:10px;">👑</div>
-                        <div style="color:#2ecc71; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">30 Jours</div>
-                        <div style="color:white; font-size:2rem; font-weight:800; margin: 10px 0;">2 500 FC</div>
-                        <div style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin-bottom:18px;">/ 30 jours</div>
-                        <div style="background:rgba(46,204,113,0.1); border-radius:10px; padding:10px; margin-bottom:20px;">
-                            <span style="color:#2ecc71; font-size:0.9rem;">⚡ 8,5 générations IA / jour</span>
-                        </div>
-                        <a href="{wa_30j}" target="_blank" style="
-                            display:block; background:linear-gradient(45deg,#2ecc71,#27ae60);
-                            color:#fff; font-weight:800; padding:10px; border-radius:50px;
-                            text-decoration:none; font-size:0.95rem;
-                        ">Choisir</a>
-                    </div>
-
-                </div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+        col1_p, col2_p, col3_p = st.columns(3)
+
+        with col1_p:
+            st.markdown("""
+                <div style="
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,215,0,0.4);
+                    border-radius: 18px;
+                    padding: 28px 16px;
+                    text-align: center;
+                    min-height: 300px;
+                ">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🌅</div>
+                    <div style="color:#FFD700; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">Journalier</div>
+                    <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">600 FC</div>
+                    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:16px;">/ par jour</div>
+                    <div style="background:rgba(255,215,0,0.1); border-radius:10px; padding:10px; margin-bottom:22px;">
+                        <span style="color:#FFD700; font-size:0.9rem;">⚡ 1,5 génération IA / jour</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown(f'<a href="{wa_jour}" target="_blank" style="display:block; background:linear-gradient(45deg,#FFD700,#FF8C00); color:#000; font-weight:800; padding:12px; border-radius:50px; text-decoration:none; font-size:1rem; text-align:center; margin-top:10px;">Choisir cette formule</a>', unsafe_allow_html=True)
+
+        with col2_p:
+            st.markdown("""
+                <div style="
+                    background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(58,123,213,0.15));
+                    border: 2px solid #00d2ff;
+                    border-radius: 18px;
+                    padding: 28px 16px;
+                    text-align: center;
+                    min-height: 300px;
+                    position: relative;
+                ">
+                    <div style="
+                        background:linear-gradient(90deg,#00d2ff,#3a7bd5);
+                        color:white; font-size:0.75rem; font-weight:800;
+                        padding:4px 16px; border-radius:20px;
+                        display:inline-block; margin-bottom:12px;
+                    ">⭐ POPULAIRE</div>
+                    <div style="font-size:2.5rem; margin-bottom:10px;">🔟</div>
+                    <div style="color:#00d2ff; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">10 Jours</div>
+                    <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">1 000 FC</div>
+                    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:16px;">/ 10 jours</div>
+                    <div style="background:rgba(0,210,255,0.1); border-radius:10px; padding:10px; margin-bottom:22px;">
+                        <span style="color:#00d2ff; font-size:0.9rem;">⚡ 4 générations IA / jour</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown(f'<a href="{wa_10j}" target="_blank" style="display:block; background:linear-gradient(45deg,#00d2ff,#3a7bd5); color:#fff; font-weight:800; padding:12px; border-radius:50px; text-decoration:none; font-size:1rem; text-align:center; margin-top:10px;">Choisir cette formule</a>', unsafe_allow_html=True)
+
+        with col3_p:
+            st.markdown("""
+                <div style="
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(46,204,113,0.4);
+                    border-radius: 18px;
+                    padding: 28px 16px;
+                    text-align: center;
+                    min-height: 300px;
+                ">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">👑</div>
+                    <div style="color:#2ecc71; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">30 Jours</div>
+                    <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">2 500 FC</div>
+                    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:16px;">/ 30 jours</div>
+                    <div style="background:rgba(46,204,113,0.1); border-radius:10px; padding:10px; margin-bottom:22px;">
+                        <span style="color:#2ecc71; font-size:0.9rem;">⚡ 8,5 générations IA / jour</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown(f'<a href="{wa_30j}" target="_blank" style="display:block; background:linear-gradient(45deg,#2ecc71,#27ae60); color:#fff; font-weight:800; padding:12px; border-radius:50px; text-decoration:none; font-size:1rem; text-align:center; margin-top:10px;">Choisir cette formule</a>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_close = st.columns([1, 2, 1])[1]
+        with col_close:
+            if st.button("✕ Fermer", key="close_premium"):
+                st.session_state["show_premium_modal"] = False
+                st.rerun()
 
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
 
