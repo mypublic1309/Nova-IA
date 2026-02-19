@@ -535,25 +535,66 @@ def show_auth_page():
         box-shadow: 0 0 0 3px rgba(255,215,0,0.12) !important;
     }
 
-    /* ===== BOUTONS DORÉ et OUTLINE ===== */
+    /* ===== ANIMATIONS PERMANENTES BOUTONS ===== */
+    @keyframes btn-shimmer {
+        0%   { background-position: -300% center; }
+        100% { background-position:  300% center; }
+    }
+    @keyframes btn-float {
+        0%, 100% { transform: translateY(0px);   box-shadow: 0 6px 25px rgba(255,215,0,0.45), 0 0 0 0 rgba(255,215,0,0.2); }
+        50%       { transform: translateY(-4px);  box-shadow: 0 14px 35px rgba(255,215,0,0.65), 0 0 18px 4px rgba(255,215,0,0.15); }
+    }
+    @keyframes btn-glow-ring {
+        0%, 100% { box-shadow: 0 6px 25px rgba(255,215,0,0.45), 0 0  0px rgba(255,215,0,0);   }
+        50%       { box-shadow: 0 6px 25px rgba(255,215,0,0.45), 0 0 22px rgba(255,215,0,0.35); }
+    }
+
+    /* ===== BOUTONS DORÉ PREMIUM ===== */
     .auth-page .stButton > button {
-        background: linear-gradient(90deg, #b8860b, #FFD700, #b8860b) !important;
-        background-size: 200% auto !important;
+        background: linear-gradient(
+            90deg,
+            #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500
+        ) !important;
+        background-size: 300% auto !important;
         color: #0a0800 !important;
         font-weight: 800 !important;
-        font-size: 0.9rem !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase;
+        font-size: 0.92rem !important;
+        letter-spacing: 2.5px !important;
+        text-transform: uppercase !important;
         border-radius: 50px !important;
         border: none !important;
-        padding: 0.75rem 1.5rem !important;
-        transition: background-position 0.4s ease, transform 0.2s, box-shadow 0.3s !important;
-        box-shadow: 0 4px 20px rgba(255,215,0,0.3) !important;
+        padding: 0.82rem 1.8rem !important;
+        width: 100% !important;
+        position: relative !important;
+        overflow: hidden !important;
+        /* Shimmer en boucle permanente */
+        animation: btn-shimmer 3s linear infinite, btn-float 3.5s ease-in-out infinite !important;
+        cursor: pointer !important;
     }
-    .auth-page .stButton > button:hover {
-        background-position: right center !important;
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 8px 28px rgba(255,215,0,0.5) !important;
+    /* Reflet blanc glissant par-dessus */
+    .auth-page .stButton > button::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important; left: -75% !important;
+        width: 50% !important; height: 100% !important;
+        background: linear-gradient(
+            120deg,
+            transparent 30%,
+            rgba(255,255,255,0.35) 50%,
+            transparent 70%
+        ) !important;
+        animation: btn-shimmer 3s linear infinite !important;
+        pointer-events: none !important;
+    }
+    /* Anneau de glow en dessous du bouton */
+    .auth-page .stButton > button::after {
+        content: '' !important;
+        position: absolute !important;
+        inset: 0 !important;
+        border-radius: 50px !important;
+        box-shadow: 0 0 0 2px rgba(255,215,0,0.5) !important;
+        animation: btn-glow-ring 2s ease-in-out infinite !important;
+        pointer-events: none !important;
     }
 
     /* ===== BADGE SÉCURITÉ ===== */
