@@ -346,20 +346,270 @@ def inject_custom_css():
 # ==========================================
 
 def show_auth_page():
-    st.markdown("<h1 class='main-title'>ESPACE NOVA AI</h1>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
+
+    # --- CSS exclusif à la page d'authentification ---
+    st.markdown("""
+    <style>
+    /* ===== ANIMATIONS ===== */
+    @keyframes shimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+    }
+    @keyframes float-up {
+        0%   { opacity: 0; transform: translateY(30px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes letter-pop {
+        0%   { opacity: 0; transform: translateY(20px) scale(0.8); }
+        60%  { transform: translateY(-4px) scale(1.05); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes glow-border {
+        0%   { box-shadow: 0 0 8px rgba(255,215,0,0.3), inset 0 0 8px rgba(255,215,0,0.05); }
+        50%  { box-shadow: 0 0 28px rgba(255,215,0,0.7), inset 0 0 20px rgba(255,215,0,0.08); }
+        100% { box-shadow: 0 0 8px rgba(255,215,0,0.3), inset 0 0 8px rgba(255,215,0,0.05); }
+    }
+    @keyframes particle-drift {
+        0%   { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.6; }
+        33%  { transform: translateY(-18px) translateX(8px) rotate(120deg); opacity: 1; }
+        66%  { transform: translateY(-8px) translateX(-6px) rotate(240deg); opacity: 0.7; }
+        100% { transform: translateY(0px) translateX(0px) rotate(360deg); opacity: 0.6; }
+    }
+    @keyframes scanline {
+        0%   { top: -10%; }
+        100% { top: 110%; }
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.4; transform: scale(0.6); }
+    }
+
+    /* ===== HERO HEADER ===== */
+    .auth-hero {
+        text-align: center;
+        padding: 40px 20px 10px 20px;
+        animation: float-up 0.8s ease both;
+    }
+    .auth-logo-ring {
+        width: 90px; height: 90px;
+        border-radius: 50%;
+        margin: 0 auto 18px auto;
+        background: radial-gradient(circle at 35% 35%, #fff8e1, #FFD700 40%, #b8860b);
+        box-shadow: 0 0 0 4px rgba(255,215,0,0.2), 0 0 40px rgba(255,215,0,0.5);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.6rem;
+        animation: glow-border 3s ease-in-out infinite;
+        position: relative;
+    }
+    .auth-logo-ring::after {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255,215,0,0.4);
+        animation: particle-drift 6s linear infinite;
+    }
+
+    /* ===== TITRE ANIMÉ LETTRE PAR LETTRE ===== */
+    .auth-title-wrap { display: flex; justify-content: center; gap: 2px; flex-wrap: wrap; margin-bottom: 6px; }
+    .auth-letter {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: letter-pop 0.5s ease both, shimmer 3s linear infinite;
+        display: inline-block;
+        line-height: 1.1;
+    }
+    .auth-subtitle {
+        color: rgba(255,215,0,0.65);
+        font-size: 0.95rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        animation: float-up 1s ease 0.5s both;
+        margin-bottom: 6px;
+    }
+    .auth-tagline {
+        color: rgba(255,255,255,0.4);
+        font-size: 0.82rem;
+        letter-spacing: 1.5px;
+        animation: float-up 1s ease 0.8s both;
+    }
+
+    /* ===== SÉPARATEUR ===== */
+    .auth-divider {
+        display: flex; align-items: center; gap: 14px;
+        margin: 28px auto 32px auto; max-width: 420px;
+        animation: float-up 1s ease 1s both;
+    }
+    .auth-divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.5), transparent); }
+    .auth-divider-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: #FFD700;
+        animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    /* ===== CARTES DE FORMULAIRE ===== */
+    .auth-card {
+        background: linear-gradient(145deg, rgba(20,15,5,0.95), rgba(35,25,5,0.9));
+        border: 1px solid rgba(255,215,0,0.35);
+        border-radius: 22px;
+        padding: 32px 28px 28px 28px;
+        position: relative;
+        overflow: hidden;
+        animation: float-up 0.9s ease both;
+        animation-delay: var(--card-delay, 0s);
+    }
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
+        background-size: 200% auto;
+        animation: shimmer 2.5s linear infinite;
+        border-radius: 22px 22px 0 0;
+    }
+    .auth-card::after {
+        content: '';
+        position: absolute;
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,215,0,0.06), transparent 70%);
+        bottom: -60px; right: -60px;
+        pointer-events: none;
+    }
+    /* Scanline subtile */
+    .auth-card .scanline {
+        position: absolute;
+        left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(255,215,0,0.12), transparent);
+        animation: scanline 4s linear infinite;
+        pointer-events: none;
+    }
+
+    /* ===== EN-TÊTE CARTE ===== */
+    .auth-card-header {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 22px;
+    }
+    .auth-card-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+        border: 1px solid rgba(255,215,0,0.3);
+        box-shadow: 0 0 12px rgba(255,215,0,0.15);
+    }
+    .auth-card-title {
+        color: #FFD700 !important;
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin: 0;
+        text-transform: uppercase;
+    }
+    .auth-card-desc {
+        color: rgba(255,255,255,0.35);
+        font-size: 0.75rem;
+        margin-top: 2px;
+        letter-spacing: 0.5px;
+    }
+
+    /* ===== CHAMPS DE FORMULAIRE (override doré) ===== */
+    .auth-page .stTextInput label {
+        color: rgba(255,215,0,0.8) !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .auth-page div[data-baseweb="input"] {
+        background: rgba(0,0,0,0.5) !important;
+        border: 1px solid rgba(255,215,0,0.25) !important;
+        border-radius: 12px !important;
+        transition: border-color 0.3s, box-shadow 0.3s !important;
+    }
+    .auth-page div[data-baseweb="input"]:focus-within {
+        border-color: rgba(255,215,0,0.7) !important;
+        box-shadow: 0 0 0 3px rgba(255,215,0,0.12) !important;
+    }
+
+    /* ===== BOUTONS DORÉ et OUTLINE ===== */
+    .auth-page .stButton > button {
+        background: linear-gradient(90deg, #b8860b, #FFD700, #b8860b) !important;
+        background-size: 200% auto !important;
+        color: #0a0800 !important;
+        font-weight: 800 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase;
+        border-radius: 50px !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        transition: background-position 0.4s ease, transform 0.2s, box-shadow 0.3s !important;
+        box-shadow: 0 4px 20px rgba(255,215,0,0.3) !important;
+    }
+    .auth-page .stButton > button:hover {
+        background-position: right center !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 8px 28px rgba(255,215,0,0.5) !important;
+    }
+
+    /* ===== BADGE SÉCURITÉ ===== */
+    .auth-secure-badge {
+        display: flex; align-items: center; justify-content: center;
+        gap: 8px; margin-top: 28px;
+        color: rgba(255,215,0,0.35);
+        font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase;
+        animation: float-up 1s ease 1.2s both;
+    }
+    .auth-secure-badge span { font-size: 0.9rem; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # --- Hero header ---
+    letters = list("NOVA AI")
+    letter_spans = "".join(
+        f'<span class="auth-letter" style="animation-delay:{i*0.07:.2f}s">'
+        f'{"&nbsp;" if c == " " else c}</span>'
+        for i, c in enumerate(letters)
+    )
+    st.markdown(f"""
+    <div class="auth-hero">
+        <div class="auth-logo-ring">⚡</div>
+        <div class="auth-title-wrap">{letter_spans}</div>
+        <div class="auth-subtitle">Plateforme IA bureautique</div>
+        <div class="auth-tagline">Intelligence · Excellence · Performance</div>
+    </div>
+    <div class="auth-divider">
+        <div class="auth-divider-line"></div>
+        <div class="auth-divider-dot"></div>
+        <div class="auth-divider-line"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- Deux colonnes de formulaires ---
+    st.markdown('<div class="auth-page">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2, gap="large")
+
     with col1:
         st.markdown("""
-        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid rgba(0,210,255,0.2);">
-            <h3 style="color:white; margin-top:0;">🔐 Accès Membre</h3>
+        <div class="auth-card" style="--card-delay:1.1s;">
+            <div class="scanline"></div>
+            <div class="auth-card-header">
+                <div class="auth-card-icon">🔐</div>
+                <div>
+                    <div class="auth-card-title">Accès Membre</div>
+                    <div class="auth-card-desc">Identifiez-vous pour accéder à votre espace</div>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         with st.form("login"):
-            uid = st.text_input("Identifiant Nova")
+            uid    = st.text_input("Identifiant Nova", placeholder="Votre identifiant...")
             wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
-            if st.form_submit_button("S'IDENTIFIER"):
+            if st.form_submit_button("⚡ S'IDENTIFIER"):
                 db = st.session_state["db"]
                 if uid in db["users"] and db["users"][uid]["whatsapp"] == wa_auth:
                     st.session_state["current_user"] = uid
@@ -371,14 +621,21 @@ def show_auth_page():
 
     with col2:
         st.markdown("""
-        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.2);">
-            <h3 style="color:white; margin-top:0;">✨ Nouveau Compte</h3>
+        <div class="auth-card" style="--card-delay:1.3s;">
+            <div class="scanline"></div>
+            <div class="auth-card-header">
+                <div class="auth-card-icon">✨</div>
+                <div>
+                    <div class="auth-card-title">Nouveau Compte</div>
+                    <div class="auth-card-desc">Rejoignez l'élite Nova AI dès maintenant</div>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         with st.form("signup"):
-            new_uid = st.text_input("Identifiant au choix")
-            new_wa = st.text_input("Votre WhatsApp (Sera votre clé d'accès)")
-            if st.form_submit_button("REJOINDRE NOVA AI"):
+            new_uid = st.text_input("Identifiant au choix", placeholder="Choisissez un identifiant...")
+            new_wa  = st.text_input("Votre WhatsApp (clé d'accès)", placeholder="Ex: 22507...")
+            if st.form_submit_button("💎 REJOINDRE NOVA AI"):
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
@@ -396,6 +653,15 @@ def show_auth_page():
                         st.warning("⚠️ Identifiant déjà utilisé.")
                 else:
                     st.error("Champs obligatoires.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- Badge sécurité bas de page ---
+    st.markdown("""
+    <div class="auth-secure-badge">
+        <span>🔒</span> Connexion sécurisée &nbsp;·&nbsp; <span>⚡</span> Nova AI &nbsp;·&nbsp; <span>🛡️</span> Données protégées
+    </div>
+    """, unsafe_allow_html=True)
 
 def main_dashboard():
     user = st.session_state["current_user"]
