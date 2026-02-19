@@ -998,23 +998,225 @@ def main_dashboard():
 
     with st.expander("🛠 Console Admin Nova"):
         if st.text_input("Master Key", type="password") == ADMIN_CODE:
+
+            # --- CSS admin ---
+            st.markdown("""
+            <style>
+            .admin-card {
+                background: linear-gradient(145deg, rgba(10,8,2,0.97), rgba(25,18,3,0.95));
+                border: 1px solid rgba(255,215,0,0.25);
+                border-radius: 18px;
+                padding: 24px;
+                margin-bottom: 18px;
+                position: relative;
+                overflow: hidden;
+            }
+            .admin-card::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 0; right: 0; height: 3px;
+                background: linear-gradient(90deg, #b8860b, #FFD700, #b8860b);
+                border-radius: 18px 18px 0 0;
+            }
+            .admin-id-badge {
+                display: inline-block;
+                background: rgba(255,215,0,0.12);
+                border: 1px solid rgba(255,215,0,0.3);
+                color: #FFD700;
+                font-size: 0.7rem;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                padding: 3px 12px;
+                border-radius: 20px;
+                margin-bottom: 14px;
+            }
+            .admin-info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            .admin-info-block {
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.07);
+                border-radius: 10px;
+                padding: 12px 14px;
+            }
+            .admin-info-label {
+                color: rgba(255,215,0,0.55);
+                font-size: 0.68rem;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+            .admin-info-value {
+                color: #ffffff;
+                font-size: 0.95rem;
+                font-weight: 600;
+                word-break: break-word;
+            }
+            .admin-desc-block {
+                background: rgba(255,255,255,0.03);
+                border: 1px solid rgba(255,255,255,0.07);
+                border-left: 3px solid rgba(255,215,0,0.4);
+                border-radius: 0 10px 10px 0;
+                padding: 12px 16px;
+                margin-bottom: 18px;
+                color: rgba(255,255,255,0.75);
+                font-size: 0.9rem;
+                line-height: 1.6;
+            }
+            .admin-desc-label {
+                color: rgba(255,215,0,0.55);
+                font-size: 0.68rem;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                margin-bottom: 6px;
+            }
+            .admin-wa-btn {
+                display: block;
+                text-align: center;
+                text-decoration: none;
+                font-weight: 700;
+                font-size: 0.82rem;
+                letter-spacing: 0.8px;
+                padding: 11px 10px;
+                border-radius: 12px;
+                transition: transform 0.2s, box-shadow 0.2s;
+                margin-bottom: 4px;
+            }
+            .admin-wa-btn:hover { transform: translateY(-2px); }
+            .btn-rejet {
+                background: rgba(231,76,60,0.15);
+                border: 1px solid rgba(231,76,60,0.5);
+                color: #e74c3c !important;
+            }
+            .btn-rejet:hover { background: rgba(231,76,60,0.28); box-shadow: 0 4px 16px rgba(231,76,60,0.25); }
+            .btn-succes {
+                background: rgba(46,204,113,0.15);
+                border: 1px solid rgba(46,204,113,0.5);
+                color: #2ecc71 !important;
+            }
+            .btn-succes:hover { background: rgba(46,204,113,0.28); box-shadow: 0 4px 16px rgba(46,204,113,0.25); }
+            .btn-recu {
+                background: rgba(255,215,0,0.12);
+                border: 1px solid rgba(255,215,0,0.4);
+                color: #FFD700 !important;
+            }
+            .btn-recu:hover { background: rgba(255,215,0,0.22); box-shadow: 0 4px 16px rgba(255,215,0,0.2); }
+            .admin-divider { height:1px; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.2), transparent); margin: 18px 0; }
+            .admin-empty {
+                text-align: center;
+                padding: 40px 20px;
+                color: rgba(255,215,0,0.4);
+                font-size: 1rem;
+                letter-spacing: 1px;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
             current_db = st.session_state["db"]
+
+            # En-tête console
+            st.markdown("""
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                <div style="font-size:1.8rem;">🛡️</div>
+                <div>
+                    <div style="color:#FFD700; font-weight:800; font-size:1.1rem; letter-spacing:1px;">PANNEAU DE CONTRÔLE NOVA</div>
+                    <div style="color:rgba(255,255,255,0.4); font-size:0.78rem; letter-spacing:1px;">Gestion des missions en temps réel</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
             if not current_db["demandes"]:
-                st.write("Aucune demande en attente.")
+                st.markdown('<div class="admin-empty">✅ Aucune mission en attente · Tableau de bord vide</div>', unsafe_allow_html=True)
+
             for i, req in enumerate(current_db["demandes"]):
-                st.write(f"📦 **{req['user']}** - {req['service']}")
-                url_dl = st.text_input(f"Lien {req['id']}", key=f"url_{i}")
-                if st.button(f"LIVRER MISSION", key=f"btn_{i}"):
+                client_wa  = req.get("whatsapp", "")
+                client_nom = req.get("user", "Inconnu")
+                service    = req.get("service", "")
+                description = req.get("desc", "Aucune description fournie.")
+                req_id     = req.get("id", f"#{i+1}")
+                timestamp  = req.get("timestamp", "")[:16] if req.get("timestamp") else "—"
+
+                # Messages WhatsApp pré-encodés
+                def wa_url(numero, texte):
+                    encoded = texte.replace(" ", "%20").replace("'", "%27").replace("\n", "%0A")
+                    return f"https://wa.me/{numero}?text={encoded}"
+
+                msg_rejet  = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova AI "
+                              f"concernant : {service}. Malheureusement, nous ne sommes pas en mesure "
+                              f"de traiter cette mission pour le moment. Merci de nous recontacter "
+                              f"pour plus d'informations. — Équipe Nova AI ⚡")
+                msg_succes = (f"✅ Bonjour {client_nom} ! Excellente nouvelle : votre mission Nova AI "
+                              f"({service}) est désormais terminée avec succès ! "
+                              f"Rendez-vous dans votre espace Nova pour récupérer votre livrable. "
+                              f"Merci de votre confiance. — Équipe Nova AI ⚡")
+                msg_recu   = (f"📬 Bonjour {client_nom}, nous confirmons la bonne réception de votre "
+                              f"demande Nova AI : {service}. Votre mission est en cours de traitement "
+                              f"par notre équipe. Vous serez notifié dès qu'elle sera finalisée. "
+                              f"— Équipe Nova AI ⚡")
+
+                url_rejet  = wa_url(client_wa, msg_rejet)
+                url_succes = wa_url(client_wa, msg_succes)
+                url_recu   = wa_url(client_wa, msg_recu)
+
+                # Carte de la demande
+                st.markdown(f"""
+                <div class="admin-card">
+                    <div class="admin-id-badge">Mission #{req_id} &nbsp;·&nbsp; {timestamp}</div>
+                    <div class="admin-info-grid">
+                        <div class="admin-info-block">
+                            <div class="admin-info-label">👤 Client</div>
+                            <div class="admin-info-value">{client_nom}</div>
+                        </div>
+                        <div class="admin-info-block">
+                            <div class="admin-info-label">📱 WhatsApp</div>
+                            <div class="admin-info-value">{client_wa if client_wa else "—"}</div>
+                        </div>
+                        <div class="admin-info-block" style="grid-column: 1 / -1;">
+                            <div class="admin-info-label">🛠️ Service demandé</div>
+                            <div class="admin-info-value">{service}</div>
+                        </div>
+                    </div>
+                    <div class="admin-desc-block">
+                        <div class="admin-desc-label">📝 Détails de la demande</div>
+                        {description}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # 3 boutons WhatsApp
+                col_rejet, col_recu, col_succes = st.columns(3)
+                with col_rejet:
+                    st.markdown(f'<a href="{url_rejet}" target="_blank" class="admin-wa-btn btn-rejet">❌ Rejeter la demande</a>', unsafe_allow_html=True)
+                with col_recu:
+                    st.markdown(f'<a href="{url_recu}" target="_blank" class="admin-wa-btn btn-recu">📬 Envoyer un reçu</a>', unsafe_allow_html=True)
+                with col_succes:
+                    st.markdown(f'<a href="{url_succes}" target="_blank" class="admin-wa-btn btn-succes">✅ Notifier le succès</a>', unsafe_allow_html=True)
+
+                # Livraison du fichier
+                st.markdown("<div style='margin-top:14px;'>", unsafe_allow_html=True)
+                url_dl = st.text_input("🔗 Lien de livraison (Google Drive, etc.)", key=f"url_{i}", placeholder="https://drive.google.com/...")
+                if st.button("📦 LIVRER LA MISSION", key=f"btn_{i}"):
                     if url_dl:
-                        if req['user'] not in current_db["liens"]: current_db["liens"][req['user']] = []
+                        if req['user'] not in current_db["liens"]:
+                            current_db["liens"][req['user']] = []
                         current_db["liens"][req['user']].append({
-                            "name": req['service'], 
+                            "name": req['service'],
                             "url": url_dl,
                             "date": datetime.now().strftime("%d/%m/%Y")
                         })
                         current_db["demandes"].pop(i)
                         save_db(current_db)
                         st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
+
+                if i < len(current_db["demandes"]) - 1:
+                    st.markdown('<div class="admin-divider"></div>', unsafe_allow_html=True)
 
 # ==========================================
 # RUNTIME
