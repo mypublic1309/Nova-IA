@@ -1155,6 +1155,33 @@ def main_dashboard():
             status_text.empty()
             if user:
                 st.success("✅ Mission enregistrée ! L'équipe Nova examinera votre demande.")
+
+                # Synthèse vocale de retour positif
+                msg_succes_vocal = (
+                    f"Félicitations ! Votre demande a bien été enregistrée avec succès. "
+                    f"Notre équipe Nova va traiter votre mission dans les plus brefs délais. "
+                    f"Vous recevrez une notification sur WhatsApp dès que votre fichier sera prêt. "
+                    f"Vous pourrez également récupérer votre livrable directement dans la section Mes livrables de votre espace Nova."
+                )
+                msg_vocal_js = msg_succes_vocal.replace("'", "\\'").replace('"', '\\"')
+                components.html(f"""
+                    <script>
+                    (function() {{
+                        window.speechSynthesis.cancel();
+                        var msg = new SpeechSynthesisUtterance("{msg_vocal_js}");
+                        msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
+                        function speak() {{
+                            var voices = window.speechSynthesis.getVoices();
+                            var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
+                            if (voiceFR) msg.voice = voiceFR;
+                            window.speechSynthesis.speak(msg);
+                        }}
+                        if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
+                        else {{ window.speechSynthesis.onvoiceschanged = speak; }}
+                    }})();
+                    </script>
+                """, height=0)
+
                 st.balloons()
                 st.rerun()
             else:
