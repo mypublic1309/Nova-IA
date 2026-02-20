@@ -70,6 +70,9 @@ if "last_service_seen" not in st.session_state:
 if "warning_triggered" not in st.session_state:
     st.session_state["warning_triggered"] = False
 
+if "intro_played" not in st.session_state:
+    st.session_state["intro_played"] = False
+
 # Reconnaissance automatique via URL (Session persistante)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
@@ -744,6 +747,36 @@ def main_dashboard():
         st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">💬 Support Nova</a>', unsafe_allow_html=True)
 
     st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
+
+    # --- Message vocal d'accueil (une seule fois par session, après 3 secondes) ---
+    if not st.session_state["intro_played"]:
+        st.session_state["intro_played"] = True
+        msg_intro = (
+                    "Bienvenue sur Nova IA, votre assistant bureautique intelligent. "
+                    "Confiez-nous vos fichiers Excel et vos exposés scolaires. "
+                    "Passez à la version Premium pour plus de rapidité, précision et professionnalisme."
+                )
+        msg_intro_js = msg_intro.replace("'", "\\'").replace('"', '\\"')
+        components.html(f"""
+            <script>
+            (function() {{
+                setTimeout(function() {{
+                    window.speechSynthesis.cancel();
+                    var msg = new SpeechSynthesisUtterance("{msg_intro_js}");
+                    msg.lang = "fr-FR"; msg.rate = 0.93; msg.pitch = 1.05; msg.volume = 1;
+                    msg.onend = function() {{ window.speechSynthesis.cancel(); }};
+                    function speak() {{
+                        var voices = window.speechSynthesis.getVoices();
+                        var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
+                        if (voiceFR) msg.voice = voiceFR;
+                        window.speechSynthesis.speak(msg);
+                    }}
+                    if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
+                    else {{ window.speechSynthesis.onvoiceschanged = speak; }}
+                }}, 3000);
+            }})();
+            </script>
+        """, height=0)
 
     # ==========================================
     # CARTE PREMIUM + FENÊTRE INTERNE (session_state)
