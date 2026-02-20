@@ -982,33 +982,25 @@ def main_dashboard():
             default_wa = db["users"][user]["whatsapp"] if user else ""
             wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
 
-        # --- Déclenchement uniquement quand le client commence à saisir ---
-        # (pas au chargement, pas au changement de service)
+        # Service Excel : déclenchement uniquement à la saisie
+        SERVICE_SAISIE = "📊 Data & Excel Analytics"
+
+        # Reset quand le service change
         if service != st.session_state["last_service_seen"]:
             st.session_state["last_service_seen"] = service
-            st.session_state["warning_triggered"] = False  # reset si le service change
+            st.session_state["warning_triggered"] = False
+            st.session_state["show_service_warning"] = False
+            # Pour les autres services : déclencher immédiatement
+            if service != SERVICE_SAISIE and service in SERVICE_PREREQUIS:
+                st.session_state["show_service_warning"] = True
 
-        # --- Fenêtre d'avertissement prérequis ---
-        # Affichée APRÈS le textarea, déclenchée par la saisie
-        st.markdown("#### 📝 Spécifications de la mission")
-        prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
-
-        # Déclenchement à la première frappe
-        if prompt and not st.session_state["warning_triggered"] and service in SERVICE_PREREQUIS:
-            st.session_state["warning_triggered"] = True
-            st.session_state["show_service_warning"] = True
-            st.rerun()
-
-        if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS:
+        # --- Fenêtre d'avertissement (affichée AVANT le textarea pour les autres services) ---
+        if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS and service != SERVICE_SAISIE:
             info = SERVICE_PREREQUIS[service]
-
-            # Texte lu à voix haute (sans emojis ni markdown)
             items_texte = " ".join(f"{texte}." for _, texte in info["items"])
             texte_vocal = (
                 f"{info['titre']}. Informations requises. "
-                f"{info['intro']} "
-                f"{items_texte} "
-                f"Conseil : {info['note']}"
+                f"{info['intro']} {items_texte} Conseil : {info['note']}"
             )
             texte_js = texte_vocal.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
 
@@ -1020,37 +1012,81 @@ def main_dashboard():
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
-
-            # Synthèse vocale via Web Speech API
             components.html(f"""
                 <script>
                 (function() {{
                     window.speechSynthesis.cancel();
                     var msg = new SpeechSynthesisUtterance("{texte_js}");
-                    msg.lang = "fr-FR";
-                    msg.rate = 0.95;
-                    msg.pitch = 1;
-                    msg.volume = 1;
+                    msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
                     function speak() {{
                         var voices = window.speechSynthesis.getVoices();
                         var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
                         if (voiceFR) msg.voice = voiceFR;
                         window.speechSynthesis.speak(msg);
                     }}
-                    if (window.speechSynthesis.getVoices().length > 0) {{
-                        speak();
-                    }} else {{
-                        window.speechSynthesis.onvoiceschanged = speak;
-                    }}
+                    if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
+                    else {{ window.speechSynthesis.onvoiceschanged = speak; }}
                 }})();
                 </script>
             """, height=0)
-
             col_mid = st.columns([1, 2, 1])[1]
             with col_mid:
                 if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
                     st.session_state["show_service_warning"] = False
+                    components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
                     st.rerun()
+
+        # --- Champ de saisie ---
+        st.markdown("#### 📝 Spécifications de la mission")
+        prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
+
+        # --- Excel uniquement : déclenchement à la première frappe ---
+        if service == SERVICE_SAISIE and service in SERVICE_PREREQUIS:
+            if prompt and not st.session_state["warning_triggered"]:
+                st.session_state["warning_triggered"] = True
+                st.session_state["show_service_warning"] = True
+                st.rerun()
+
+            if st.session_state["show_service_warning"]:
+                info = SERVICE_PREREQUIS[service]
+                items_texte = " ".join(f"{texte}." for _, texte in info["items"])
+                texte_vocal = (
+                    f"{info['titre']}. Informations requises. "
+                    f"{info['intro']} {items_texte} Conseil : {info['note']}"
+                )
+                texte_js = texte_vocal.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+
+                st.info(f"""
+**{info["icone"]} {info["titre"]} — Informations requises**
+
+{info["intro"]}
+
+{"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
+💡 *{info["note"]}*
+""")
+                components.html(f"""
+                    <script>
+                    (function() {{
+                        window.speechSynthesis.cancel();
+                        var msg = new SpeechSynthesisUtterance("{texte_js}");
+                        msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
+                        function speak() {{
+                            var voices = window.speechSynthesis.getVoices();
+                            var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
+                            if (voiceFR) msg.voice = voiceFR;
+                            window.speechSynthesis.speak(msg);
+                        }}
+                        if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
+                        else {{ window.speechSynthesis.onvoiceschanged = speak; }}
+                    }})();
+                    </script>
+                """, height=0)
+                col_mid = st.columns([1, 2, 1])[1]
+                with col_mid:
+                    if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
+                        st.session_state["show_service_warning"] = False
+                        components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
+                        st.rerun()
         
         # LOGO STRIP
         st.markdown("""
