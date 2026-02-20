@@ -913,8 +913,7 @@ def main_dashboard():
                 color: rgba(241,196,15,0.85);
                 font-size: 0.85rem;
             ">
-                ⚠️ Champs non renseignés : <b>{", ".join(champs_manquants)}</b>. 
-                Votre demande sera tout de même enregistrée et examinée par l'équipe Nova.
+                ⚠️ Veuillez s'il vous plaît détailler vos besoins comme il se doit, afin d'éviter que votre demande soit refusée.
             </div>
             """, unsafe_allow_html=True)
 
