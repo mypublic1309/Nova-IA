@@ -1234,7 +1234,7 @@ def main_dashboard():
                     """, height=0)
 
                 st.balloons()
-                time.sleep(15)
+                time.sleep(20)
                 st.rerun()
             else:
                 st.session_state["view"] = "auth"
