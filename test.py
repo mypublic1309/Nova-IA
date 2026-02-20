@@ -25,9 +25,9 @@ def normalize_wa(numero):
     if not numero:
         return ""
     numero = numero.strip().replace(" ", "").replace("-", "").replace("+", "")
-    # Si commence par 0 → remplacer par indicatif Côte d'Ivoire 225
-    if numero.startswith("0"):
-        numero = "225" + numero[1:]
+    # Si commence par 0 → ajouter 225 devant en gardant le 0
+    if numero.startswith("0") and not numero.startswith("00"):
+        numero = "225" + numero
     # Si déjà 225... laisser tel quel
     return numero
 
