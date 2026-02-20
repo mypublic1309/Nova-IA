@@ -716,34 +716,30 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Voix de guidage à la connexion (3 secondes après chargement) ---
-    msg_login = (
-        "Bienvenue sur Nova IA. "
-        "Pour vous connecter, entrez votre identifiant Nova ainsi que votre numéro WhatsApp. "
-        "Si vous êtes nouveau, créez votre compte en choisissant un identifiant et en renseignant votre numéro WhatsApp. "
-        "Nous sommes là pour vous accompagner."
-    )
-    msg_login_js = msg_login.replace("'", "\\'").replace('"', '\\"')
-    components.html(f"""
-        <script>
-        (function() {{
-            setTimeout(function() {{
-                window.speechSynthesis.cancel();
-                var msg = new SpeechSynthesisUtterance("{msg_login_js}");
-                msg.lang = "fr-FR"; msg.rate = 0.93; msg.pitch = 1.05; msg.volume = 1;
-                msg.onend = function() {{ window.speechSynthesis.cancel(); }};
-                function speak() {{
-                    var voices = window.speechSynthesis.getVoices();
-                    var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
-                    if (voiceFR) msg.voice = voiceFR;
-                    window.speechSynthesis.speak(msg);
-                }}
-                if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
-                else {{ window.speechSynthesis.onvoiceschanged = speak; }}
-            }}, 3000);
-        }})();
-        </script>
-    """, height=0)
+    # --- Voix de guidage à la connexion (ElevenLabs login.mp3) ---
+    audio_path_login = "login.mp3"
+    if os.path.exists(audio_path_login):
+        with open(audio_path_login, "rb") as f:
+            audio_b64_login = __import__('base64').b64encode(f.read()).decode()
+        components.html(f"""
+            <script>
+            (function() {{
+                setTimeout(function() {{
+                    var b64 = "{audio_b64_login}";
+                    var binary = atob(b64);
+                    var bytes = new Uint8Array(binary.length);
+                    for (var i = 0; i < binary.length; i++) {{
+                        bytes[i] = binary.charCodeAt(i);
+                    }}
+                    var blob = new Blob([bytes], {{type: "audio/mpeg"}});
+                    var url = URL.createObjectURL(blob);
+                    var audio = new Audio(url);
+                    audio.volume = 1;
+                    audio.play().catch(function(e) {{ console.log("Autoplay bloqué:", e); }});
+                }}, 3000);
+            }})();
+            </script>
+        """, height=0)
 
 def main_dashboard():
     user = st.session_state["current_user"]
@@ -1056,12 +1052,16 @@ def main_dashboard():
         # --- Fenêtre d'avertissement (affichée AVANT le textarea pour les autres services) ---
         if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS and service != SERVICE_SAISIE:
             info = SERVICE_PREREQUIS[service]
-            items_texte = " ".join(f"{texte}." for _, texte in info["items"])
-            texte_vocal = (
-                f"{info['titre']}. Informations requises. "
-                f"{info['intro']} {items_texte} Conseil : {info['note']}"
-            )
-            texte_js = texte_vocal.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+
+            # Mapping service → fichier MP3
+            SERVICE_AUDIO = {
+                "📝 Exposé scolaire complet IA":  "prerequis_expose.mp3",
+                "⚙️ Pack Office (Word/Excel/PPT)": "prerequis_office.mp3",
+                "🎨 Création Design IA":           "prerequis_design.mp3",
+                "📚 Affiches & Reçus":             "prerequis_affiches.mp3",
+                "👔 CV & Lettre de Motivation":    "prerequis_cv.mp3",
+                "📄 Conversion & Fichier PDF":     "prerequis_pdf.mp3",
+            }
 
             st.info(f"""
 **{info["icone"]} {info["titre"]} — Informations requises**
@@ -1071,23 +1071,24 @@ def main_dashboard():
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
-            components.html(f"""
-                <script>
-                (function() {{
-                    window.speechSynthesis.cancel();
-                    var msg = new SpeechSynthesisUtterance("{texte_js}");
-                    msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
-                    function speak() {{
-                        var voices = window.speechSynthesis.getVoices();
-                        var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
-                        if (voiceFR) msg.voice = voiceFR;
-                        window.speechSynthesis.speak(msg);
-                    }}
-                    if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
-                    else {{ window.speechSynthesis.onvoiceschanged = speak; }}
-                }})();
-                </script>
-            """, height=0)
+            # Lecture MP3 ElevenLabs si disponible, sinon Web Speech
+            audio_file = SERVICE_AUDIO.get(service)
+            if audio_file and os.path.exists(audio_file):
+                with open(audio_file, "rb") as f:
+                    b64 = __import__('base64').b64encode(f.read()).decode()
+                components.html(f"""
+                    <script>
+                    (function() {{
+                        var binary = atob("{b64}");
+                        var bytes = new Uint8Array(binary.length);
+                        for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                        var blob = new Blob([bytes], {{type: "audio/mpeg"}});
+                        var audio = new Audio(URL.createObjectURL(blob));
+                        audio.volume = 1;
+                        audio.play().catch(function(e) {{ console.log(e); }});
+                    }})();
+                    </script>
+                """, height=0)
             col_mid = st.columns([1, 2, 1])[1]
             with col_mid:
                 if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
@@ -1108,12 +1109,6 @@ def main_dashboard():
 
             if st.session_state["show_service_warning"]:
                 info = SERVICE_PREREQUIS[service]
-                items_texte = " ".join(f"{texte}." for _, texte in info["items"])
-                texte_vocal = (
-                    f"{info['titre']}. Informations requises. "
-                    f"{info['intro']} {items_texte} Conseil : {info['note']}"
-                )
-                texte_js = texte_vocal.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
 
                 st.info(f"""
 **{info["icone"]} {info["titre"]} — Informations requises**
@@ -1123,23 +1118,23 @@ def main_dashboard():
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
-                components.html(f"""
-                    <script>
-                    (function() {{
-                        window.speechSynthesis.cancel();
-                        var msg = new SpeechSynthesisUtterance("{texte_js}");
-                        msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
-                        function speak() {{
-                            var voices = window.speechSynthesis.getVoices();
-                            var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
-                            if (voiceFR) msg.voice = voiceFR;
-                            window.speechSynthesis.speak(msg);
-                        }}
-                        if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
-                        else {{ window.speechSynthesis.onvoiceschanged = speak; }}
-                    }})();
-                    </script>
-                """, height=0)
+                # Lecture MP3 ElevenLabs Excel
+                if os.path.exists("prerequis_excel.mp3"):
+                    with open("prerequis_excel.mp3", "rb") as f:
+                        b64_excel = __import__('base64').b64encode(f.read()).decode()
+                    components.html(f"""
+                        <script>
+                        (function() {{
+                            var binary = atob("{b64_excel}");
+                            var bytes = new Uint8Array(binary.length);
+                            for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                            var blob = new Blob([bytes], {{type: "audio/mpeg"}});
+                            var audio = new Audio(URL.createObjectURL(blob));
+                            audio.volume = 1;
+                            audio.play().catch(function(e) {{ console.log(e); }});
+                        }})();
+                        </script>
+                    """, height=0)
                 col_mid = st.columns([1, 2, 1])[1]
                 with col_mid:
                     if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
@@ -1215,37 +1210,31 @@ def main_dashboard():
             if user:
                 st.success("✅ Mission enregistrée ! L'équipe Nova examinera votre demande.")
 
-                # Synthèse vocale de retour positif — interrupteur : coupe tout, lit, puis s'arrête seule
-                msg_succes_vocal = (
-                    "Félicitations ! Votre demande a bien été enregistrée avec succès. "
-                    "Notre équipe Nova va traiter votre mission dans les plus brefs délais. "
-                    "Vous recevrez une notification sur WhatsApp dès que votre fichier sera prêt. "
-                    "Vous pourrez récupérer votre livrable dans la section Mes livrables de votre espace Nova."
-                )
-                msg_vocal_js = msg_succes_vocal.replace("'", "\\'").replace('"', '\\"')
-                components.html(f"""
-                    <script>
-                    (function() {{
-                        window.speechSynthesis.cancel();
-                        var msg = new SpeechSynthesisUtterance("{msg_vocal_js}");
-                        msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
-                        msg.onend = function() {{
-                            window.speechSynthesis.cancel();
-                        }};
-                        function speak() {{
-                            var voices = window.speechSynthesis.getVoices();
-                            var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
-                            if (voiceFR) msg.voice = voiceFR;
-                            window.speechSynthesis.speak(msg);
-                        }}
-                        if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
-                        else {{ window.speechSynthesis.onvoiceschanged = speak; }}
-                    }})();
-                    </script>
-                """, height=0)
+                # Voix ElevenLabs confirmation.mp3
+                audio_path_confirm = "confirmation.mp3"
+                if os.path.exists(audio_path_confirm):
+                    with open(audio_path_confirm, "rb") as f:
+                        audio_b64_confirm = __import__('base64').b64encode(f.read()).decode()
+                    components.html(f"""
+                        <script>
+                        (function() {{
+                            var b64 = "{audio_b64_confirm}";
+                            var binary = atob(b64);
+                            var bytes = new Uint8Array(binary.length);
+                            for (var i = 0; i < binary.length; i++) {{
+                                bytes[i] = binary.charCodeAt(i);
+                            }}
+                            var blob = new Blob([bytes], {{type: "audio/mpeg"}});
+                            var url = URL.createObjectURL(blob);
+                            var audio = new Audio(url);
+                            audio.volume = 1;
+                            audio.play().catch(function(e) {{ console.log("Autoplay bloqué:", e); }});
+                        }})();
+                        </script>
+                    """, height=0)
 
                 st.balloons()
-                time.sleep(8)  # Laisser la voix terminer avant le rechargement
+                time.sleep(8)
                 st.rerun()
             else:
                 st.session_state["view"] = "auth"
