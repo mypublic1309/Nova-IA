@@ -988,6 +988,17 @@ def main_dashboard():
         if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS:
             info = SERVICE_PREREQUIS[service]
 
+            # Texte lu à voix haute (sans emojis ni markdown)
+            items_texte = " ".join(f"{texte}." for _, texte in info["items"])
+            texte_vocal = (
+                f"{info['titre']}. Informations requises. "
+                f"{info['intro']} "
+                f"{items_texte} "
+                f"Conseil : {info['note']}"
+            )
+            # Échappement pour usage dans JS
+            texte_js = texte_vocal.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+
             st.info(f"""
 **{info["icone"]} {info["titre"]} — Informations requises**
 
@@ -996,6 +1007,36 @@ def main_dashboard():
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
+
+            # Synthèse vocale via Web Speech API (lecture automatique)
+            components.html(f"""
+                <script>
+                (function() {{
+                    window.speechSynthesis.cancel();
+                    var msg = new SpeechSynthesisUtterance("{texte_js}");
+                    msg.lang = "fr-FR";
+                    msg.rate = 0.95;
+                    msg.pitch = 1;
+                    msg.volume = 1;
+
+                    // Attendre que les voix soient chargées
+                    function speak() {{
+                        var voices = window.speechSynthesis.getVoices();
+                        var voiceFR = voices.find(function(v) {{
+                            return v.lang.startsWith("fr");
+                        }});
+                        if (voiceFR) msg.voice = voiceFR;
+                        window.speechSynthesis.speak(msg);
+                    }}
+
+                    if (window.speechSynthesis.getVoices().length > 0) {{
+                        speak();
+                    }} else {{
+                        window.speechSynthesis.onvoiceschanged = speak;
+                    }}
+                }})();
+                </script>
+            """, height=0)
 
             col_mid = st.columns([1, 2, 1])[1]
             with col_mid:
