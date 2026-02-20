@@ -1217,31 +1217,17 @@ def main_dashboard():
                     ">⚠️ INCOMPLET · {manquants_html}</div>
                     """
 
-                # Carte de la demande
+                # Carte de la demande — affichage simple et direct
                 st.markdown(f"""
                 <div class="admin-card">
-                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:16px;">
                         <div class="admin-id-badge" style="margin-bottom:0;">Mission #{req_id} &nbsp;·&nbsp; {timestamp}</div>
                         {badge_incomplet}
                     </div>
-                    <div class="admin-info-grid">
-                        <div class="admin-info-block">
-                            <div class="admin-info-label">👤 Client</div>
-                            <div class="admin-info-value">{client_nom}</div>
-                        </div>
-                        <div class="admin-info-block">
-                            <div class="admin-info-label">📱 WhatsApp</div>
-                            <div class="admin-info-value">{client_wa if client_wa else "—"}</div>
-                        </div>
-                        <div class="admin-info-block" style="grid-column: 1 / -1;">
-                            <div class="admin-info-label">🛠️ Service demandé</div>
-                            <div class="admin-info-value">{service}</div>
-                        </div>
-                    </div>
-                    <div class="admin-desc-block">
-                        <div class="admin-desc-label">📝 Détails de la demande</div>
-                        {description}
-                    </div>
+                    <p style="color:white; font-size:1rem; margin:8px 0;">👤 <b style="color:rgba(255,215,0,0.8);">Client :</b> {client_nom}</p>
+                    <p style="color:white; font-size:1rem; margin:8px 0;">📱 <b style="color:rgba(255,215,0,0.8);">WhatsApp :</b> {client_wa if client_wa else "—"}</p>
+                    <p style="color:white; font-size:1rem; margin:8px 0;">🛠️ <b style="color:rgba(255,215,0,0.8);">Service demandé :</b> {service}</p>
+                    <p style="color:white; font-size:1rem; margin:8px 0;">📝 <b style="color:rgba(255,215,0,0.8);">Détails de la demande :</b> {description}</p>
                 </div>
                 """, unsafe_allow_html=True)
 
