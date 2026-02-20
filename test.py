@@ -716,6 +716,35 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
+    # --- Voix de guidage à la connexion (3 secondes après chargement) ---
+    msg_login = (
+        "Bienvenue sur Nova IA. "
+        "Pour vous connecter, entrez votre identifiant Nova ainsi que votre numéro WhatsApp. "
+        "Si vous êtes nouveau, créez votre compte en choisissant un identifiant et en renseignant votre numéro WhatsApp. "
+        "Nous sommes là pour vous accompagner."
+    )
+    msg_login_js = msg_login.replace("'", "\\'").replace('"', '\\"')
+    components.html(f"""
+        <script>
+        (function() {{
+            setTimeout(function() {{
+                window.speechSynthesis.cancel();
+                var msg = new SpeechSynthesisUtterance("{msg_login_js}");
+                msg.lang = "fr-FR"; msg.rate = 0.93; msg.pitch = 1.05; msg.volume = 1;
+                msg.onend = function() {{ window.speechSynthesis.cancel(); }};
+                function speak() {{
+                    var voices = window.speechSynthesis.getVoices();
+                    var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
+                    if (voiceFR) msg.voice = voiceFR;
+                    window.speechSynthesis.speak(msg);
+                }}
+                if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
+                else {{ window.speechSynthesis.onvoiceschanged = speak; }}
+            }}, 3000);
+        }})();
+        </script>
+    """, height=0)
+
 def main_dashboard():
     user = st.session_state["current_user"]
     db = st.session_state["db"]
