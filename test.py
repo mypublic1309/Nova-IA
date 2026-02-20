@@ -61,6 +61,12 @@ if "is_glowing" not in st.session_state:
 if "show_premium_modal" not in st.session_state:
     st.session_state["show_premium_modal"] = False
 
+if "show_service_warning" not in st.session_state:
+    st.session_state["show_service_warning"] = False
+
+if "last_service_seen" not in st.session_state:
+    st.session_state["last_service_seen"] = None
+
 # Reconnaissance automatique via URL (Session persistante)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
@@ -861,15 +867,107 @@ def main_dashboard():
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
 
     with tab1:
+
+        # --- Dictionnaire des prérequis par service ---
+        SERVICE_PREREQUIS = {
+            "📝 Exposé scolaire complet IA": {
+                "icone": "📝",
+                "titre": "Exposé Scolaire Complet IA",
+                "intro": "Pour que nous puissions générer votre exposé avec précision et professionnalisme, veuillez nous fournir les informations suivantes dans votre cahier des charges :",
+                "items": [
+                    ("🎯", "Le thème ou sujet de l'exposé"),
+                    ("🏫", "Le niveau scolaire (Collège, Lycée, Université...)"),
+                    ("📏", "Le nombre de pages désiré"),
+                    ("🏢", "L'école ou l'établissement concerné"),
+                    ("📚", "La matière ou discipline concernée"),
+                ],
+                "note": "Plus vos informations sont précises, plus le résultat sera adapté à vos attentes."
+            },
+            "📊 Data & Excel Analytics": {
+                "icone": "📊",
+                "titre": "Data & Excel Analytics",
+                "intro": "Pour traiter vos données efficacement, merci de préciser dans votre cahier des charges :",
+                "items": [
+                    ("📁", "Le type de fichier à traiter (Excel, CSV, autre...)"),
+                    ("🎯", "L'objectif de l'analyse (tableau de bord, graphiques, calculs...)"),
+                    ("📋", "Une description des données ou colonnes présentes"),
+                    ("🔢", "Le nombre approximatif de lignes ou d'entrées"),
+                ],
+                "note": "Vous pouvez également joindre un fichier exemple via WhatsApp après la soumission."
+            },
+            "⚙️ Pack Office (Word/Excel/PPT)": {
+                "icone": "⚙️",
+                "titre": "Pack Office — Word / Excel / PowerPoint",
+                "intro": "Pour réaliser votre document Office au standard professionnel, précisez :",
+                "items": [
+                    ("📄", "Le type de document souhaité (Word, Excel ou PowerPoint)"),
+                    ("🎯", "Le sujet ou contenu du document"),
+                    ("📏", "Le nombre de pages ou diapositives souhaité"),
+                    ("🎨", "Un style ou thème de couleurs si vous en avez un"),
+                ],
+                "note": "Précisez si vous souhaitez un logo ou une charte graphique particulière."
+            },
+            "🎨 Création Design IA": {
+                "icone": "🎨",
+                "titre": "Création Design IA",
+                "intro": "Pour créer un design à la hauteur de vos attentes, indiquez-nous :",
+                "items": [
+                    ("🖼️", "Le type de visuel (affiche, bannière, logo, flyer...)"),
+                    ("📐", "Le format ou dimensions souhaitées"),
+                    ("🎨", "Les couleurs ou thème visuel préféré"),
+                    ("✍️", "Les textes ou messages à intégrer"),
+                    ("🏢", "Le nom de votre entreprise ou projet"),
+                ],
+                "note": "Une référence visuelle ou exemple que vous aimez accélérera le travail."
+            },
+            "📚 Affiches & Reçus": {
+                "icone": "📚",
+                "titre": "Affiches & Reçus",
+                "intro": "Pour concevoir votre affiche ou reçu, nous aurons besoin de :",
+                "items": [
+                    ("🏢", "Le nom de votre entreprise ou organisation"),
+                    ("📋", "Les informations à faire apparaître (prix, date, lieu, contacts...)"),
+                    ("🎨", "La couleur principale ou identité visuelle"),
+                    ("📐", "Le format désiré (A4, A5, reçu thermique...)"),
+                ],
+                "note": "Un logo ou image à intégrer peut être envoyé via WhatsApp."
+            },
+            "👔 CV & Lettre de Motivation": {
+                "icone": "👔",
+                "titre": "CV & Lettre de Motivation",
+                "intro": "Pour rédiger votre CV ou lettre de motivation de façon percutante, fournissez :",
+                "items": [
+                    ("👤", "Votre nom complet et coordonnées"),
+                    ("🎓", "Vos diplômes et formations"),
+                    ("💼", "Vos expériences professionnelles"),
+                    ("🎯", "Le poste ou secteur visé"),
+                    ("✨", "Vos compétences clés et atouts"),
+                ],
+                "note": "Précisez si vous souhaitez uniquement le CV, la lettre, ou les deux."
+            },
+            "📄 Conversion & Fichier PDF": {
+                "icone": "📄",
+                "titre": "Conversion & Fichier PDF",
+                "intro": "Pour traiter votre fichier correctement, indiquez-nous :",
+                "items": [
+                    ("📁", "Le format du fichier source (Word, Excel, image, autre...)"),
+                    ("🔄", "Le format de sortie souhaité (PDF, Word, Excel...)"),
+                    ("📋", "Le nombre de fichiers à convertir"),
+                    ("🔒", "Si le PDF doit être protégé par mot de passe"),
+                ],
+                "note": "Envoyez votre fichier directement via WhatsApp après la soumission."
+            },
+        }
+
         col_f, col_wa = st.columns(2)
         with col_f:
             st.markdown("#### 🛠️ Service Nova")
             service = st.selectbox(
-                "Type d'intervention", 
+                "Type d'intervention",
                 [
-                    "📊 Data & Excel Analytics", 
-                    "📝 Exposé scolaire complet IA", 
-                    "⚙️ Pack Office (Word/Excel/PPT)", 
+                    "📊 Data & Excel Analytics",
+                    "📝 Exposé scolaire complet IA",
+                    "⚙️ Pack Office (Word/Excel/PPT)",
                     "🎨 Création Design IA",
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
@@ -880,7 +978,70 @@ def main_dashboard():
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
             wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
-        
+
+        # --- Déclenchement de la fenêtre si le service change ---
+        if service != st.session_state["last_service_seen"] and service in SERVICE_PREREQUIS:
+            st.session_state["show_service_warning"] = True
+            st.session_state["last_service_seen"] = service
+
+        # --- Fenêtre d'avertissement prérequis ---
+        if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS:
+            info = SERVICE_PREREQUIS[service]
+            items_html = "".join(
+                f'<li style="margin:10px 0; color:#fff; font-size:0.97rem;">'
+                f'<span style="margin-right:8px;">{icone}</span>'
+                f'<span style="color:rgba(255,255,255,0.85);">{texte}</span></li>'
+                for icone, texte in info["items"]
+            )
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(145deg, rgba(15,10,2,0.98), rgba(30,20,3,0.96));
+                border: 1.5px solid rgba(255,215,0,0.5);
+                border-radius: 18px;
+                padding: 30px 28px;
+                margin: 18px 0;
+                position: relative;
+                box-shadow: 0 0 40px rgba(255,215,0,0.1);
+            ">
+                <div style="position:absolute; top:0; left:0; right:0; height:3px;
+                    background:linear-gradient(90deg,#b8860b,#FFD700,#b8860b);
+                    border-radius:18px 18px 0 0;"></div>
+
+                <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
+                    <div style="font-size:2rem; background:rgba(255,215,0,0.12);
+                        border:1px solid rgba(255,215,0,0.3); border-radius:12px;
+                        width:52px; height:52px; display:flex; align-items:center;
+                        justify-content:center;">{info["icone"]}</div>
+                    <div>
+                        <div style="color:#FFD700; font-size:1.15rem; font-weight:800;
+                            letter-spacing:0.5px; text-transform:uppercase;">{info["titre"]}</div>
+                        <div style="color:rgba(255,255,255,0.4); font-size:0.78rem;
+                            margin-top:3px; letter-spacing:1px;">INFORMATIONS REQUISES</div>
+                    </div>
+                </div>
+
+                <p style="color:rgba(255,255,255,0.7); font-size:0.93rem;
+                    line-height:1.6; margin-bottom:16px;">{info["intro"]}</p>
+
+                <ul style="list-style:none; padding:0; margin:0 0 16px 0;
+                    background:rgba(255,255,255,0.03); border-radius:12px; padding:16px 20px;">
+                    {items_html}
+                </ul>
+
+                <div style="background:rgba(255,215,0,0.07); border-left:3px solid #FFD700;
+                    border-radius:0 8px 8px 0; padding:10px 14px; color:rgba(255,215,0,0.8);
+                    font-size:0.85rem; font-style:italic;">
+                    💡 {info["note"]}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_mid = st.columns([1, 2, 1])[1]
+            with col_mid:
+                if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
+                    st.session_state["show_service_warning"] = False
+                    st.rerun()
+
         st.markdown("#### 📝 Spécifications de la mission")
         prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
         
