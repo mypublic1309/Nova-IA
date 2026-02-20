@@ -780,7 +780,7 @@ def main_dashboard():
     # --- Message vocal d'accueil ElevenLabs (une seule fois par session, après 3 secondes) ---
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
-        audio_path = "intro.mp3intro.mp3.mp3"
+        audio_path = "intro.mp3"
         if os.path.exists(audio_path):
             with open(audio_path, "rb") as f:
                 audio_b64 = __import__('base64').b64encode(f.read()).decode()
