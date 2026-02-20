@@ -777,31 +777,18 @@ def main_dashboard():
 
     st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
 
-    # --- Message vocal d'accueil (une seule fois par session, après 3 secondes) ---
+    # --- Message vocal d'accueil ElevenLabs (une seule fois par session, après 3 secondes) ---
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
-        msg_intro = (
-                    "Bienvenue sur Nova IA, votre assistant bureautique intelligent. "
-                    "Confiez-nous vos fichiers Excel et vos exposés scolaires. "
-                    "Passez à la version Premium pour plus de rapidité, précision et professionnalisme."
-                )
-        msg_intro_js = msg_intro.replace("'", "\\'").replace('"', '\\"')
+        audio_url = "https://raw.githubusercontent.com/mypublic1309/espace-partage/main/ElevenLabs_2026-02-20T12_08_54_Jarnathan%20Cross%20-%20Witty%2C%20Knowing%20%26%20Poise%20_pvc_sp100_s34_sb75_se43_b_m2.mp3"
         components.html(f"""
             <script>
             (function() {{
                 setTimeout(function() {{
                     window.speechSynthesis.cancel();
-                    var msg = new SpeechSynthesisUtterance("{msg_intro_js}");
-                    msg.lang = "fr-FR"; msg.rate = 0.93; msg.pitch = 1.05; msg.volume = 1;
-                    msg.onend = function() {{ window.speechSynthesis.cancel(); }};
-                    function speak() {{
-                        var voices = window.speechSynthesis.getVoices();
-                        var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
-                        if (voiceFR) msg.voice = voiceFR;
-                        window.speechSynthesis.speak(msg);
-                    }}
-                    if (window.speechSynthesis.getVoices().length > 0) {{ speak(); }}
-                    else {{ window.speechSynthesis.onvoiceschanged = speak; }}
+                    var audio = new Audio("{audio_url}");
+                    audio.volume = 1;
+                    audio.play().catch(function(e) {{ console.log("Audio blocked:", e); }});
                 }}, 3000);
             }})();
             </script>
