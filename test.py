@@ -19,6 +19,18 @@ st.set_page_config(
 DATA_FILE = "data_nova_v3.json"
 ADMIN_CODE = "02110240"
 
+# --- FONCTION NORMALISATION NUMÉRO WHATSAPP ---
+def normalize_wa(numero):
+    """Convertit un numéro local en format international WhatsApp."""
+    if not numero:
+        return ""
+    numero = numero.strip().replace(" ", "").replace("-", "").replace("+", "")
+    # Si commence par 0 → remplacer par indicatif Côte d'Ivoire 225
+    if numero.startswith("0"):
+        numero = "225" + numero[1:]
+    # Si déjà 225... laisser tel quel
+    return numero
+
 # --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
@@ -664,7 +676,7 @@ def show_auth_page():
             wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
             if st.form_submit_button("⚡ S'IDENTIFIER"):
                 db = st.session_state["db"]
-                if uid in db["users"] and db["users"][uid]["whatsapp"] == wa_auth:
+                if uid in db["users"] and db["users"][uid]["whatsapp"] == normalize_wa(wa_auth):
                     st.session_state["current_user"] = uid
                     st.session_state["view"] = "home"
                     st.query_params["user_id"] = uid
@@ -693,7 +705,7 @@ def show_auth_page():
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
                         db["users"][new_uid] = {
-                            "whatsapp": new_wa,
+                            "whatsapp": normalize_wa(new_wa),
                             "email": "Non renseigné",
                             "joined": str(datetime.now())
                         }
@@ -1196,7 +1208,7 @@ def main_dashboard():
                 "user": user if user else "guest",
                 "service": service,
                 "desc": prompt if prompt else "(aucune description fournie)",
-                "whatsapp": wa_display if wa_display else "(non renseigné)",
+                "whatsapp": normalize_wa(wa_display) if wa_display else "(non renseigné)",
                 "status": statut,
                 "incomplet": bool(champs_manquants),
                 "champs_manquants": champs_manquants,
@@ -1317,7 +1329,8 @@ def main_dashboard():
                 return f"https://wa.me/{numero}?text={encoded}"
 
             for i, req in enumerate(current_db["demandes"]):
-                client_wa        = req.get("whatsapp", "(non renseigné)")
+                client_wa_raw    = req.get("whatsapp", "(non renseigné)")
+                client_wa        = normalize_wa(client_wa_raw)
                 client_nom       = req.get("user", "Inconnu")
                 service          = req.get("service", "—")
                 description      = req.get("desc", "(aucune description)")
