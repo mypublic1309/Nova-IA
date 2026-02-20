@@ -987,54 +987,15 @@ def main_dashboard():
         # --- Fenêtre d'avertissement prérequis ---
         if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS:
             info = SERVICE_PREREQUIS[service]
-            items_html = "".join(
-                f'<li style="margin:10px 0; color:#fff; font-size:0.97rem;">'
-                f'<span style="margin-right:8px;">{icone}</span>'
-                f'<span style="color:rgba(255,255,255,0.85);">{texte}</span></li>'
-                for icone, texte in info["items"]
-            )
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(145deg, rgba(15,10,2,0.98), rgba(30,20,3,0.96));
-                border: 1.5px solid rgba(255,215,0,0.5);
-                border-radius: 18px;
-                padding: 30px 28px;
-                margin: 18px 0;
-                position: relative;
-                box-shadow: 0 0 40px rgba(255,215,0,0.1);
-            ">
-                <div style="position:absolute; top:0; left:0; right:0; height:3px;
-                    background:linear-gradient(90deg,#b8860b,#FFD700,#b8860b);
-                    border-radius:18px 18px 0 0;"></div>
 
-                <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
-                    <div style="font-size:2rem; background:rgba(255,215,0,0.12);
-                        border:1px solid rgba(255,215,0,0.3); border-radius:12px;
-                        width:52px; height:52px; display:flex; align-items:center;
-                        justify-content:center;">{info["icone"]}</div>
-                    <div>
-                        <div style="color:#FFD700; font-size:1.15rem; font-weight:800;
-                            letter-spacing:0.5px; text-transform:uppercase;">{info["titre"]}</div>
-                        <div style="color:rgba(255,255,255,0.4); font-size:0.78rem;
-                            margin-top:3px; letter-spacing:1px;">INFORMATIONS REQUISES</div>
-                    </div>
-                </div>
+            st.info(f"""
+**{info["icone"]} {info["titre"]} — Informations requises**
 
-                <p style="color:rgba(255,255,255,0.7); font-size:0.93rem;
-                    line-height:1.6; margin-bottom:16px;">{info["intro"]}</p>
+{info["intro"]}
 
-                <ul style="list-style:none; padding:0; margin:0 0 16px 0;
-                    background:rgba(255,255,255,0.03); border-radius:12px; padding:16px 20px;">
-                    {items_html}
-                </ul>
-
-                <div style="background:rgba(255,215,0,0.07); border-left:3px solid #FFD700;
-                    border-radius:0 8px 8px 0; padding:10px 14px; color:rgba(255,215,0,0.8);
-                    font-size:0.85rem; font-style:italic;">
-                    💡 {info["note"]}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+{"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
+💡 *{info["note"]}*
+""")
 
             col_mid = st.columns([1, 2, 1])[1]
             with col_mid:
