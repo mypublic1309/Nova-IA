@@ -896,12 +896,31 @@ def main_dashboard():
         <p style="text-align:center; color:rgba(255,255,255,0.4); font-size:0.8rem; margin-top:5px;">Data • Dev • Design • Expertise • Rapidité</p>
         """, unsafe_allow_html=True)
 
+        # Indicateur visuel des champs manquants (sans bloquer)
+        champs_manquants = []
+        if not wa_display:
+            champs_manquants.append("WhatsApp de contact")
+        if not prompt:
+            champs_manquants.append("Cahier des charges")
+        if champs_manquants:
+            st.markdown(f"""
+            <div style="
+                background: rgba(241,196,15,0.08);
+                border: 1px dashed rgba(241,196,15,0.4);
+                border-radius: 10px;
+                padding: 10px 16px;
+                margin-top: 8px;
+                color: rgba(241,196,15,0.85);
+                font-size: 0.85rem;
+            ">
+                ⚠️ Champs non renseignés : <b>{", ".join(champs_manquants)}</b>. 
+                Votre demande sera tout de même enregistrée et examinée par l'équipe Nova.
+            </div>
+            """, unsafe_allow_html=True)
+
         if st.button("ACTIVER L'ALGORITHME NOVA"):
-            if prompt and wa_display:
-                st.session_state["is_glowing"] = True
-                st.rerun()
-            else:
-                st.error("Détails manquants.")
+            st.session_state["is_glowing"] = True
+            st.rerun()
 
         if st.session_state["is_glowing"]:
             progress_placeholder = st.empty()
@@ -911,14 +930,19 @@ def main_dashboard():
                 time.sleep(0.02)
                 bar.progress(percent_complete + 1)
                 status_text.markdown(f"<p style='text-align:center; color:#00d2ff; font-size:1.2rem; font-weight:bold;'>NOVA PROCESSING : {percent_complete + 1}%</p>", unsafe_allow_html=True)
-            
+
+            # Statut selon complétude
+            statut = "En attente de vérification (informations incomplètes)" if champs_manquants else "Traitement Nova en cours..."
+
             new_req = {
                 "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
                 "user": user if user else "guest",
                 "service": service,
-                "desc": prompt,
-                "whatsapp": wa_display,
-                "status": "Traitement Nova en cours...",
+                "desc": prompt if prompt else "(aucune description fournie)",
+                "whatsapp": wa_display if wa_display else "(non renseigné)",
+                "status": statut,
+                "incomplet": bool(champs_manquants),
+                "champs_manquants": champs_manquants,
                 "timestamp": str(datetime.now())
             }
             st.session_state["db"]["demandes"].append(new_req)
@@ -927,7 +951,7 @@ def main_dashboard():
             progress_placeholder.empty()
             status_text.empty()
             if user:
-                st.success("✅ Mission enregistrée ! Suivez l'avancement dans vos livrables.")
+                st.success("✅ Mission enregistrée ! L'équipe Nova examinera votre demande.")
                 st.balloons()
                 st.rerun()
             else:
@@ -1135,22 +1159,34 @@ def main_dashboard():
                 st.markdown('<div class="admin-empty">✅ Aucune mission en attente · Tableau de bord vide</div>', unsafe_allow_html=True)
 
             for i, req in enumerate(current_db["demandes"]):
-                client_wa  = req.get("whatsapp", "")
-                client_nom = req.get("user", "Inconnu")
-                service    = req.get("service", "")
-                description = req.get("desc", "Aucune description fournie.")
-                req_id     = req.get("id", f"#{i+1}")
-                timestamp  = req.get("timestamp", "")[:16] if req.get("timestamp") else "—"
+                client_wa       = req.get("whatsapp", "")
+                client_nom      = req.get("user", "Inconnu")
+                service         = req.get("service", "")
+                description     = req.get("desc", "Aucune description fournie.")
+                req_id          = req.get("id", f"#{i+1}")
+                timestamp       = req.get("timestamp", "")[:16] if req.get("timestamp") else "—"
+                est_incomplet   = req.get("incomplet", False)
+                champs_manquants = req.get("champs_manquants", [])
 
                 # Messages WhatsApp pré-encodés
                 def wa_url(numero, texte):
                     encoded = texte.replace(" ", "%20").replace("'", "%27").replace("\n", "%0A")
                     return f"https://wa.me/{numero}?text={encoded}"
 
-                msg_rejet  = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova AI "
-                              f"concernant : {service}. Malheureusement, nous ne sommes pas en mesure "
-                              f"de traiter cette mission pour le moment. Merci de nous recontacter "
-                              f"pour plus d'informations. — Équipe Nova AI ⚡")
+                # Message de rejet adapté selon complétude
+                if est_incomplet and champs_manquants:
+                    champs_str = ", ".join(champs_manquants)
+                    msg_rejet = (f"Bonjour {client_nom}, nous avons reçu votre demande Nova AI "
+                                 f"concernant : {service}. Cependant, nous ne pouvons pas la traiter "
+                                 f"car les informations suivantes sont manquantes ou incomplètes : "
+                                 f"{champs_str}. Merci de soumettre à nouveau votre demande en "
+                                 f"complétant tous les champs requis. — Équipe Nova AI ⚡")
+                else:
+                    msg_rejet = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova AI "
+                                 f"concernant : {service}. Malheureusement, nous ne sommes pas en mesure "
+                                 f"de traiter cette mission pour le moment. Merci de nous recontacter "
+                                 f"pour plus d'informations. — Équipe Nova AI ⚡")
+
                 msg_succes = (f"✅ Bonjour {client_nom} ! Excellente nouvelle : votre mission Nova AI "
                               f"({service}) est désormais terminée avec succès ! "
                               f"Rendez-vous dans votre espace Nova pour récupérer votre livrable. "
@@ -1164,10 +1200,30 @@ def main_dashboard():
                 url_succes = wa_url(client_wa, msg_succes)
                 url_recu   = wa_url(client_wa, msg_recu)
 
+                # Badge statut incomplet
+                badge_incomplet = ""
+                if est_incomplet:
+                    manquants_html = ", ".join(champs_manquants)
+                    badge_incomplet = f"""
+                    <div style="
+                        display:inline-flex; align-items:center; gap:6px;
+                        background: rgba(231,76,60,0.12);
+                        border: 1px solid rgba(231,76,60,0.4);
+                        color: #e74c3c;
+                        font-size: 0.72rem; font-weight: 700;
+                        letter-spacing: 1px; text-transform: uppercase;
+                        padding: 4px 12px; border-radius: 20px;
+                        margin-left: 8px;
+                    ">⚠️ INCOMPLET · {manquants_html}</div>
+                    """
+
                 # Carte de la demande
                 st.markdown(f"""
                 <div class="admin-card">
-                    <div class="admin-id-badge">Mission #{req_id} &nbsp;·&nbsp; {timestamp}</div>
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+                        <div class="admin-id-badge" style="margin-bottom:0;">Mission #{req_id} &nbsp;·&nbsp; {timestamp}</div>
+                        {badge_incomplet}
+                    </div>
                     <div class="admin-info-grid">
                         <div class="admin-info-block">
                             <div class="admin-info-label">👤 Client</div>
