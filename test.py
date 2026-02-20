@@ -780,19 +780,29 @@ def main_dashboard():
     # --- Message vocal d'accueil ElevenLabs (une seule fois par session, après 3 secondes) ---
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
-        audio_url = "https://drive.google.com/uc?export=download&id=16Uv8wIEL3F69axG_iLrWKH0LqTF8Ucw0"
-        components.html(f"""
-            <script>
-            (function() {{
-                setTimeout(function() {{
-                    window.speechSynthesis.cancel();
-                    var audio = new Audio("{audio_url}");
-                    audio.volume = 1;
-                    audio.play().catch(function(e) {{ console.log("Audio blocked:", e); }});
-                }}, 3000);
-            }})();
-            </script>
-        """, height=0)
+        audio_path = "intro.mp3intro.mp3.mp3"
+        if os.path.exists(audio_path):
+            with open(audio_path, "rb") as f:
+                audio_b64 = __import__('base64').b64encode(f.read()).decode()
+            components.html(f"""
+                <script>
+                (function() {{
+                    setTimeout(function() {{
+                        var b64 = "{audio_b64}";
+                        var binary = atob(b64);
+                        var bytes = new Uint8Array(binary.length);
+                        for (var i = 0; i < binary.length; i++) {{
+                            bytes[i] = binary.charCodeAt(i);
+                        }}
+                        var blob = new Blob([bytes], {{type: "audio/mpeg"}});
+                        var url = URL.createObjectURL(blob);
+                        var audio = new Audio(url);
+                        audio.volume = 1;
+                        audio.play().catch(function(e) {{ console.log("Autoplay bloqué:", e); }});
+                    }}, 3000);
+                }})();
+                </script>
+            """, height=0)
 
     # ==========================================
     # CARTE PREMIUM + FENÊTRE INTERNE (session_state)
