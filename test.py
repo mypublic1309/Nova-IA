@@ -1156,12 +1156,12 @@ def main_dashboard():
             if user:
                 st.success("✅ Mission enregistrée ! L'équipe Nova examinera votre demande.")
 
-                # Synthèse vocale de retour positif
+                # Synthèse vocale de retour positif — interrupteur : coupe tout, lit, puis s'arrête seule
                 msg_succes_vocal = (
-                    f"Félicitations ! Votre demande a bien été enregistrée avec succès. "
-                    f"Notre équipe Nova va traiter votre mission dans les plus brefs délais. "
-                    f"Vous recevrez une notification sur WhatsApp dès que votre fichier sera prêt. "
-                    f"Vous pourrez également récupérer votre livrable directement dans la section Mes livrables de votre espace Nova."
+                    "Félicitations ! Votre demande a bien été enregistrée avec succès. "
+                    "Notre équipe Nova va traiter votre mission dans les plus brefs délais. "
+                    "Vous recevrez une notification sur WhatsApp dès que votre fichier sera prêt. "
+                    "Vous pourrez récupérer votre livrable dans la section Mes livrables de votre espace Nova."
                 )
                 msg_vocal_js = msg_succes_vocal.replace("'", "\\'").replace('"', '\\"')
                 components.html(f"""
@@ -1170,6 +1170,9 @@ def main_dashboard():
                         window.speechSynthesis.cancel();
                         var msg = new SpeechSynthesisUtterance("{msg_vocal_js}");
                         msg.lang = "fr-FR"; msg.rate = 0.95; msg.pitch = 1; msg.volume = 1;
+                        msg.onend = function() {{
+                            window.speechSynthesis.cancel();
+                        }};
                         function speak() {{
                             var voices = window.speechSynthesis.getVoices();
                             var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
@@ -1183,6 +1186,7 @@ def main_dashboard():
                 """, height=0)
 
                 st.balloons()
+                time.sleep(8)  # Laisser la voix terminer avant le rechargement
                 st.rerun()
             else:
                 st.session_state["view"] = "auth"
