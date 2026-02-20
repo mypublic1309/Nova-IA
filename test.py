@@ -780,7 +780,7 @@ def main_dashboard():
     # --- Message vocal d'accueil ElevenLabs (une seule fois par session, après 3 secondes) ---
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
-        audio_url = "https://raw.githubusercontent.com/mypublic1309/espace-partage/main/ElevenLabs_2026-02-20T12_08_54_Jarnathan%20Cross%20-%20Witty%2C%20Knowing%20%26%20Poise%20_pvc_sp100_s34_sb75_se43_b_m2.mp3"
+        audio_url = "https://drive.google.com/uc?export=download&id=16Uv8wIEL3F69axG_iLrWKH0LqTF8Ucw0"
         components.html(f"""
             <script>
             (function() {{
