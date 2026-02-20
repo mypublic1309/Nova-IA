@@ -67,6 +67,9 @@ if "show_service_warning" not in st.session_state:
 if "last_service_seen" not in st.session_state:
     st.session_state["last_service_seen"] = None
 
+if "warning_triggered" not in st.session_state:
+    st.session_state["warning_triggered"] = False
+
 # Reconnaissance automatique via URL (Session persistante)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
@@ -979,12 +982,23 @@ def main_dashboard():
             default_wa = db["users"][user]["whatsapp"] if user else ""
             wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
 
-        # --- Déclenchement de la fenêtre si le service change ---
-        if service != st.session_state["last_service_seen"] and service in SERVICE_PREREQUIS:
-            st.session_state["show_service_warning"] = True
+        # --- Déclenchement uniquement quand le client commence à saisir ---
+        # (pas au chargement, pas au changement de service)
+        if service != st.session_state["last_service_seen"]:
             st.session_state["last_service_seen"] = service
+            st.session_state["warning_triggered"] = False  # reset si le service change
 
         # --- Fenêtre d'avertissement prérequis ---
+        # Affichée APRÈS le textarea, déclenchée par la saisie
+        st.markdown("#### 📝 Spécifications de la mission")
+        prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
+
+        # Déclenchement à la première frappe
+        if prompt and not st.session_state["warning_triggered"] and service in SERVICE_PREREQUIS:
+            st.session_state["warning_triggered"] = True
+            st.session_state["show_service_warning"] = True
+            st.rerun()
+
         if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS:
             info = SERVICE_PREREQUIS[service]
 
@@ -996,7 +1010,6 @@ def main_dashboard():
                 f"{items_texte} "
                 f"Conseil : {info['note']}"
             )
-            # Échappement pour usage dans JS
             texte_js = texte_vocal.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
 
             st.info(f"""
@@ -1008,7 +1021,7 @@ def main_dashboard():
 💡 *{info["note"]}*
 """)
 
-            # Synthèse vocale via Web Speech API (lecture automatique)
+            # Synthèse vocale via Web Speech API
             components.html(f"""
                 <script>
                 (function() {{
@@ -1018,17 +1031,12 @@ def main_dashboard():
                     msg.rate = 0.95;
                     msg.pitch = 1;
                     msg.volume = 1;
-
-                    // Attendre que les voix soient chargées
                     function speak() {{
                         var voices = window.speechSynthesis.getVoices();
-                        var voiceFR = voices.find(function(v) {{
-                            return v.lang.startsWith("fr");
-                        }});
+                        var voiceFR = voices.find(function(v) {{ return v.lang.startsWith("fr"); }});
                         if (voiceFR) msg.voice = voiceFR;
                         window.speechSynthesis.speak(msg);
                     }}
-
                     if (window.speechSynthesis.getVoices().length > 0) {{
                         speak();
                     }} else {{
@@ -1043,9 +1051,6 @@ def main_dashboard():
                 if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
                     st.session_state["show_service_warning"] = False
                     st.rerun()
-
-        st.markdown("#### 📝 Spécifications de la mission")
-        prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
         
         # LOGO STRIP
         st.markdown("""
