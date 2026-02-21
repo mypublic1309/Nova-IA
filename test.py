@@ -147,42 +147,23 @@ if "warning_triggered" not in st.session_state:
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
 
-# Reconnaissance automatique (PWA + navigateur)
+# Reconnaissance automatique via cookie navigateur (session persistante)
 if st.session_state["current_user"] is None:
+    # 1. Vérifier d'abord l'URL
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
         st.session_state["current_user"] = stored_user
     else:
-        # Écran de chargement pendant que le JS lit le localStorage
-        st.markdown("""
-            <div id="nova-loader" style="
-                position:fixed; top:0; left:0; width:100%; height:100%;
-                background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
-                display:flex; flex-direction:column;
-                align-items:center; justify-content:center;
-                z-index:9999;
-            ">
-                <div style="font-size:3rem;">⚡</div>
-                <div style="color:#00d2ff; font-size:1.2rem; font-weight:700; margin-top:15px;">Reconnexion Nova AI...</div>
-            </div>
-        """, unsafe_allow_html=True)
+        # 2. Lire le cookie via localStorage
         components.html("""
             <script>
-            (function() {
-                var uid = localStorage.getItem('nova_user_id');
-                if (uid) {
-                    var url = new URL(window.parent.location.href);
-                    url.searchParams.set('user_id', uid);
-                    setTimeout(function() {
-                        window.parent.location.replace(url.toString());
-                    }, 800);
-                } else {
-                    setTimeout(function() {
-                        var loader = window.parent.document.getElementById('nova-loader');
-                        if (loader) loader.style.display = 'none';
-                    }, 800);
-                }
-            })();
+            var uid = localStorage.getItem('nova_user_id');
+            if (uid) {
+                // Passer l'uid à Streamlit via l'URL
+                var url = new URL(window.location.href);
+                url.searchParams.set('user_id', uid);
+                window.location.href = url.toString();
+            }
             </script>
         """, height=0)
 
@@ -1523,8 +1504,24 @@ def main_dashboard():
 
 inject_custom_css()
 
-
-
+# Gestion de la persistance via localStorage
+components.html("""
+    <script>
+    const user = localStorage.getItem('nova_user');
+    const urlParams = new URLSearchParams(window.parent.location.search);
+    const currentUser = urlParams.get('user_id');
+    
+    if (user && !currentUser && !window.parent.location.href.includes('logout')) {
+        window.parent.location.href = window.parent.location.origin + window.parent.location.pathname + '?user_id=' + user;
+    }
+    if (!currentUser && user && window.parent.location.href.includes('logout')) {
+        localStorage.removeItem('nova_user');
+    }
+    if (currentUser && user !== currentUser) {
+        localStorage.setItem('nova_user', currentUser);
+    }
+    </script>
+""", height=0)
 
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
