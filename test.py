@@ -135,6 +135,9 @@ if "is_glowing" not in st.session_state:
 if "show_premium_modal" not in st.session_state:
     st.session_state["show_premium_modal"] = False
 
+if "premium_formule" not in st.session_state:
+    st.session_state["premium_formule"] = None
+
 if "show_service_warning" not in st.session_state:
     st.session_state["show_service_warning"] = False
 
@@ -146,6 +149,12 @@ if "warning_triggered" not in st.session_state:
 
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
+
+if "show_install_guide" not in st.session_state:
+    st.session_state["show_install_guide"] = False
+
+if "install_guide_uid" not in st.session_state:
+    st.session_state["install_guide_uid"] = ""
 
 # Reconnaissance automatique via cookie navigateur (session persistante)
 if st.session_state["current_user"] is None:
@@ -764,92 +773,10 @@ def show_auth_page():
                 if uid in db["users"] and db["users"][uid]["whatsapp"] == normalize_wa(wa_auth):
                     st.session_state["current_user"] = uid
                     st.session_state["view"] = "home"
+                    st.session_state["show_install_guide"] = True
+                    st.session_state["install_guide_uid"] = uid
                     st.query_params["user_id"] = uid
-                    components.html(f"""
-                        <div style="
-                            background: linear-gradient(135deg, #1a1a2e, #16213e);
-                            border: 2px solid #FFD700;
-                            border-radius: 20px;
-                            padding: 25px 20px;
-                            font-family: Poppins, sans-serif;
-                            color: white;
-                            max-width: 500px;
-                            margin: 0 auto;
-                        ">
-                            <div style="text-align:center; margin-bottom:18px;">
-                                <div style="font-size:2.5rem;">📲</div>
-                                <div style="color:#FFD700; font-weight:800; font-size:1.1rem; margin-top:8px;">
-                                    INSTALLEZ VOTRE ESPACE NOVA AI
-                                </div>
-                                <div style="color:rgba(255,255,255,0.6); font-size:0.8rem; margin-top:4px;">
-                                    Ne vous reconnectez plus jamais — accès direct depuis votre écran d'accueil
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: rgba(0,0,0,0.4);
-                                border: 1px solid rgba(0,210,255,0.4);
-                                border-radius: 12px;
-                                padding: 12px;
-                                text-align:center;
-                                margin-bottom: 18px;
-                            ">
-                                <div style="color:rgba(255,255,255,0.5); font-size:0.75rem; margin-bottom:4px;">🔗 VOTRE LIEN PERSONNEL</div>
-                                <div style="color:#00d2ff; font-weight:700; font-size:0.85rem; word-break:break-all;">
-                                    espace-partage-8.streamlit.app/?user_id={uid}
-                                </div>
-                            </div>
-
-                            <div style="margin-bottom:16px;">
-                                <div style="color:#FFD700; font-weight:700; font-size:0.9rem; margin-bottom:10px;">📱 Sur Android (Chrome) :</div>
-                                <div style="display:flex; flex-direction:column; gap:8px;">
-                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
-                                        <b style="color:#00d2ff;">1.</b> Cliquez sur le bouton <b>"Mon lien Nova"</b> ci-dessous
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
-                                        <b style="color:#00d2ff;">2.</b> Appuyez sur les <b>⋮ trois points</b> en haut à droite
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
-                                        <b style="color:#00d2ff;">3.</b> Choisissez <b>"Ajouter à l'écran d'accueil"</b>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="margin-bottom:20px;">
-                                <div style="color:#FFD700; font-weight:700; font-size:0.9rem; margin-bottom:10px;">🍎 Sur iPhone (Safari) :</div>
-                                <div style="display:flex; flex-direction:column; gap:8px;">
-                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
-                                        <b style="color:#00d2ff;">1.</b> Cliquez sur le bouton <b>"Mon lien Nova"</b> ci-dessous
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
-                                        <b style="color:#00d2ff;">2.</b> Appuyez sur l'icône <b>📤 Partager</b> en bas
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
-                                        <b style="color:#00d2ff;">3.</b> Choisissez <b>"Sur l'écran d'accueil"</b>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="text-align:center;">
-                                <a href="https://espace-partage-8.streamlit.app/?user_id={uid}" target="_blank"
-                                   style="
-                                    display:inline-block;
-                                    background: linear-gradient(45deg, #FFD700, #FF8C00);
-                                    color:#000; font-weight:800; font-size:1rem;
-                                    padding:12px 30px; border-radius:50px;
-                                    text-decoration:none;
-                                    box-shadow: 0 5px 20px rgba(255,215,0,0.4);
-                                   ">
-                                    🔗 Mon lien Nova
-                                </a>
-                            </div>
-                        </div>
-                        <script>
-                        setTimeout(function() {{
-                            window.parent.location.replace('https://espace-partage-8.streamlit.app/?user_id={uid}');
-                        }}, 15000);
-                        </script>
-                    """, height=600)
+                    st.rerun()
                 else:
                     st.error("❌ Identifiant ou numéro inconnu.")
 
@@ -881,6 +808,8 @@ def show_auth_page():
                         save_user(new_uid, normalize_wa(new_wa))
                         st.session_state["current_user"] = new_uid
                         st.session_state["view"] = "home"
+                        st.session_state["show_install_guide"] = True
+                        st.session_state["install_guide_uid"] = new_uid
                         st.session_state["db"] = load_db()
                         st.query_params["user_id"] = new_uid
                         st.rerun()
@@ -1006,103 +935,302 @@ def main_dashboard():
             st.session_state["show_premium_modal"] = True
             st.rerun()
 
-    # --- Fenêtre interne des formules (affichée si show_premium_modal = True) ---
-    if st.session_state["show_premium_modal"]:
+    # --- Page dédiée premium (affichée si show_premium_modal = True) ---
+    if st.session_state["show_premium_modal"] and not st.session_state["premium_formule"]:
+
         st.markdown("""
-            <div style="
-                background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-                border: 2px solid #FFD700;
-                border-radius: 24px;
-                padding: 35px 25px 30px 25px;
-                margin: 10px 0 30px 0;
-                box-shadow: 0 0 60px rgba(255,215,0,0.25);
-            ">
-                <h2 style="text-align:center; color:#FFD700; font-size:1.7rem; font-weight:800; margin-bottom:6px; letter-spacing:1px;">
-                    ⭐ CHOISISSEZ VOTRE FORMULE NOVA PREMIUM
-                </h2>
-                <p style="text-align:center; color:rgba(255,255,255,0.55); margin-bottom:30px; font-size:0.95rem;">
-                    Sélectionnez le plan qui correspond à vos besoins
-                </p>
+        <style>
+        @keyframes gold-shimmer {
+            0%   { background-position: -300% center; }
+            100% { background-position:  300% center; }
+        }
+        @keyframes gold-glow {
+            0%,100% { box-shadow: 0 0 15px rgba(255,215,0,0.3); }
+            50%      { box-shadow: 0 0 40px rgba(255,215,0,0.8); }
+        }
+        @keyframes gold-float {
+            0%,100% { transform: translateY(0px); }
+            50%      { transform: translateY(-8px); }
+        }
+        @keyframes gold-particle {
+            0%   { transform: translateY(0) scale(1); opacity:0.8; }
+            50%  { transform: translateY(-20px) scale(1.4); opacity:1; }
+            100% { transform: translateY(0) scale(1); opacity:0.8; }
+        }
+        @keyframes slide-up {
+            0%   { opacity:0; transform: translateY(30px); }
+            100% { opacity:1; transform: translateY(0); }
+        }
+        .prem-page { padding: 20px 0; }
+        .prem-stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+        .prem-star  { position:absolute; animation: gold-particle 3s ease-in-out infinite; font-size:1.2rem; }
+        .prem-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gold-shimmer 3s linear infinite;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .prem-card {
+            background: linear-gradient(145deg, rgba(10,7,0,0.98), rgba(25,18,0,0.96));
+            border: 2px solid #FFD700;
+            border-radius: 24px;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: slide-up 0.6s ease both, gold-glow 3s ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .prem-card:hover { transform: translateY(-5px) scale(1.02); }
+        .prem-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #7a5500, #FFD700, #fff5c0, #FFD700, #7a5500);
+            background-size: 200% auto;
+            animation: gold-shimmer 2s linear infinite;
+        }
+        .prem-price {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FFD700, #fff5c0, #FFD700);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gold-shimmer 2s linear infinite;
+        }
+        .prem-btn {
+            display: block;
+            background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500);
+            background-size: 300% auto;
+            color: #0a0800 !important;
+            font-weight: 800;
+            font-size: 0.95rem;
+            padding: 12px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            animation: gold-shimmer 3s linear infinite;
+            margin-top: 12px;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        </style>
+
+        <div class="prem-page">
+            <div class="prem-stars">
+                <span class="prem-star" style="top:5%;  left:8%;  animation-delay:0s;">✨</span>
+                <span class="prem-star" style="top:12%; left:85%; animation-delay:0.5s;">💎</span>
+                <span class="prem-star" style="top:40%; left:3%;  animation-delay:1s;">⭐</span>
+                <span class="prem-star" style="top:65%; left:90%; animation-delay:0.3s;">✨</span>
+                <span class="prem-star" style="top:80%; left:15%; animation-delay:1.5s;">💎</span>
+                <span class="prem-star" style="top:90%; left:70%; animation-delay:0.8s;">⭐</span>
             </div>
+            <div style="position:relative; z-index:1; text-align:center; margin-bottom:25px;">
+                <div style="font-size:3rem; animation: gold-float 3s ease-in-out infinite;">👑</div>
+                <div class="prem-title">NOVA PREMIUM</div>
+                <div style="color:rgba(255,215,0,0.5); font-size:0.82rem; letter-spacing:3px; text-transform:uppercase; margin-top:6px;">
+                    Choisissez votre formule d'excellence
+                </div>
+            </div>
+        </div>
         """, unsafe_allow_html=True)
 
         col1_p, col2_p, col3_p = st.columns(3)
 
         with col1_p:
             st.markdown("""
-                <div style="
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,215,0,0.4);
-                    border-radius: 18px;
-                    padding: 28px 16px;
-                    text-align: center;
-                    min-height: 300px;
-                ">
-                    <div style="font-size:2.5rem; margin-bottom:10px;">🌅</div>
-                    <div style="color:#FFD700; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">Journalier</div>
-                    <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">600 FC</div>
-                    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:16px;">/ par jour</div>
-                    <div style="background:rgba(255,215,0,0.1); border-radius:10px; padding:10px; margin-bottom:22px;">
-                        <span style="color:#FFD700; font-size:0.9rem;">⚡ 1,5 génération IA / jour</span>
-                    </div>
+            <div class="prem-card" style="animation-delay:0.2s;">
+                <div style="font-size:2.5rem; margin-bottom:10px; animation: gold-float 3s ease-in-out infinite;">🌅</div>
+                <div style="color:#FFD700; font-weight:800; font-size:1rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">Journalier</div>
+                <div class="prem-price">600 FC</div>
+                <div style="color:rgba(255,255,255,0.35); font-size:0.78rem; margin-bottom:14px;">par jour</div>
+                <div style="background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.2); border-radius:12px; padding:10px; margin-bottom:6px;">
+                    <span style="color:#FFD700; font-size:0.85rem; font-weight:700;">⚡ 1,5 génération IA / jour</span>
                 </div>
+            </div>
             """, unsafe_allow_html=True)
-            st.markdown(f'<a href="{wa_jour}" target="_blank" style="display:block; background:linear-gradient(45deg,#FFD700,#FF8C00); color:#000; font-weight:800; padding:12px; border-radius:50px; text-decoration:none; font-size:1rem; text-align:center; margin-top:10px;">Choisir cette formule</a>', unsafe_allow_html=True)
+            if st.button("🌅 Choisir Journalier", key="prem_jour"):
+                st.session_state["premium_formule"] = "journalier"
+                st.rerun()
 
         with col2_p:
             st.markdown("""
-                <div style="
-                    background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(58,123,213,0.15));
-                    border: 2px solid #00d2ff;
-                    border-radius: 18px;
-                    padding: 28px 16px;
-                    text-align: center;
-                    min-height: 300px;
-                    position: relative;
-                ">
-                    <div style="
-                        background:linear-gradient(90deg,#00d2ff,#3a7bd5);
-                        color:white; font-size:0.75rem; font-weight:800;
-                        padding:4px 16px; border-radius:20px;
-                        display:inline-block; margin-bottom:12px;
-                    ">⭐ POPULAIRE</div>
-                    <div style="font-size:2.5rem; margin-bottom:10px;">🔟</div>
-                    <div style="color:#00d2ff; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">10 Jours</div>
-                    <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">1 000 FC</div>
-                    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:16px;">/ 10 jours</div>
-                    <div style="background:rgba(0,210,255,0.1); border-radius:10px; padding:10px; margin-bottom:22px;">
-                        <span style="color:#00d2ff; font-size:0.9rem;">⚡ 4 générations IA / jour</span>
-                    </div>
+            <div class="prem-card" style="animation-delay:0.4s; border-color:#fff5c0; box-shadow: 0 0 50px rgba(255,215,0,0.5);">
+                <div style="background:linear-gradient(90deg,#FFD700,#fff5c0,#FFD700); background-size:200% auto; animation:gold-shimmer 2s linear infinite; color:#000; font-size:0.7rem; font-weight:800; padding:4px 16px; border-radius:20px; display:inline-block; margin-bottom:10px; letter-spacing:2px;">⭐ POPULAIRE</div>
+                <div style="font-size:2.5rem; margin-bottom:10px; animation: gold-float 3s ease-in-out infinite 0.5s;">🔟</div>
+                <div style="color:#FFD700; font-weight:800; font-size:1rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">10 Jours</div>
+                <div class="prem-price">1 000 FC</div>
+                <div style="color:rgba(255,255,255,0.35); font-size:0.78rem; margin-bottom:14px;">10 jours</div>
+                <div style="background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.2); border-radius:12px; padding:10px; margin-bottom:6px;">
+                    <span style="color:#FFD700; font-size:0.85rem; font-weight:700;">⚡ 4 générations IA / jour</span>
                 </div>
+            </div>
             """, unsafe_allow_html=True)
-            st.markdown(f'<a href="{wa_10j}" target="_blank" style="display:block; background:linear-gradient(45deg,#00d2ff,#3a7bd5); color:#fff; font-weight:800; padding:12px; border-radius:50px; text-decoration:none; font-size:1rem; text-align:center; margin-top:10px;">Choisir cette formule</a>', unsafe_allow_html=True)
+            if st.button("🔟 Choisir 10 Jours", key="prem_10j"):
+                st.session_state["premium_formule"] = "10jours"
+                st.rerun()
 
         with col3_p:
             st.markdown("""
-                <div style="
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(46,204,113,0.4);
-                    border-radius: 18px;
-                    padding: 28px 16px;
-                    text-align: center;
-                    min-height: 300px;
-                ">
-                    <div style="font-size:2.5rem; margin-bottom:10px;">👑</div>
-                    <div style="color:#2ecc71; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">30 Jours</div>
-                    <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">2 500 FC</div>
-                    <div style="color:rgba(255,255,255,0.45); font-size:0.8rem; margin-bottom:16px;">/ 30 jours</div>
-                    <div style="background:rgba(46,204,113,0.1); border-radius:10px; padding:10px; margin-bottom:22px;">
-                        <span style="color:#2ecc71; font-size:0.9rem;">⚡ 8,5 générations IA / jour</span>
-                    </div>
+            <div class="prem-card" style="animation-delay:0.6s;">
+                <div style="font-size:2.5rem; margin-bottom:10px; animation: gold-float 3s ease-in-out infinite 1s;">👑</div>
+                <div style="color:#FFD700; font-weight:800; font-size:1rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">30 Jours</div>
+                <div class="prem-price">2 500 FC</div>
+                <div style="color:rgba(255,255,255,0.35); font-size:0.78rem; margin-bottom:14px;">30 jours</div>
+                <div style="background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.2); border-radius:12px; padding:10px; margin-bottom:6px;">
+                    <span style="color:#FFD700; font-size:0.85rem; font-weight:700;">⚡ 8,5 générations IA / jour</span>
                 </div>
+            </div>
             """, unsafe_allow_html=True)
-            st.markdown(f'<a href="{wa_30j}" target="_blank" style="display:block; background:linear-gradient(45deg,#2ecc71,#27ae60); color:#fff; font-weight:800; padding:12px; border-radius:50px; text-decoration:none; font-size:1rem; text-align:center; margin-top:10px;">Choisir cette formule</a>', unsafe_allow_html=True)
+            if st.button("👑 Choisir 30 Jours", key="prem_30j"):
+                st.session_state["premium_formule"] = "30jours"
+                st.rerun()
 
         st.markdown("<br>", unsafe_allow_html=True)
         col_close = st.columns([1, 2, 1])[1]
         with col_close:
             if st.button("✕ Fermer", key="close_premium"):
                 st.session_state["show_premium_modal"] = False
+                st.rerun()
+
+    # --- Page dédiée par formule ---
+    if st.session_state["premium_formule"]:
+        formule = st.session_state["premium_formule"]
+        if formule == "journalier":
+            emoji, nom, prix, duree, gen, wa_url_f = "🌅", "JOURNALIER", "600 FC", "1 jour", "1,5 génération IA / jour", wa_jour
+        elif formule == "10jours":
+            emoji, nom, prix, duree, gen, wa_url_f = "🔟", "10 JOURS", "1 000 FC", "10 jours", "4 générations IA / jour", wa_10j
+        else:
+            emoji, nom, prix, duree, gen, wa_url_f = "👑", "30 JOURS", "2 500 FC", "30 jours", "8,5 générations IA / jour", wa_30j
+
+        st.markdown(f"""
+        <style>
+        @keyframes pg-shimmer {{ 0% {{ background-position:-300% center; }} 100% {{ background-position:300% center; }} }}
+        @keyframes pg-glow {{ 0%,100% {{ box-shadow:0 0 20px rgba(255,215,0,0.3); }} 50% {{ box-shadow:0 0 60px rgba(255,215,0,0.9); }} }}
+        @keyframes pg-float {{ 0%,100% {{ transform:translateY(0); }} 50% {{ transform:translateY(-12px); }} }}
+        @keyframes pg-particle {{ 0% {{ transform:translateY(0) scale(1); opacity:0.8; }} 50% {{ transform:translateY(-25px) scale(1.5); opacity:1; }} 100% {{ transform:translateY(0) scale(1); opacity:0.8; }} }}
+        @keyframes pg-slide {{ 0% {{ opacity:0; transform:translateY(40px); }} 100% {{ opacity:1; transform:translateY(0); }} }}
+        @keyframes pg-rotate {{ 0% {{ transform:rotate(0deg); }} 100% {{ transform:rotate(360deg); }} }}
+
+        .pg-stars {{ position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }}
+        .pg-star   {{ position:absolute; animation: pg-particle 3s ease-in-out infinite; }}
+
+        .pg-ring {{
+            width:120px; height:120px; border-radius:50%;
+            background: radial-gradient(circle at 35% 35%, #fff8e1, #FFD700 40%, #b8860b);
+            box-shadow: 0 0 0 6px rgba(255,215,0,0.2), 0 0 60px rgba(255,215,0,0.7);
+            display:flex; align-items:center; justify-content:center;
+            font-size:3.5rem; margin:0 auto 20px auto;
+            animation: pg-glow 2s ease-in-out infinite, pg-float 3s ease-in-out infinite;
+            position:relative;
+        }}
+        .pg-ring::after {{
+            content:'';
+            position:absolute; inset:-10px;
+            border-radius:50%;
+            border:3px dashed rgba(255,215,0,0.5);
+            animation: pg-rotate 8s linear infinite;
+        }}
+        .pg-title {{
+            font-size:2.5rem; font-weight:800;
+            background: linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
+            background-size:300% auto;
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            animation: pg-shimmer 2.5s linear infinite;
+            text-align:center; letter-spacing:3px; text-transform:uppercase;
+        }}
+        .pg-card {{
+            background: linear-gradient(145deg, rgba(10,7,0,0.98), rgba(25,18,0,0.96));
+            border:2px solid #FFD700; border-radius:28px;
+            padding:35px 25px; max-width:550px; margin:20px auto;
+            position:relative; overflow:hidden;
+            animation: pg-slide 0.7s ease both, pg-glow 3s ease-in-out infinite;
+        }}
+        .pg-card::before {{
+            content:'';
+            position:absolute; top:0; left:0; right:0; height:4px;
+            background: linear-gradient(90deg,#7a5500,#FFD700,#fff5c0,#FFD700,#7a5500);
+            background-size:200% auto;
+            animation: pg-shimmer 2s linear infinite;
+        }}
+        .pg-price {{
+            font-size:3.5rem; font-weight:800;
+            background:linear-gradient(90deg,#FFD700,#fff5c0,#FFD700);
+            background-size:200% auto;
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            animation:pg-shimmer 2s linear infinite;
+            text-align:center;
+        }}
+        .pg-feature {{
+            background:rgba(255,215,0,0.07);
+            border:1px solid rgba(255,215,0,0.25);
+            border-radius:14px; padding:14px 18px;
+            margin-bottom:12px; font-size:0.9rem;
+            color:rgba(255,255,255,0.85);
+            animation: pg-slide 0.5s ease both;
+        }}
+        .pg-feature b {{ color:#FFD700; }}
+        .pg-wa-btn {{
+            display:block;
+            background:linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
+            background-size:300% auto;
+            color:#0a0800 !important; font-weight:800; font-size:1.1rem;
+            padding:16px 30px; border-radius:50px;
+            text-decoration:none; text-align:center;
+            animation: pg-shimmer 3s linear infinite, pg-glow 2.5s ease-in-out infinite;
+            margin-top:20px; letter-spacing:2px;
+        }}
+        </style>
+
+        <div style="padding:30px 10px; position:relative;">
+            <div class="pg-stars">
+                <span class="pg-star" style="top:5%;  left:6%;  font-size:1.4rem; animation-delay:0s;">✨</span>
+                <span class="pg-star" style="top:10%; left:88%; font-size:1rem;   animation-delay:0.5s;">💎</span>
+                <span class="pg-star" style="top:30%; left:2%;  font-size:1.2rem; animation-delay:1s;">⭐</span>
+                <span class="pg-star" style="top:55%; left:93%; font-size:1.4rem; animation-delay:0.3s;">✨</span>
+                <span class="pg-star" style="top:70%; left:10%; font-size:1rem;   animation-delay:1.5s;">💎</span>
+                <span class="pg-star" style="top:85%; left:75%; font-size:1.2rem; animation-delay:0.8s;">⭐</span>
+                <span class="pg-star" style="top:45%; left:48%; font-size:0.9rem; animation-delay:2s;">✨</span>
+            </div>
+
+            <div style="position:relative; z-index:1; text-align:center; margin-bottom:10px;">
+                <div class="pg-ring">{emoji}</div>
+                <div class="pg-title">NOVA {nom}</div>
+                <div style="color:rgba(255,215,0,0.5); font-size:0.8rem; letter-spacing:3px; text-transform:uppercase; margin-top:6px;">
+                    Formule Premium · Excellence Garantie
+                </div>
+            </div>
+
+            <div class="pg-card" style="position:relative; z-index:1;">
+                <div class="pg-price">{prix}</div>
+                <div style="color:rgba(255,255,255,0.4); font-size:0.82rem; text-align:center; margin-bottom:20px;">/ {duree}</div>
+
+                <div class="pg-feature" style="animation-delay:0.2s;"><b>⚡ Puissance ·</b> {gen}</div>
+                <div class="pg-feature" style="animation-delay:0.3s;"><b>🚀 Accès ·</b> Priorité absolue sur toutes les missions Nova</div>
+                <div class="pg-feature" style="animation-delay:0.4s;"><b>🤖 IA ·</b> Algorithme Nova de pointe — puissance 10<sup>10</sup></div>
+                <div class="pg-feature" style="animation-delay:0.5s;"><b>💬 Support ·</b> Assistance WhatsApp dédiée 24h/24</div>
+                <div class="pg-feature" style="animation-delay:0.6s;"><b>📦 Livraison ·</b> Résultats ultra-rapides dans votre espace Nova</div>
+
+                <a href="{wa_url_f}" target="_blank" class="pg-wa-btn">
+                    💎 ACTIVER MAINTENANT SUR WHATSAPP
+                </a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_back = st.columns([1, 2, 1])[1]
+        with col_back:
+            if st.button("← Retour aux formules", key="back_premium"):
+                st.session_state["premium_formule"] = None
                 st.rerun()
 
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
@@ -1607,7 +1735,228 @@ components.html("""
     </script>
 """, height=0)
 
+# ==========================================
+# PAGE GUIDE INSTALLATION PWA
+# ==========================================
+def show_install_guide(uid):
+    lien = f"https://espace-partage-8.streamlit.app/?user_id={uid}"
+    st.markdown(f"""
+    <style>
+    @keyframes float-letter {{
+        0%   {{ transform: translateY(0px) rotate(-3deg); opacity:0.7; }}
+        50%  {{ transform: translateY(-18px) rotate(3deg); opacity:1; }}
+        100% {{ transform: translateY(0px) rotate(-3deg); opacity:0.7; }}
+    }}
+    @keyframes shimmer-gold {{
+        0%   {{ background-position: -300% center; }}
+        100% {{ background-position:  300% center; }}
+    }}
+    @keyframes pulse-ring {{
+        0%   {{ box-shadow: 0 0 0 0 rgba(255,215,0,0.5); }}
+        70%  {{ box-shadow: 0 0 0 20px rgba(255,215,0,0); }}
+        100% {{ box-shadow: 0 0 0 0 rgba(255,215,0,0); }}
+    }}
+    @keyframes star-drift {{
+        0%   {{ transform: translateY(0) translateX(0) scale(1); opacity:0.8; }}
+        33%  {{ transform: translateY(-25px) translateX(10px) scale(1.3); opacity:1; }}
+        66%  {{ transform: translateY(-10px) translateX(-8px) scale(0.9); opacity:0.6; }}
+        100% {{ transform: translateY(0) translateX(0) scale(1); opacity:0.8; }}
+    }}
+    @keyframes slide-in-up {{
+        0%   {{ opacity:0; transform: translateY(40px); }}
+        100% {{ opacity:1; transform: translateY(0); }}
+    }}
+    @keyframes glow-line {{
+        0%,100% {{ opacity:0.4; }}
+        50%      {{ opacity:1; }}
+    }}
+
+    .guide-page {{
+        min-height: 100vh;
+        padding: 40px 20px;
+        text-align: center;
+    }}
+    .guide-stars {{
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+    }}
+    .guide-star {{
+        position: absolute;
+        font-size: 1rem;
+        animation: star-drift 4s ease-in-out infinite;
+    }}
+    .guide-title-wrap {{
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }}
+    .guide-letter {{
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
+        background-size: 300% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: float-letter 3s ease-in-out infinite, shimmer-gold 3s linear infinite;
+        display: inline-block;
+    }}
+    .guide-card {{
+        background: linear-gradient(145deg, rgba(15,10,2,0.97), rgba(30,20,5,0.95));
+        border: 1px solid rgba(255,215,0,0.4);
+        border-radius: 24px;
+        padding: 30px 25px;
+        margin: 15px auto;
+        max-width: 600px;
+        position: relative;
+        overflow: hidden;
+        animation: slide-in-up 0.7s ease both;
+        z-index: 1;
+    }}
+    .guide-card::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
+        background-size: 200% auto;
+        animation: shimmer-gold 2.5s linear infinite;
+        border-radius: 24px 24px 0 0;
+    }}
+    .guide-lien-box {{
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(0,210,255,0.5);
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin: 18px 0;
+        word-break: break-all;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #00d2ff;
+        letter-spacing: 0.5px;
+        animation: glow-line 2s ease-in-out infinite;
+    }}
+    .guide-step {{
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,215,0,0.15);
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        text-align: left;
+        font-size: 0.88rem;
+        color: rgba(255,255,255,0.85);
+        animation: slide-in-up 0.6s ease both;
+    }}
+    .guide-step b {{ color: #00d2ff; }}
+    .guide-btn {{
+        display: inline-block;
+        background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500);
+        background-size: 300% auto;
+        color: #0a0800 !important;
+        font-weight: 800;
+        font-size: 1.05rem;
+        padding: 14px 35px;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 6px 25px rgba(255,215,0,0.45);
+        animation: shimmer-gold 3s linear infinite, pulse-ring 2.5s ease-in-out infinite;
+        margin-top: 10px;
+        letter-spacing: 1px;
+    }}
+    .guide-section-title {{
+        color: #FFD700;
+        font-weight: 800;
+        font-size: 1rem;
+        text-align: left;
+        margin-bottom: 10px;
+        margin-top: 18px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }}
+    </style>
+
+    <div class="guide-page">
+
+        <!-- Étoiles flottantes -->
+        <div class="guide-stars">
+            <span class="guide-star" style="top:8%; left:5%; animation-delay:0s;">✨</span>
+            <span class="guide-star" style="top:15%; left:88%; animation-delay:0.8s;">⭐</span>
+            <span class="guide-star" style="top:35%; left:3%; animation-delay:1.5s;">💫</span>
+            <span class="guide-star" style="top:60%; left:92%; animation-delay:0.3s;">✨</span>
+            <span class="guide-star" style="top:75%; left:7%; animation-delay:1.2s;">⭐</span>
+            <span class="guide-star" style="top:85%; left:80%; animation-delay:0.6s;">💫</span>
+            <span class="guide-star" style="top:50%; left:50%; animation-delay:2s;">✨</span>
+        </div>
+
+        <!-- Titre animé -->
+        <div style="position:relative; z-index:1; margin-bottom:6px;">
+            <div style="font-size:3.5rem; margin-bottom:10px;">📲</div>
+            <div class="guide-title-wrap">
+                {''.join(f'<span class="guide-letter" style="animation-delay:{i*0.12}s">{c if c != " " else "&nbsp;"}</span>' for i, c in enumerate("NOVA AI"))}
+            </div>
+            <div style="color:rgba(255,215,0,0.6); font-size:0.85rem; letter-spacing:4px; text-transform:uppercase; margin-top:4px;">
+                Votre Application Personnelle
+            </div>
+        </div>
+
+        <!-- Carte principale -->
+        <div class="guide-card" style="animation-delay:0.2s;">
+            <div style="color:white; font-size:1rem; font-weight:600; margin-bottom:4px;">
+                🎉 Bienvenue <span style="color:#FFD700;">{uid}</span> !
+            </div>
+            <div style="color:rgba(255,255,255,0.5); font-size:0.82rem; margin-bottom:6px;">
+                Installez votre espace Nova AI en quelques secondes — ne vous reconnectez plus jamais.
+            </div>
+
+            <div style="color:rgba(255,255,255,0.4); font-size:0.75rem; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">🔗 Votre lien personnel</div>
+            <div class="guide-lien-box">{lien}</div>
+
+            <div style="text-align:center; margin-bottom:8px;">
+                <a href="{lien}" target="_blank" class="guide-btn">⚡ Ouvrir Mon Espace Nova</a>
+            </div>
+        </div>
+
+        <!-- Android -->
+        <div class="guide-card" style="animation-delay:0.4s;">
+            <div class="guide-section-title">📱 Android — Chrome</div>
+            <div class="guide-step" style="animation-delay:0.5s;"><b>Étape 1 ·</b> Appuyez sur <b>"Ouvrir Mon Espace Nova"</b> ci-dessus</div>
+            <div class="guide-step" style="animation-delay:0.6s;"><b>Étape 2 ·</b> Appuyez sur les <b>⋮ trois points</b> en haut à droite du navigateur</div>
+            <div class="guide-step" style="animation-delay:0.7s;"><b>Étape 3 ·</b> Choisissez <b>"Ajouter à l'écran d'accueil"</b></div>
+            <div class="guide-step" style="animation-delay:0.8s;"><b>Étape 4 ·</b> Confirmez — l'icône Nova AI apparaît sur votre écran 🎉</div>
+        </div>
+
+        <!-- iPhone -->
+        <div class="guide-card" style="animation-delay:0.6s;">
+            <div class="guide-section-title">🍎 iPhone — Safari</div>
+            <div class="guide-step" style="animation-delay:0.7s;"><b>Étape 1 ·</b> Appuyez sur <b>"Ouvrir Mon Espace Nova"</b> ci-dessus</div>
+            <div class="guide-step" style="animation-delay:0.8s;"><b>Étape 2 ·</b> Appuyez sur l'icône <b>📤 Partager</b> en bas de Safari</div>
+            <div class="guide-step" style="animation-delay:0.9s;"><b>Étape 3 ·</b> Faites défiler et choisissez <b>"Sur l'écran d'accueil"</b></div>
+            <div class="guide-step" style="animation-delay:1.0s;"><b>Étape 4 ·</b> Appuyez sur <b>"Ajouter"</b> — Nova AI est installé 🎉</div>
+        </div>
+
+        <!-- Badge -->
+        <div style="position:relative; z-index:1; margin-top:20px; color:rgba(255,215,0,0.3); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase;">
+            🔒 Accès sécurisé &nbsp;·&nbsp; ⚡ Nova AI &nbsp;·&nbsp; 🛡️ Données protégées
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_c = st.columns([1, 2, 1])[1]
+    with col_c:
+        if st.button("✅ J'ai installé — Accéder à mon espace", key="guide_done"):
+            st.session_state["show_install_guide"] = False
+            st.rerun()
+
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
+elif st.session_state.get("show_install_guide"):
+    show_install_guide(st.session_state["install_guide_uid"])
 else:
     main_dashboard()
