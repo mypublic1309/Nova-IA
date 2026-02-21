@@ -147,11 +147,34 @@ if "warning_triggered" not in st.session_state:
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
 
-# Reconnaissance automatique via URL (Session persistante)
+# Reconnaissance automatique via cookie navigateur (session persistante)
 if st.session_state["current_user"] is None:
+    # 1. Vérifier d'abord l'URL
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
         st.session_state["current_user"] = stored_user
+    else:
+        # 2. Lire le cookie via localStorage
+        components.html("""
+            <script>
+            var uid = localStorage.getItem('nova_user_id');
+            if (uid) {
+                // Passer l'uid à Streamlit via l'URL
+                var url = new URL(window.location.href);
+                url.searchParams.set('user_id', uid);
+                window.location.href = url.toString();
+            }
+            </script>
+        """, height=0)
+
+# Sauvegarder dans localStorage à chaque connexion
+if st.session_state["current_user"]:
+    uid_connecte = st.session_state["current_user"]
+    components.html(f"""
+        <script>
+        localStorage.setItem('nova_user_id', '{uid_connecte}');
+        </script>
+    """, height=0)
 
 # ==========================================
 # DESIGN ET STYLE (CSS AVANCÉ)
@@ -827,6 +850,7 @@ def main_dashboard():
             if st.button("Quitter la session"):
                 st.session_state["current_user"] = None
                 st.query_params.clear()
+                components.html("<script>localStorage.removeItem('nova_user_id');</script>", height=0)
                 st.rerun()
         else:
             if st.button("Connexion"):
