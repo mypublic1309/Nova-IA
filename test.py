@@ -147,11 +147,44 @@ if "warning_triggered" not in st.session_state:
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
 
-# Reconnaissance automatique via query_params (session persistante)
+# Reconnaissance automatique (PWA + navigateur)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
         st.session_state["current_user"] = stored_user
+    else:
+        # Écran de chargement pendant que le JS lit le localStorage
+        st.markdown("""
+            <div id="nova-loader" style="
+                position:fixed; top:0; left:0; width:100%; height:100%;
+                background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+                display:flex; flex-direction:column;
+                align-items:center; justify-content:center;
+                z-index:9999;
+            ">
+                <div style="font-size:3rem;">⚡</div>
+                <div style="color:#00d2ff; font-size:1.2rem; font-weight:700; margin-top:15px;">Reconnexion Nova AI...</div>
+            </div>
+        """, unsafe_allow_html=True)
+        components.html("""
+            <script>
+            (function() {
+                var uid = localStorage.getItem('nova_user_id');
+                if (uid) {
+                    var url = new URL(window.parent.location.href);
+                    url.searchParams.set('user_id', uid);
+                    setTimeout(function() {
+                        window.parent.location.replace(url.toString());
+                    }, 800);
+                } else {
+                    setTimeout(function() {
+                        var loader = window.parent.document.getElementById('nova-loader');
+                        if (loader) loader.style.display = 'none';
+                    }, 800);
+                }
+            })();
+            </script>
+        """, height=0)
 
 # Sauvegarder dans localStorage à chaque connexion
 if st.session_state["current_user"]:
