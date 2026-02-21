@@ -149,23 +149,25 @@ if "intro_played" not in st.session_state:
 
 # Reconnaissance automatique via cookie navigateur (session persistante)
 if st.session_state["current_user"] is None:
-    # 1. Vérifier d'abord l'URL
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
         st.session_state["current_user"] = stored_user
     else:
-        # 2. Lire le cookie via localStorage
         components.html("""
             <script>
-            var uid = localStorage.getItem('nova_user_id');
-            if (uid) {
-                // Passer l'uid à Streamlit via l'URL
-                var url = new URL(window.location.href);
-                url.searchParams.set('user_id', uid);
-                window.location.href = url.toString();
-            }
+            (function() {
+                var uid = localStorage.getItem('nova_user_id');
+                if (uid) {
+                    var url = new URL(window.parent.location.href);
+                    if (url.searchParams.get('user_id') !== uid) {
+                        url.searchParams.set('user_id', uid);
+                        window.parent.location.replace(url.toString());
+                    }
+                }
+            })();
             </script>
         """, height=0)
+        st.stop()
 
 # Sauvegarder dans localStorage à chaque connexion
 if st.session_state["current_user"]:
