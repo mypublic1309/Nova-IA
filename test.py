@@ -1741,6 +1741,9 @@ components.html("""
 def show_install_guide(uid):
     lien = f"https://espace-partage-8.streamlit.app/?user_id={uid}"
 
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- Bloc bienvenue + lien + sections ---
     st.markdown(f"""
     <style>
     @keyframes shimmer-g  {{ 0% {{ background-position:-300% center; }} 100% {{ background-position:300% center; }} }}
@@ -1750,19 +1753,8 @@ def show_install_guide(uid):
     @keyframes slide-g    {{ 0% {{ opacity:0; transform:translateY(25px); }} 100% {{ opacity:1; transform:translateY(0); }} }}
     @keyframes rotate-g   {{ 0% {{ transform:rotate(0deg); }} 100% {{ transform:rotate(360deg); }} }}
 
-    /* Étoiles fixes */
     .g-star {{ position:fixed; pointer-events:none; z-index:0; animation:particle-g 3s ease-in-out infinite; font-size:1.1rem; }}
 
-    /* Titre */
-    .g-title {{
-        font-size:2.4rem; font-weight:800; text-align:center;
-        background: linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
-        background-size:300% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-        animation: shimmer-g 3s linear infinite; letter-spacing:4px;
-        position:relative; z-index:1;
-    }}
-
-    /* Icône centrale */
     .g-icon-ring {{
         width:90px; height:90px; border-radius:50%;
         background: radial-gradient(circle at 35% 35%, #fff8e1, #FFD700 40%, #b8860b);
@@ -1777,11 +1769,18 @@ def show_install_guide(uid):
         animation: rotate-g 7s linear infinite;
     }}
 
-    /* Bloc bienvenue */
+    .g-title-main {{
+        font-size:2.4rem; font-weight:800; text-align:center;
+        background: linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
+        background-size:300% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        animation: shimmer-g 3s linear infinite; letter-spacing:4px;
+        position:relative; z-index:1;
+    }}
+
     .g-welcome {{
         background: linear-gradient(145deg, rgba(15,10,2,0.97), rgba(30,20,5,0.95));
         border:1px solid rgba(255,215,0,0.4); border-radius:20px;
-        padding:22px 24px; margin-bottom:18px;
+        padding:22px 24px; margin:18px 0;
         position:relative; overflow:hidden;
         animation: slide-g 0.6s ease both, glow-g 4s ease-in-out infinite;
         z-index:1;
@@ -1792,16 +1791,13 @@ def show_install_guide(uid):
         background-size:200% auto; animation:shimmer-g 2s linear infinite;
     }}
 
-    /* Bloc lien */
     .g-lien {{
         background:rgba(0,0,0,0.55); border:1px solid rgba(0,210,255,0.5);
         border-radius:14px; padding:14px 18px; margin:14px 0;
         font-size:0.92rem; font-weight:700; color:#00d2ff;
-        word-break:break-all; letter-spacing:0.5px;
-        text-align:center;
+        word-break:break-all; letter-spacing:0.5px; text-align:center;
     }}
 
-    /* Bouton doré */
     .g-btn {{
         display:block; text-align:center;
         background:linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
@@ -1809,18 +1805,15 @@ def show_install_guide(uid):
         font-weight:800; font-size:1rem; padding:14px 28px;
         border-radius:50px; text-decoration:none; letter-spacing:2px;
         animation:shimmer-g 3s linear infinite;
-        box-shadow:0 6px 25px rgba(255,215,0,0.45);
-        margin:12px 0;
+        box-shadow:0 6px 25px rgba(255,215,0,0.45); margin:12px 0;
     }}
 
-    /* Bloc section Android/iPhone */
     .g-section {{
         background:linear-gradient(145deg, rgba(15,10,2,0.97), rgba(30,20,5,0.95));
         border:1px solid rgba(255,215,0,0.3); border-radius:20px;
         padding:24px 22px; margin-bottom:16px;
         position:relative; overflow:hidden;
-        animation: slide-g 0.6s ease both;
-        z-index:1;
+        animation: slide-g 0.6s ease both; z-index:1;
     }}
     .g-section::before {{
         content:''; position:absolute; top:0; left:0; right:0; height:3px;
@@ -1828,33 +1821,26 @@ def show_install_guide(uid):
         background-size:200% auto; animation:shimmer-g 2s linear infinite;
     }}
     .g-section-title {{
-        font-size:1.1rem; font-weight:800; color:#FFD700;
+        font-size:1.05rem; font-weight:800; color:#FFD700;
         letter-spacing:2px; text-transform:uppercase;
-        margin-bottom:18px; display:flex; align-items:center; gap:8px;
+        margin-bottom:16px;
     }}
 
-    /* Chaque étape */
     .g-step {{
         display:flex; align-items:flex-start; gap:14px;
         background:rgba(255,255,255,0.04);
         border:1px solid rgba(255,215,0,0.12);
-        border-radius:14px; padding:14px 16px;
-        margin-bottom:10px;
+        border-radius:14px; padding:14px 16px; margin-bottom:10px;
     }}
-    .g-step-num {{ font-size:1.6rem; flex-shrink:0; }}
+    .g-step-num  {{ font-size:1.6rem; flex-shrink:0; line-height:1.2; }}
     .g-step-body {{ display:flex; flex-direction:column; gap:3px; }}
     .g-step-title {{ font-size:0.95rem; font-weight:700; color:#FFD700; }}
     .g-step-desc  {{ font-size:0.8rem; color:rgba(255,255,255,0.5); }}
 
-    /* Étape succès */
-    .g-step-success .g-step-title {{ color:#2ecc71 !important; }}
-
-    /* Badge bas */
     .g-badge {{
         text-align:center; color:rgba(255,215,0,0.3);
-        font-size:0.72rem; letter-spacing:2px;
-        text-transform:uppercase; margin-top:10px;
-        position:relative; z-index:1;
+        font-size:0.72rem; letter-spacing:2px; text-transform:uppercase;
+        margin-top:10px; position:relative; z-index:1;
     }}
     </style>
 
@@ -1865,17 +1851,13 @@ def show_install_guide(uid):
     <span class="g-star" style="top:62%; left:93%; animation-delay:0.3s;">✨</span>
     <span class="g-star" style="top:78%; left:8%;  animation-delay:1.8s;">⭐</span>
     <span class="g-star" style="top:88%; left:78%; animation-delay:0.9s;">💫</span>
-    """, unsafe_allow_html=True)
 
-    # --- Icône + Titre ---
-    st.markdown("<div class='g-icon-ring'>📲</div>", unsafe_allow_html=True)
-    st.markdown("<div class='g-title'>NOVA AI</div>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:rgba(255,215,0,0.55); letter-spacing:4px; font-size:0.82rem; margin-top:6px; position:relative; z-index:1;'>VOTRE APPLICATION PERSONNELLE</p>", unsafe_allow_html=True)
+    <!-- Icône + Titre -->
+    <div class="g-icon-ring">📲</div>
+    <div class="g-title-main">NOVA AI</div>
+    <p style="text-align:center; color:rgba(255,215,0,0.55); letter-spacing:4px; font-size:0.82rem; margin-top:6px; position:relative; z-index:1;">VOTRE APPLICATION PERSONNELLE</p>
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- Bloc bienvenue + lien ---
-    st.markdown(f"""
+    <!-- Bienvenue + Lien -->
     <div class="g-welcome">
         <div style="font-size:1.05rem; font-weight:700; color:white; margin-bottom:6px;">
             🎉 Bienvenue <span style="color:#FFD700;">{uid}</span> !
@@ -1887,6 +1869,74 @@ def show_install_guide(uid):
         <div class="g-lien">{lien}</div>
         <a href="{lien}" target="_blank" class="g-btn">⚡ Ouvrir Mon Espace Nova</a>
     </div>
+
+    <!-- Android -->
+    <div class="g-section">
+        <div class="g-section-title">📱 Vous avez un Android ?</div>
+        <div class="g-step">
+            <div class="g-step-num">1️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur "Ouvrir Mon Espace Nova"</div>
+                <div class="g-step-desc">Le bouton doré juste au-dessus</div>
+            </div>
+        </div>
+        <div class="g-step">
+            <div class="g-step-num">2️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur les ⋮ trois points</div>
+                <div class="g-step-desc">En haut à droite de votre navigateur Chrome</div>
+            </div>
+        </div>
+        <div class="g-step">
+            <div class="g-step-num">3️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Choisissez "Ajouter à l'écran d'accueil"</div>
+                <div class="g-step-desc">Dans le menu qui s'ouvre</div>
+            </div>
+        </div>
+        <div class="g-step" style="border-color:rgba(46,204,113,0.25);">
+            <div class="g-step-num">✅</div>
+            <div class="g-step-body">
+                <div class="g-step-title" style="color:#2ecc71;">C'est installé !</div>
+                <div class="g-step-desc">L'icône Nova AI apparaît sur votre écran d'accueil 🎉</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- iPhone -->
+    <div class="g-section">
+        <div class="g-section-title">🍎 Vous avez un iPhone ?</div>
+        <div class="g-step">
+            <div class="g-step-num">1️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur "Ouvrir Mon Espace Nova"</div>
+                <div class="g-step-desc">Ouvrez-le dans Safari (pas Chrome)</div>
+            </div>
+        </div>
+        <div class="g-step">
+            <div class="g-step-num">2️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur l'icône 📤 Partager</div>
+                <div class="g-step-desc">En bas au centre de votre écran Safari</div>
+            </div>
+        </div>
+        <div class="g-step">
+            <div class="g-step-num">3️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Choisissez "Sur l'écran d'accueil"</div>
+                <div class="g-step-desc">Faites défiler la liste vers le bas pour le trouver</div>
+            </div>
+        </div>
+        <div class="g-step" style="border-color:rgba(46,204,113,0.25);">
+            <div class="g-step-num">✅</div>
+            <div class="g-step-body">
+                <div class="g-step-title" style="color:#2ecc71;">C'est installé !</div>
+                <div class="g-step-desc">Appuyez sur "Ajouter" — Nova AI est sur votre écran 🎉</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="g-badge">🔒 Accès sécurisé &nbsp;·&nbsp; ⚡ Nova AI &nbsp;·&nbsp; 🛡️ Données protégées</div>
     """, unsafe_allow_html=True)
 
     # --- Android ---
@@ -1918,10 +1968,10 @@ def show_install_guide(uid):
             </div>
         </div>
 
-        <div class="g-step g-step-success">
+        <div class="g-step" style="border-color:rgba(46,204,113,0.25);">
             <div class="g-step-num">✅</div>
             <div class="g-step-body">
-                <div class="g-step-title">C'est installé !</div>
+                <div class="g-step-title" style="color:#2ecc71;">C'est installé !</div>
                 <div class="g-step-desc">L'icône Nova AI apparaît sur votre écran d'accueil 🎉</div>
             </div>
         </div>
@@ -1957,10 +2007,10 @@ def show_install_guide(uid):
             </div>
         </div>
 
-        <div class="g-step g-step-success">
+        <div class="g-step" style="border-color:rgba(46,204,113,0.25);">
             <div class="g-step-num">✅</div>
             <div class="g-step-body">
-                <div class="g-step-title">C'est installé !</div>
+                <div class="g-step-title" style="color:#2ecc71;">C'est installé !</div>
                 <div class="g-step-desc">Appuyez sur "Ajouter" — Nova AI est sur votre écran 🎉</div>
             </div>
         </div>
