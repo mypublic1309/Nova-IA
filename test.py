@@ -765,7 +765,91 @@ def show_auth_page():
                     st.session_state["current_user"] = uid
                     st.session_state["view"] = "home"
                     st.query_params["user_id"] = uid
-                    st.rerun()
+                    components.html(f"""
+                        <div style="
+                            background: linear-gradient(135deg, #1a1a2e, #16213e);
+                            border: 2px solid #FFD700;
+                            border-radius: 20px;
+                            padding: 25px 20px;
+                            font-family: Poppins, sans-serif;
+                            color: white;
+                            max-width: 500px;
+                            margin: 0 auto;
+                        ">
+                            <div style="text-align:center; margin-bottom:18px;">
+                                <div style="font-size:2.5rem;">📲</div>
+                                <div style="color:#FFD700; font-weight:800; font-size:1.1rem; margin-top:8px;">
+                                    INSTALLEZ VOTRE ESPACE NOVA AI
+                                </div>
+                                <div style="color:rgba(255,255,255,0.6); font-size:0.8rem; margin-top:4px;">
+                                    Ne vous reconnectez plus jamais — accès direct depuis votre écran d'accueil
+                                </div>
+                            </div>
+
+                            <div style="
+                                background: rgba(0,0,0,0.4);
+                                border: 1px solid rgba(0,210,255,0.4);
+                                border-radius: 12px;
+                                padding: 12px;
+                                text-align:center;
+                                margin-bottom: 18px;
+                            ">
+                                <div style="color:rgba(255,255,255,0.5); font-size:0.75rem; margin-bottom:4px;">🔗 VOTRE LIEN PERSONNEL</div>
+                                <div style="color:#00d2ff; font-weight:700; font-size:0.85rem; word-break:break-all;">
+                                    espace-partage-8.streamlit.app/?user_id={uid}
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:16px;">
+                                <div style="color:#FFD700; font-weight:700; font-size:0.9rem; margin-bottom:10px;">📱 Sur Android (Chrome) :</div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
+                                        <b style="color:#00d2ff;">1.</b> Cliquez sur le bouton <b>"Mon lien Nova"</b> ci-dessous
+                                    </div>
+                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
+                                        <b style="color:#00d2ff;">2.</b> Appuyez sur les <b>⋮ trois points</b> en haut à droite
+                                    </div>
+                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
+                                        <b style="color:#00d2ff;">3.</b> Choisissez <b>"Ajouter à l'écran d'accueil"</b>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:20px;">
+                                <div style="color:#FFD700; font-weight:700; font-size:0.9rem; margin-bottom:10px;">🍎 Sur iPhone (Safari) :</div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
+                                        <b style="color:#00d2ff;">1.</b> Cliquez sur le bouton <b>"Mon lien Nova"</b> ci-dessous
+                                    </div>
+                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
+                                        <b style="color:#00d2ff;">2.</b> Appuyez sur l'icône <b>📤 Partager</b> en bas
+                                    </div>
+                                    <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; font-size:0.82rem;">
+                                        <b style="color:#00d2ff;">3.</b> Choisissez <b>"Sur l'écran d'accueil"</b>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align:center;">
+                                <a href="https://espace-partage-8.streamlit.app/?user_id={uid}" target="_blank"
+                                   style="
+                                    display:inline-block;
+                                    background: linear-gradient(45deg, #FFD700, #FF8C00);
+                                    color:#000; font-weight:800; font-size:1rem;
+                                    padding:12px 30px; border-radius:50px;
+                                    text-decoration:none;
+                                    box-shadow: 0 5px 20px rgba(255,215,0,0.4);
+                                   ">
+                                    🔗 Mon lien Nova
+                                </a>
+                            </div>
+                        </div>
+                        <script>
+                        setTimeout(function() {{
+                            window.parent.location.replace('https://espace-partage-8.streamlit.app/?user_id={uid}');
+                        }}, 15000);
+                        </script>
+                    """, height=600)
                 else:
                     st.error("❌ Identifiant ou numéro inconnu.")
 
