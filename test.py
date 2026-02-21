@@ -1924,20 +1924,60 @@ def show_install_guide(uid):
 
         <!-- Android -->
         <div class="guide-card" style="animation-delay:0.4s;">
-            <div class="guide-section-title">📱 Android — Chrome</div>
-            <div class="guide-step" style="animation-delay:0.5s;"><b>Étape 1 ·</b> Appuyez sur <b>"Ouvrir Mon Espace Nova"</b> ci-dessus</div>
-            <div class="guide-step" style="animation-delay:0.6s;"><b>Étape 2 ·</b> Appuyez sur les <b>⋮ trois points</b> en haut à droite du navigateur</div>
-            <div class="guide-step" style="animation-delay:0.7s;"><b>Étape 3 ·</b> Choisissez <b>"Ajouter à l'écran d'accueil"</b></div>
-            <div class="guide-step" style="animation-delay:0.8s;"><b>Étape 4 ·</b> Confirmez — l'icône Nova AI apparaît sur votre écran 🎉</div>
+            <div class="guide-section-title">📱 Vous avez un Android ?</div>
+
+            <div class="guide-step" style="animation-delay:0.5s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">1️⃣</div>
+                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur "Ouvrir Mon Espace Nova"</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Le bouton doré juste en dessous</div>
+            </div>
+
+            <div class="guide-step" style="animation-delay:0.6s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">2️⃣</div>
+                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur les ⋮ trois points</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">En haut à droite de votre navigateur Chrome</div>
+            </div>
+
+            <div class="guide-step" style="animation-delay:0.7s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">3️⃣</div>
+                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Choisissez "Ajouter à l'écran d'accueil"</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Dans le menu qui s'ouvre</div>
+            </div>
+
+            <div class="guide-step" style="animation-delay:0.8s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">✅</div>
+                <div style="font-size:1rem; font-weight:700; color:#2ecc71; margin-bottom:3px;">C'est installé !</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">L'icône Nova AI apparaît sur votre écran d'accueil 🎉</div>
+            </div>
         </div>
 
         <!-- iPhone -->
         <div class="guide-card" style="animation-delay:0.6s;">
-            <div class="guide-section-title">🍎 iPhone — Safari</div>
-            <div class="guide-step" style="animation-delay:0.7s;"><b>Étape 1 ·</b> Appuyez sur <b>"Ouvrir Mon Espace Nova"</b> ci-dessus</div>
-            <div class="guide-step" style="animation-delay:0.8s;"><b>Étape 2 ·</b> Appuyez sur l'icône <b>📤 Partager</b> en bas de Safari</div>
-            <div class="guide-step" style="animation-delay:0.9s;"><b>Étape 3 ·</b> Faites défiler et choisissez <b>"Sur l'écran d'accueil"</b></div>
-            <div class="guide-step" style="animation-delay:1.0s;"><b>Étape 4 ·</b> Appuyez sur <b>"Ajouter"</b> — Nova AI est installé 🎉</div>
+            <div class="guide-section-title">🍎 Vous avez un iPhone ?</div>
+
+            <div class="guide-step" style="animation-delay:0.7s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">1️⃣</div>
+                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur "Ouvrir Mon Espace Nova"</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Le bouton doré juste en dessous — ouvrez-le dans Safari</div>
+            </div>
+
+            <div class="guide-step" style="animation-delay:0.8s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">2️⃣</div>
+                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur l'icône 📤 Partager</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">En bas au centre de votre écran Safari</div>
+            </div>
+
+            <div class="guide-step" style="animation-delay:0.9s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">3️⃣</div>
+                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Choisissez "Sur l'écran d'accueil"</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Faites défiler la liste vers le bas pour le trouver</div>
+            </div>
+
+            <div class="guide-step" style="animation-delay:1.0s;">
+                <div style="font-size:1.8rem; margin-bottom:6px;">✅</div>
+                <div style="font-size:1rem; font-weight:700; color:#2ecc71; margin-bottom:3px;">C'est installé !</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Appuyez sur "Ajouter" — Nova AI est sur votre écran 🎉</div>
+            </div>
         </div>
 
         <!-- Badge -->
