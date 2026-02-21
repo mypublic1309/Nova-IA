@@ -167,7 +167,6 @@ if st.session_state["current_user"] is None:
             })();
             </script>
         """, height=0)
-        st.stop()
 
 # Sauvegarder dans localStorage à chaque connexion
 if st.session_state["current_user"]:
