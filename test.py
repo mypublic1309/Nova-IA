@@ -1740,260 +1740,241 @@ components.html("""
 # ==========================================
 def show_install_guide(uid):
     lien = f"https://espace-partage-8.streamlit.app/?user_id={uid}"
+
     st.markdown(f"""
     <style>
-    @keyframes float-letter {{
-        0%   {{ transform: translateY(0px) rotate(-3deg); opacity:0.7; }}
-        50%  {{ transform: translateY(-18px) rotate(3deg); opacity:1; }}
-        100% {{ transform: translateY(0px) rotate(-3deg); opacity:0.7; }}
-    }}
-    @keyframes shimmer-gold {{
-        0%   {{ background-position: -300% center; }}
-        100% {{ background-position:  300% center; }}
-    }}
-    @keyframes pulse-ring {{
-        0%   {{ box-shadow: 0 0 0 0 rgba(255,215,0,0.5); }}
-        70%  {{ box-shadow: 0 0 0 20px rgba(255,215,0,0); }}
-        100% {{ box-shadow: 0 0 0 0 rgba(255,215,0,0); }}
-    }}
-    @keyframes star-drift {{
-        0%   {{ transform: translateY(0) translateX(0) scale(1); opacity:0.8; }}
-        33%  {{ transform: translateY(-25px) translateX(10px) scale(1.3); opacity:1; }}
-        66%  {{ transform: translateY(-10px) translateX(-8px) scale(0.9); opacity:0.6; }}
-        100% {{ transform: translateY(0) translateX(0) scale(1); opacity:0.8; }}
-    }}
-    @keyframes slide-in-up {{
-        0%   {{ opacity:0; transform: translateY(40px); }}
-        100% {{ opacity:1; transform: translateY(0); }}
-    }}
-    @keyframes glow-line {{
-        0%,100% {{ opacity:0.4; }}
-        50%      {{ opacity:1; }}
+    @keyframes shimmer-g  {{ 0% {{ background-position:-300% center; }} 100% {{ background-position:300% center; }} }}
+    @keyframes float-g    {{ 0%,100% {{ transform:translateY(0); }} 50% {{ transform:translateY(-10px); }} }}
+    @keyframes glow-g     {{ 0%,100% {{ box-shadow:0 0 15px rgba(255,215,0,0.3); }} 50% {{ box-shadow:0 0 45px rgba(255,215,0,0.8); }} }}
+    @keyframes particle-g {{ 0% {{ transform:translateY(0) scale(1); opacity:0.7; }} 50% {{ transform:translateY(-20px) scale(1.4); opacity:1; }} 100% {{ transform:translateY(0) scale(1); opacity:0.7; }} }}
+    @keyframes slide-g    {{ 0% {{ opacity:0; transform:translateY(25px); }} 100% {{ opacity:1; transform:translateY(0); }} }}
+    @keyframes rotate-g   {{ 0% {{ transform:rotate(0deg); }} 100% {{ transform:rotate(360deg); }} }}
+
+    /* Étoiles fixes */
+    .g-star {{ position:fixed; pointer-events:none; z-index:0; animation:particle-g 3s ease-in-out infinite; font-size:1.1rem; }}
+
+    /* Titre */
+    .g-title {{
+        font-size:2.4rem; font-weight:800; text-align:center;
+        background: linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
+        background-size:300% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        animation: shimmer-g 3s linear infinite; letter-spacing:4px;
+        position:relative; z-index:1;
     }}
 
-    .guide-page {{
-        min-height: 100vh;
-        padding: 40px 20px;
-        text-align: center;
+    /* Icône centrale */
+    .g-icon-ring {{
+        width:90px; height:90px; border-radius:50%;
+        background: radial-gradient(circle at 35% 35%, #fff8e1, #FFD700 40%, #b8860b);
+        display:flex; align-items:center; justify-content:center;
+        font-size:2.8rem; margin:0 auto 16px auto;
+        animation: glow-g 2.5s ease-in-out infinite, float-g 3s ease-in-out infinite;
+        position:relative; z-index:1;
     }}
-    .guide-stars {{
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
+    .g-icon-ring::after {{
+        content:''; position:absolute; inset:-8px; border-radius:50%;
+        border:2px dashed rgba(255,215,0,0.45);
+        animation: rotate-g 7s linear infinite;
     }}
-    .guide-star {{
-        position: absolute;
-        font-size: 1rem;
-        animation: star-drift 4s ease-in-out infinite;
-    }}
-    .guide-title-wrap {{
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-        position: relative;
-        z-index: 1;
-    }}
-    .guide-letter {{
-        font-size: 2.8rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
-        background-size: 300% auto;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: float-letter 3s ease-in-out infinite, shimmer-gold 3s linear infinite;
-        display: inline-block;
-    }}
-    .guide-card {{
+
+    /* Bloc bienvenue */
+    .g-welcome {{
         background: linear-gradient(145deg, rgba(15,10,2,0.97), rgba(30,20,5,0.95));
-        border: 1px solid rgba(255,215,0,0.4);
-        border-radius: 24px;
-        padding: 30px 25px;
-        margin: 15px auto;
-        max-width: 600px;
-        position: relative;
-        overflow: hidden;
-        animation: slide-in-up 0.7s ease both;
-        z-index: 1;
+        border:1px solid rgba(255,215,0,0.4); border-radius:20px;
+        padding:22px 24px; margin-bottom:18px;
+        position:relative; overflow:hidden;
+        animation: slide-g 0.6s ease both, glow-g 4s ease-in-out infinite;
+        z-index:1;
     }}
-    .guide-card::before {{
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
-        background-size: 200% auto;
-        animation: shimmer-gold 2.5s linear infinite;
-        border-radius: 24px 24px 0 0;
+    .g-welcome::before {{
+        content:''; position:absolute; top:0; left:0; right:0; height:3px;
+        background:linear-gradient(90deg,#7a5500,#FFD700,#fff5c0,#FFD700,#7a5500);
+        background-size:200% auto; animation:shimmer-g 2s linear infinite;
     }}
-    .guide-lien-box {{
-        background: rgba(0,0,0,0.5);
-        border: 1px solid rgba(0,210,255,0.5);
-        border-radius: 14px;
-        padding: 14px 18px;
-        margin: 18px 0;
-        word-break: break-all;
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #00d2ff;
-        letter-spacing: 0.5px;
-        animation: glow-line 2s ease-in-out infinite;
+
+    /* Bloc lien */
+    .g-lien {{
+        background:rgba(0,0,0,0.55); border:1px solid rgba(0,210,255,0.5);
+        border-radius:14px; padding:14px 18px; margin:14px 0;
+        font-size:0.92rem; font-weight:700; color:#00d2ff;
+        word-break:break-all; letter-spacing:0.5px;
+        text-align:center;
     }}
-    .guide-step {{
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,215,0,0.15);
-        border-radius: 14px;
-        padding: 14px 16px;
-        margin-bottom: 10px;
-        text-align: left;
-        font-size: 0.88rem;
-        color: rgba(255,255,255,0.85);
-        animation: slide-in-up 0.6s ease both;
+
+    /* Bouton doré */
+    .g-btn {{
+        display:block; text-align:center;
+        background:linear-gradient(90deg,#7a5500,#b8860b,#FFD700,#fff5c0,#FFD700,#b8860b,#7a5500);
+        background-size:300% auto; color:#0a0800 !important;
+        font-weight:800; font-size:1rem; padding:14px 28px;
+        border-radius:50px; text-decoration:none; letter-spacing:2px;
+        animation:shimmer-g 3s linear infinite;
+        box-shadow:0 6px 25px rgba(255,215,0,0.45);
+        margin:12px 0;
     }}
-    .guide-step b {{ color: #00d2ff; }}
-    .guide-btn {{
-        display: inline-block;
-        background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500);
-        background-size: 300% auto;
-        color: #0a0800 !important;
-        font-weight: 800;
-        font-size: 1.05rem;
-        padding: 14px 35px;
-        border-radius: 50px;
-        text-decoration: none;
-        box-shadow: 0 6px 25px rgba(255,215,0,0.45);
-        animation: shimmer-gold 3s linear infinite, pulse-ring 2.5s ease-in-out infinite;
-        margin-top: 10px;
-        letter-spacing: 1px;
+
+    /* Bloc section Android/iPhone */
+    .g-section {{
+        background:linear-gradient(145deg, rgba(15,10,2,0.97), rgba(30,20,5,0.95));
+        border:1px solid rgba(255,215,0,0.3); border-radius:20px;
+        padding:24px 22px; margin-bottom:16px;
+        position:relative; overflow:hidden;
+        animation: slide-g 0.6s ease both;
+        z-index:1;
     }}
-    .guide-section-title {{
-        color: #FFD700;
-        font-weight: 800;
-        font-size: 1rem;
-        text-align: left;
-        margin-bottom: 10px;
-        margin-top: 18px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
+    .g-section::before {{
+        content:''; position:absolute; top:0; left:0; right:0; height:3px;
+        background:linear-gradient(90deg,#7a5500,#FFD700,#fff5c0,#FFD700,#7a5500);
+        background-size:200% auto; animation:shimmer-g 2s linear infinite;
+    }}
+    .g-section-title {{
+        font-size:1.1rem; font-weight:800; color:#FFD700;
+        letter-spacing:2px; text-transform:uppercase;
+        margin-bottom:18px; display:flex; align-items:center; gap:8px;
+    }}
+
+    /* Chaque étape */
+    .g-step {{
+        display:flex; align-items:flex-start; gap:14px;
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,215,0,0.12);
+        border-radius:14px; padding:14px 16px;
+        margin-bottom:10px;
+    }}
+    .g-step-num {{ font-size:1.6rem; flex-shrink:0; }}
+    .g-step-body {{ display:flex; flex-direction:column; gap:3px; }}
+    .g-step-title {{ font-size:0.95rem; font-weight:700; color:#FFD700; }}
+    .g-step-desc  {{ font-size:0.8rem; color:rgba(255,255,255,0.5); }}
+
+    /* Étape succès */
+    .g-step-success .g-step-title {{ color:#2ecc71 !important; }}
+
+    /* Badge bas */
+    .g-badge {{
+        text-align:center; color:rgba(255,215,0,0.3);
+        font-size:0.72rem; letter-spacing:2px;
+        text-transform:uppercase; margin-top:10px;
+        position:relative; z-index:1;
     }}
     </style>
 
-    <div class="guide-page">
+    <!-- Étoiles -->
+    <span class="g-star" style="top:5%;  left:5%;  animation-delay:0s;">✨</span>
+    <span class="g-star" style="top:12%; left:88%; animation-delay:0.6s;">⭐</span>
+    <span class="g-star" style="top:38%; left:2%;  animation-delay:1.2s;">💫</span>
+    <span class="g-star" style="top:62%; left:93%; animation-delay:0.3s;">✨</span>
+    <span class="g-star" style="top:78%; left:8%;  animation-delay:1.8s;">⭐</span>
+    <span class="g-star" style="top:88%; left:78%; animation-delay:0.9s;">💫</span>
+    """, unsafe_allow_html=True)
 
-        <!-- Étoiles flottantes -->
-        <div class="guide-stars">
-            <span class="guide-star" style="top:8%; left:5%; animation-delay:0s;">✨</span>
-            <span class="guide-star" style="top:15%; left:88%; animation-delay:0.8s;">⭐</span>
-            <span class="guide-star" style="top:35%; left:3%; animation-delay:1.5s;">💫</span>
-            <span class="guide-star" style="top:60%; left:92%; animation-delay:0.3s;">✨</span>
-            <span class="guide-star" style="top:75%; left:7%; animation-delay:1.2s;">⭐</span>
-            <span class="guide-star" style="top:85%; left:80%; animation-delay:0.6s;">💫</span>
-            <span class="guide-star" style="top:50%; left:50%; animation-delay:2s;">✨</span>
+    # --- Icône + Titre ---
+    st.markdown("<div class='g-icon-ring'>📲</div>", unsafe_allow_html=True)
+    st.markdown("<div class='g-title'>NOVA AI</div>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:rgba(255,215,0,0.55); letter-spacing:4px; font-size:0.82rem; margin-top:6px; position:relative; z-index:1;'>VOTRE APPLICATION PERSONNELLE</p>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- Bloc bienvenue + lien ---
+    st.markdown(f"""
+    <div class="g-welcome">
+        <div style="font-size:1.05rem; font-weight:700; color:white; margin-bottom:6px;">
+            🎉 Bienvenue <span style="color:#FFD700;">{uid}</span> !
         </div>
-
-        <!-- Titre animé -->
-        <div style="position:relative; z-index:1; margin-bottom:6px;">
-            <div style="font-size:3.5rem; margin-bottom:10px;">📲</div>
-            <div class="guide-title-wrap">
-                {''.join(f'<span class="guide-letter" style="animation-delay:{i*0.12}s">{c if c != " " else "&nbsp;"}</span>' for i, c in enumerate("NOVA AI"))}
-            </div>
-            <div style="color:rgba(255,215,0,0.6); font-size:0.85rem; letter-spacing:4px; text-transform:uppercase; margin-top:4px;">
-                Votre Application Personnelle
-            </div>
+        <div style="color:rgba(255,255,255,0.5); font-size:0.85rem; margin-bottom:14px;">
+            Installez votre espace Nova AI en quelques secondes — ne vous reconnectez plus jamais.
         </div>
+        <div style="color:rgba(255,255,255,0.35); font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">🔗 Votre lien personnel</div>
+        <div class="g-lien">{lien}</div>
+        <a href="{lien}" target="_blank" class="g-btn">⚡ Ouvrir Mon Espace Nova</a>
+    </div>
+    """, unsafe_allow_html=True)
 
-        <!-- Carte principale -->
-        <div class="guide-card" style="animation-delay:0.2s;">
-            <div style="color:white; font-size:1rem; font-weight:600; margin-bottom:4px;">
-                🎉 Bienvenue <span style="color:#FFD700;">{uid}</span> !
-            </div>
-            <div style="color:rgba(255,255,255,0.5); font-size:0.82rem; margin-bottom:6px;">
-                Installez votre espace Nova AI en quelques secondes — ne vous reconnectez plus jamais.
-            </div>
+    # --- Android ---
+    st.markdown("""
+    <div class="g-section" style="animation-delay:0.2s;">
+        <div class="g-section-title">📱 Vous avez un Android ?</div>
 
-            <div style="color:rgba(255,255,255,0.4); font-size:0.75rem; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">🔗 Votre lien personnel</div>
-            <div class="guide-lien-box">{lien}</div>
-
-            <div style="text-align:center; margin-bottom:8px;">
-                <a href="{lien}" target="_blank" class="guide-btn">⚡ Ouvrir Mon Espace Nova</a>
-            </div>
-        </div>
-
-        <!-- Android -->
-        <div class="guide-card" style="animation-delay:0.4s;">
-            <div class="guide-section-title">📱 Vous avez un Android ?</div>
-
-            <div class="guide-step" style="animation-delay:0.5s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">1️⃣</div>
-                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur "Ouvrir Mon Espace Nova"</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Le bouton doré juste en dessous</div>
-            </div>
-
-            <div class="guide-step" style="animation-delay:0.6s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">2️⃣</div>
-                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur les ⋮ trois points</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">En haut à droite de votre navigateur Chrome</div>
-            </div>
-
-            <div class="guide-step" style="animation-delay:0.7s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">3️⃣</div>
-                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Choisissez "Ajouter à l'écran d'accueil"</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Dans le menu qui s'ouvre</div>
-            </div>
-
-            <div class="guide-step" style="animation-delay:0.8s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">✅</div>
-                <div style="font-size:1rem; font-weight:700; color:#2ecc71; margin-bottom:3px;">C'est installé !</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">L'icône Nova AI apparaît sur votre écran d'accueil 🎉</div>
+        <div class="g-step">
+            <div class="g-step-num">1️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur "Ouvrir Mon Espace Nova"</div>
+                <div class="g-step-desc">Le bouton doré juste au-dessus</div>
             </div>
         </div>
 
-        <!-- iPhone -->
-        <div class="guide-card" style="animation-delay:0.6s;">
-            <div class="guide-section-title">🍎 Vous avez un iPhone ?</div>
-
-            <div class="guide-step" style="animation-delay:0.7s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">1️⃣</div>
-                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur "Ouvrir Mon Espace Nova"</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Le bouton doré juste en dessous — ouvrez-le dans Safari</div>
-            </div>
-
-            <div class="guide-step" style="animation-delay:0.8s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">2️⃣</div>
-                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Appuyez sur l'icône 📤 Partager</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">En bas au centre de votre écran Safari</div>
-            </div>
-
-            <div class="guide-step" style="animation-delay:0.9s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">3️⃣</div>
-                <div style="font-size:1rem; font-weight:700; color:#FFD700; margin-bottom:3px;">Choisissez "Sur l'écran d'accueil"</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Faites défiler la liste vers le bas pour le trouver</div>
-            </div>
-
-            <div class="guide-step" style="animation-delay:1.0s;">
-                <div style="font-size:1.8rem; margin-bottom:6px;">✅</div>
-                <div style="font-size:1rem; font-weight:700; color:#2ecc71; margin-bottom:3px;">C'est installé !</div>
-                <div style="color:rgba(255,255,255,0.55); font-size:0.82rem;">Appuyez sur "Ajouter" — Nova AI est sur votre écran 🎉</div>
+        <div class="g-step">
+            <div class="g-step-num">2️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur les ⋮ trois points</div>
+                <div class="g-step-desc">En haut à droite de votre navigateur Chrome</div>
             </div>
         </div>
 
-        <!-- Badge -->
-        <div style="position:relative; z-index:1; margin-top:20px; color:rgba(255,215,0,0.3); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase;">
-            🔒 Accès sécurisé &nbsp;·&nbsp; ⚡ Nova AI &nbsp;·&nbsp; 🛡️ Données protégées
+        <div class="g-step">
+            <div class="g-step-num">3️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Choisissez "Ajouter à l'écran d'accueil"</div>
+                <div class="g-step-desc">Dans le menu qui s'ouvre</div>
+            </div>
+        </div>
+
+        <div class="g-step g-step-success">
+            <div class="g-step-num">✅</div>
+            <div class="g-step-body">
+                <div class="g-step-title">C'est installé !</div>
+                <div class="g-step-desc">L'icône Nova AI apparaît sur votre écran d'accueil 🎉</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
+    # --- iPhone ---
+    st.markdown("""
+    <div class="g-section" style="animation-delay:0.4s;">
+        <div class="g-section-title">🍎 Vous avez un iPhone ?</div>
+
+        <div class="g-step">
+            <div class="g-step-num">1️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur "Ouvrir Mon Espace Nova"</div>
+                <div class="g-step-desc">Ouvrez-le dans Safari (pas Chrome)</div>
+            </div>
+        </div>
+
+        <div class="g-step">
+            <div class="g-step-num">2️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Appuyez sur l'icône 📤 Partager</div>
+                <div class="g-step-desc">En bas au centre de votre écran Safari</div>
+            </div>
+        </div>
+
+        <div class="g-step">
+            <div class="g-step-num">3️⃣</div>
+            <div class="g-step-body">
+                <div class="g-step-title">Choisissez "Sur l'écran d'accueil"</div>
+                <div class="g-step-desc">Faites défiler la liste vers le bas pour le trouver</div>
+            </div>
+        </div>
+
+        <div class="g-step g-step-success">
+            <div class="g-step-num">✅</div>
+            <div class="g-step-body">
+                <div class="g-step-title">C'est installé !</div>
+                <div class="g-step-desc">Appuyez sur "Ajouter" — Nova AI est sur votre écran 🎉</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div class='g-badge'>🔒 Accès sécurisé &nbsp;·&nbsp; ⚡ Nova AI &nbsp;·&nbsp; 🛡️ Données protégées</div>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
+
     col_c = st.columns([1, 2, 1])[1]
     with col_c:
         if st.button("✅ J'ai installé — Accéder à mon espace", key="guide_done"):
             st.session_state["show_install_guide"] = False
             st.rerun()
-
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
 elif st.session_state.get("show_install_guide"):
