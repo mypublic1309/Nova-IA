@@ -147,26 +147,11 @@ if "warning_triggered" not in st.session_state:
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
 
-# Reconnaissance automatique via cookie navigateur (session persistante)
+# Reconnaissance automatique via query_params (session persistante)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
         st.session_state["current_user"] = stored_user
-    else:
-        components.html("""
-            <script>
-            (function() {
-                var uid = localStorage.getItem('nova_user_id');
-                if (uid) {
-                    var url = new URL(window.parent.location.href);
-                    if (url.searchParams.get('user_id') !== uid) {
-                        url.searchParams.set('user_id', uid);
-                        window.parent.location.replace(url.toString());
-                    }
-                }
-            })();
-            </script>
-        """, height=0)
 
 # Sauvegarder dans localStorage à chaque connexion
 if st.session_state["current_user"]:
@@ -1505,24 +1490,8 @@ def main_dashboard():
 
 inject_custom_css()
 
-# Gestion de la persistance via localStorage
-components.html("""
-    <script>
-    const user = localStorage.getItem('nova_user');
-    const urlParams = new URLSearchParams(window.parent.location.search);
-    const currentUser = urlParams.get('user_id');
-    
-    if (user && !currentUser && !window.parent.location.href.includes('logout')) {
-        window.parent.location.href = window.parent.location.origin + window.parent.location.pathname + '?user_id=' + user;
-    }
-    if (!currentUser && user && window.parent.location.href.includes('logout')) {
-        localStorage.removeItem('nova_user');
-    }
-    if (currentUser && user !== currentUser) {
-        localStorage.setItem('nova_user', currentUser);
-    }
-    </script>
-""", height=0)
+
+
 
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
