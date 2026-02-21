@@ -5,6 +5,7 @@ import hashlib
 import time
 from datetime import datetime
 import streamlit.components.v1 as components
+from supabase import create_client
 
 # ==========================================
 # CONFIGURATION ET CONSTANTES
@@ -19,44 +20,105 @@ st.set_page_config(
 DATA_FILE = "data_nova_v3.json"
 ADMIN_CODE = "02110240"
 
+# --- CONNEXION SUPABASE ---
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 # --- FONCTION NORMALISATION NUMÉRO WHATSAPP ---
 def normalize_wa(numero):
-    """Convertit un numéro local en format international WhatsApp."""
     if not numero:
         return ""
     numero = numero.strip().replace(" ", "").replace("-", "").replace("+", "")
-    # Si commence par 0 → ajouter 225 devant en gardant le 0
     if numero.startswith("0") and not numero.startswith("00"):
         numero = "225" + numero
-    # Si déjà 225... laisser tel quel
     return numero
+
+# --- FONCTIONS SUPABASE ---
+def load_db():
+    try:
+        # Charger users
+        users_rows = supabase.table("users").select("*").execute().data
+        users = {r["uid"]: {"whatsapp": r["whatsapp"], "email": r["email"], "joined": r["joined"]} for r in users_rows}
+
+        # Charger demandes
+        demandes_rows = supabase.table("demandes").select("*").execute().data
+        demandes = []
+        for r in demandes_rows:
+            demandes.append({
+                "id": r["id"],
+                "user": r["uid"],
+                "service": r["service"],
+                "desc": r["description"],
+                "whatsapp": r["whatsapp"],
+                "status": r["status"],
+                "incomplet": r["incomplet"],
+                "champs_manquants": json.loads(r["champs_manquants"]) if r["champs_manquants"] else [],
+                "timestamp": r["timestamp"]
+            })
+
+        # Charger liens
+        liens_rows = supabase.table("liens").select("*").execute().data
+        liens = {}
+        for r in liens_rows:
+            if r["uid"] not in liens:
+                liens[r["uid"]] = []
+            liens[r["uid"]].append({"name": r["name"], "url": r["url"], "date": r["date"]})
+
+        return {"users": users, "demandes": demandes, "liens": liens}
+    except Exception as e:
+        st.error(f"Erreur chargement Supabase : {e}")
+        return {"users": {}, "demandes": [], "liens": {}}
+
+def save_user(uid, whatsapp, email="Non renseigné"):
+    try:
+        supabase.table("users").upsert({
+            "uid": uid, "whatsapp": whatsapp,
+            "email": email, "joined": str(datetime.now())
+        }).execute()
+    except Exception as e:
+        st.error(f"Erreur sauvegarde utilisateur : {e}")
+
+def save_demande(req):
+    try:
+        supabase.table("demandes").upsert({
+            "id": req["id"],
+            "uid": req["user"],
+            "service": req["service"],
+            "description": req["desc"],
+            "whatsapp": req["whatsapp"],
+            "status": req["status"],
+            "incomplet": req["incomplet"],
+            "champs_manquants": json.dumps(req["champs_manquants"]),
+            "timestamp": req["timestamp"]
+        }).execute()
+    except Exception as e:
+        st.error(f"Erreur sauvegarde demande : {e}")
+
+def delete_demande(req_id):
+    try:
+        supabase.table("demandes").delete().eq("id", req_id).execute()
+    except Exception as e:
+        st.error(f"Erreur suppression demande : {e}")
+
+def save_lien(uid, name, url, date):
+    try:
+        supabase.table("liens").insert({
+            "uid": uid, "name": name, "url": url, "date": date
+        }).execute()
+    except Exception as e:
+        st.error(f"Erreur sauvegarde lien : {e}")
+
+def save_db(data):
+    # Compatibilité — non utilisée directement, remplacée par les fonctions spécifiques
+    pass
 
 # --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
 SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
-
-# Encodage manuel des espaces pour les liens
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
 whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.replace(' ', '%20')}"
-
-
-# ==========================================
-# LOGIQUE DE DONNÉES (DATA LAYER)
-# ==========================================
-
-def load_db():
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {"users": {}, "demandes": [], "liens": {}}
-    return {"users": {}, "demandes": [], "liens": {}}
-
-def save_db(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
 
 if "db" not in st.session_state:
     st.session_state["db"] = load_db()
@@ -709,9 +771,10 @@ def show_auth_page():
                             "email": "Non renseigné",
                             "joined": str(datetime.now())
                         }
+                        save_user(new_uid, normalize_wa(new_wa))
                         st.session_state["current_user"] = new_uid
                         st.session_state["view"] = "home"
-                        save_db(db)
+                        st.session_state["db"] = load_db()
                         st.query_params["user_id"] = new_uid
                         st.rerun()
                     else:
@@ -1027,6 +1090,20 @@ def main_dashboard():
                 ],
                 "note": "Envoyez votre fichier directement via WhatsApp après la soumission."
             },
+            "📝 Création de Sujets & Examens": {
+                "icone": "📝",
+                "titre": "Création de Sujets & Examens",
+                "intro": "Pour concevoir votre devoir ou examen sur mesure, veuillez nous préciser :",
+                "items": [
+                    ("🎓", "Le niveau scolaire (Primaire, Collège, Lycée, Université...)"),
+                    ("📚", "La matière ou discipline concernée"),
+                    ("🎯", "Le type de sujet (devoir surveillé, examen, contrôle, concours...)"),
+                    ("📏", "Le nombre de questions ou d'exercices souhaité"),
+                    ("⏱️", "La durée prévue pour l'épreuve"),
+                    ("🏢", "L'établissement scolaire ou l'institution"),
+                ],
+                "note": "Précisez si vous souhaitez un corrigé ou un barème de notation en accompagnement."
+            },
         }
 
         col_f, col_wa = st.columns(2)
@@ -1037,6 +1114,7 @@ def main_dashboard():
                 [
                     "📊 Data & Excel Analytics",
                     "📝 Exposé scolaire complet IA",
+                    "📝 Création de Sujets & Examens",
                     "⚙️ Pack Office (Word/Excel/PPT)",
                     "🎨 Création Design IA",
                     "📚 Affiches & Reçus",
@@ -1067,7 +1145,8 @@ def main_dashboard():
 
             # Mapping service → fichier MP3
             SERVICE_AUDIO = {
-                "📝 Exposé scolaire complet IA":  "prerequis_expose.mp3",
+                "📝 Exposé scolaire complet IA":   "prerequis_expose.mp3",
+                "📝 Création de Sujets & Examens": "prerequis_examens.mp3",
                 "⚙️ Pack Office (Word/Excel/PPT)": "prerequis_office.mp3",
                 "🎨 Création Design IA":           "prerequis_design.mp3",
                 "📚 Affiches & Reçus":             "prerequis_affiches.mp3",
@@ -1215,7 +1294,8 @@ def main_dashboard():
                 "timestamp": str(datetime.now())
             }
             st.session_state["db"]["demandes"].append(new_req)
-            save_db(st.session_state["db"])
+            save_demande(new_req)
+            st.session_state["db"] = load_db()
             st.session_state["is_glowing"] = False
             progress_placeholder.empty()
             status_text.empty()
@@ -1389,15 +1469,9 @@ def main_dashboard():
                 url_dl = st.text_input("🔗 Lien de livraison", key=f"url_{i}", placeholder="https://drive.google.com/...")
                 if st.button("📦 LIVRER LA MISSION", key=f"btn_{i}"):
                     if url_dl:
-                        if req['user'] not in current_db["liens"]:
-                            current_db["liens"][req['user']] = []
-                        current_db["liens"][req['user']].append({
-                            "name": req['service'],
-                            "url": url_dl,
-                            "date": datetime.now().strftime("%d/%m/%Y")
-                        })
-                        current_db["demandes"].pop(i)
-                        save_db(current_db)
+                        save_lien(req['user'], req['service'], url_dl, datetime.now().strftime("%d/%m/%Y"))
+                        delete_demande(req['id'])
+                        st.session_state["db"] = load_db()
                         st.rerun()
 
 # ==========================================
