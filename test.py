@@ -116,18 +116,11 @@ def save_db(data):
 # --- NOTIFICATION EMAIL ---
 def envoyer_notification(client_nom, client_wa, service, description):
     try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
+        import urllib.request
+        import urllib.parse
 
-        sender   = st.secrets["EMAIL_SENDER"]
-        password = st.secrets["EMAIL_PASSWORD"]
+        api_key  = st.secrets["RESEND_API_KEY"]
         receiver = st.secrets["EMAIL_RECEIVER"]
-
-        msg = MIMEMultipart()
-        msg["From"]    = sender
-        msg["To"]      = receiver
-        msg["Subject"] = f"🔔 Nouvelle commande Nova AI — {service}"
 
         corps = f"""
 🔔 NOUVELLE COMMANDE NOVA AI
@@ -141,13 +134,30 @@ def envoyer_notification(client_nom, client_wa, service, description):
 
 Connectez-vous à la console admin pour traiter cette mission.
         """
-        msg.attach(MIMEText(corps, "plain"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender, password)
-            server.sendmail(sender, receiver, msg.as_string())
+        data = json.dumps({
+            "from": "Nova AI <onboarding@resend.dev>",
+            "to": [receiver],
+            "subject": f"🔔 Nouvelle commande Nova AI — {service}",
+            "text": corps
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=data,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                st.toast("📧 Notification email envoyée !", icon="✅")
+            else:
+                st.toast(f"❌ Erreur email : {response.status}", icon="⚠️")
     except Exception as e:
-        pass  # Ne pas bloquer l'app si l'email échoue
+        st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
 # --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
