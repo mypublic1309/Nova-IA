@@ -116,10 +116,9 @@ def save_db(data):
 # --- NOTIFICATION EMAIL ---
 def envoyer_notification(client_nom, client_wa, service, description):
     try:
-        import urllib.request
+        import resend
 
-        api_key  = st.secrets["RESEND_API_KEY"]
-        receiver = st.secrets["EMAIL_RECEIVER"]
+        resend.api_key = st.secrets["RESEND_API_KEY"]
 
         corps = f"""
 🔔 NOUVELLE COMMANDE NOVA AI
@@ -134,31 +133,15 @@ def envoyer_notification(client_nom, client_wa, service, description):
 Connectez-vous à la console admin pour traiter cette mission.
         """
 
-        data = json.dumps({
+        resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
-            "to": [receiver],
+            "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"🔔 Nouvelle commande Nova AI — {service}",
             "text": corps
-        }).encode("utf-8")
+        })
 
-        req = urllib.request.Request(
-            "https://api.resend.com/emails",
-            data=data,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            method="POST"
-        )
-        with urllib.request.urlopen(req) as response:
-            response_body = response.read().decode()
-            if response.status in (200, 201):
-                st.toast("📧 Notification email envoyée !", icon="✅")
-            else:
-                st.toast(f"❌ Erreur email {response.status}: {response_body}", icon="⚠️")
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode()
-        st.toast(f"❌ HTTP {e.code}: {error_body}", icon="⚠️")
+        st.toast("📧 Notification email envoyée !", icon="✅")
+
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
