@@ -117,7 +117,6 @@ def save_db(data):
 def envoyer_notification(client_nom, client_wa, service, description):
     try:
         import urllib.request
-        import urllib.parse
 
         api_key  = st.secrets["RESEND_API_KEY"]
         receiver = st.secrets["EMAIL_RECEIVER"]
@@ -152,10 +151,14 @@ Connectez-vous à la console admin pour traiter cette mission.
             method="POST"
         )
         with urllib.request.urlopen(req) as response:
-            if response.status == 200:
+            response_body = response.read().decode()
+            if response.status in (200, 201):
                 st.toast("📧 Notification email envoyée !", icon="✅")
             else:
-                st.toast(f"❌ Erreur email : {response.status}", icon="⚠️")
+                st.toast(f"❌ Erreur email {response.status}: {response_body}", icon="⚠️")
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode()
+        st.toast(f"❌ HTTP {e.code}: {error_body}", icon="⚠️")
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
