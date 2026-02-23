@@ -1582,16 +1582,77 @@ def main_dashboard():
                         with st.expander("👁️ Voir le contenu généré par Gemini", expanded=True):
                             st.markdown(result["contenu"])
 
-                        nom_fichier = f"NovaAI_{client_nom}_{service[:20].strip()}.txt".replace(" ", "_").replace("/", "-")
-                        st.download_button(
-                            label="📥 TÉLÉCHARGER LE FICHIER GÉNÉRÉ",
-                            data=result["contenu"].encode("utf-8"),
-                            file_name=nom_fichier,
-                            mime="text/plain",
-                            key=f"dl_{req_id}",
-                            use_container_width=True
-                        )
-                        st.info("💡 Télécharge le fichier → mets-le sur Google Drive → copie le lien de partage → colle-le ci-dessous pour livrer au client.")
+                        nom_fichier = f"NovaAI_{client_nom}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                        
+                        # Génération du vrai fichier Word .docx
+                        try:
+                            from docx import Document
+                            from docx.shared import Pt, RGBColor, Inches
+                            from docx.enum.text import WD_ALIGN_PARAGRAPH
+                            from io import BytesIO
+
+                            doc = Document()
+
+                            # Style de la page de garde
+                            titre = doc.add_heading(f"NOVA AI", 0)
+                            titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                            sous_titre = doc.add_heading(service, level=1)
+                            sous_titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                            info = doc.add_paragraph(f"Client : {client_nom}     |     Date : {datetime.now().strftime('%d/%m/%Y')}")
+                            info.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            doc.add_paragraph("")
+                            doc.add_paragraph("─" * 60)
+                            doc.add_paragraph("")
+
+                            # Contenu structuré ligne par ligne
+                            for ligne in result["contenu"].split("\n"):
+                                ligne_strip = ligne.strip()
+                                if not ligne_strip:
+                                    doc.add_paragraph("")
+                                elif ligne_strip.startswith("# "):
+                                    doc.add_heading(ligne_strip[2:], level=1)
+                                elif ligne_strip.startswith("## "):
+                                    doc.add_heading(ligne_strip[3:], level=2)
+                                elif ligne_strip.startswith("### "):
+                                    doc.add_heading(ligne_strip[4:], level=3)
+                                elif ligne_strip.startswith("**") and ligne_strip.endswith("**"):
+                                    p = doc.add_paragraph()
+                                    run = p.add_run(ligne_strip.replace("**", ""))
+                                    run.bold = True
+                                elif ligne_strip.startswith("- ") or ligne_strip.startswith("* "):
+                                    doc.add_paragraph(ligne_strip[2:], style="List Bullet")
+                                elif ligne_strip[0].isdigit() and ". " in ligne_strip[:4]:
+                                    doc.add_paragraph(ligne_strip, style="List Number")
+                                else:
+                                    doc.add_paragraph(ligne_strip)
+
+                            buf = BytesIO()
+                            doc.save(buf)
+                            buf.seek(0)
+
+                            st.download_button(
+                                label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
+                                data=buf,
+                                file_name=nom_fichier,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_{req_id}",
+                                use_container_width=True
+                            )
+                        except ImportError:
+                            # Fallback .txt si python-docx absent
+                            st.download_button(
+                                label="📥 TÉLÉCHARGER (.txt)",
+                                data=result["contenu"].encode("utf-8"),
+                                file_name=nom_fichier.replace(".docx", ".txt"),
+                                mime="text/plain",
+                                key=f"dl_{req_id}",
+                                use_container_width=True
+                            )
+                            st.warning("⚠️ Ajoute `python-docx` dans requirements.txt pour générer du .docx")
+
+                        st.info("💡 Télécharge → mets sur Google Drive → copie le lien → colle ci-dessous pour livrer au client.")
 
                 # --- LIVRAISON ---
                 st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
