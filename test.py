@@ -220,8 +220,7 @@ def envoyer_notification(client_nom, client_wa, service, description):
         api_key  = st.secrets["RESEND_API_KEY"]
         receiver = st.secrets["EMAIL_RECEIVER"]
 
-        corps = f"""
-🔔 NOUVELLE COMMANDE NOVA AI
+        corps = f"""🔔 NOUVELLE COMMANDE NOVA AI
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
@@ -230,8 +229,7 @@ def envoyer_notification(client_nom, client_wa, service, description):
 
 ⏰ Reçue le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
 
-Connectez-vous à la console admin pour traiter cette mission.
-        """
+Connectez-vous à la console admin pour traiter cette mission."""
 
         data = json.dumps({
             "from": "Nova AI <onboarding@resend.dev>",
@@ -249,11 +247,9 @@ Connectez-vous à la console admin pour traiter cette mission.
             },
             method="POST"
         )
-        with urllib.request.urlopen(req) as response:
-            if response.status == 200:
-                st.toast("📧 Notification email envoyée !", icon="✅")
-            else:
-                st.toast(f"❌ Erreur email : {response.status}", icon="⚠️")
+        with urllib.request.urlopen(req, timeout=15) as response:
+            st.toast("📧 Notification email envoyée !", icon="✅")
+
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
