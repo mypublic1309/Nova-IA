@@ -155,21 +155,26 @@ def get_modeles_disponibles(api_key):
         with _ur.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode())
         modeles = []
+        # Exclure les modèles non-texte (audio, image, tts, etc.)
+        exclusions = ["tts", "audio", "image", "imagen", "veo", "robotics",
+                      "embedding", "aqa", "computer-use", "research", "nano-banana",
+                      "gemma", "preview"]
         for m in data.get("models", []):
             if "generateContent" in m.get("supportedGenerationMethods", []):
-                # Extraire juste le nom court ex: "models/gemini-2.0-flash" → "gemini-2.0-flash"
                 nom = m["name"].replace("models/", "")
-                modeles.append(nom)
-        # Priorité : flash en premier, pro ensuite
-        modeles_tries = sorted(modeles, key=lambda x: (
-            0 if "flash" in x and "lite" in x else
-            1 if "flash" in x else
-            2
-        ))
+                if not any(excl in nom.lower() for excl in exclusions):
+                    modeles.append(nom)
+        # Priorité : flash-lite → flash → pro → autres
+        def priorite(nom):
+            if "flash-lite" in nom: return 0
+            if "flash" in nom:      return 1
+            if "pro" in nom:        return 2
+            return 3
+        modeles_tries = sorted(modeles, key=priorite)
         return modeles_tries
     except Exception as e:
         # Fallback statique si ListModels échoue
-        return ["gemini-2.0-flash-lite-001", "gemini-2.0-flash-001", "gemini-1.5-flash-002"]
+        return ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash"]
 
 
 def generer_avec_gemini(service, description, client_nom):
@@ -1743,7 +1748,24 @@ def main_dashboard():
                     </div>
                     """, unsafe_allow_html=True)
 
+                    # Bouton diagnostic
+                    if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
+                        with st.spinner("Interrogation de l'API Gemini..."):
+                            modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
+                        if modeles_dispo:
+                            st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
+                            for m in modeles_dispo:
+                                st.code(m)
+                        else:
+                            st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
+
                     if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
+                        with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
+                            modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
+                            if modeles_dispo:
+                                st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
+                            else:
+                                st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
                         with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
                             contenu = generer_avec_gemini(service, description, client_nom)
 
