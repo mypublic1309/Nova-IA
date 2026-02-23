@@ -281,8 +281,9 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
             }
         }).encode("utf-8")
 
-        # Modèles en fallback automatique
-        modeles = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+        # Modèles en fallback automatique (ordre priorité)
+        modeles = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        erreurs = []
 
         for modele in modeles:
             try:
@@ -296,14 +297,26 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                     result = json.loads(response.read().decode("utf-8"))
                     texte = result["candidates"][0]["content"]["parts"][0]["text"]
                     return texte
-            except Exception as e:
-                err = str(e)
-                if "429" in err or "404" in err or "quota" in err.lower():
-                    time.sleep(3)
+            except _ur.error.HTTPError as e:
+                # Lire le corps de la réponse pour voir la vraie erreur
+                try:
+                    corps_erreur = e.read().decode("utf-8")
+                    erreur_detail = json.loads(corps_erreur).get("error", {}).get("message", corps_erreur[:200])
+                except:
+                    erreur_detail = str(e)
+                erreurs.append(f"{modele} → HTTP {e.code}: {erreur_detail}")
+                if e.code in [429, 503]:  # Quota / surcharge → essayer suivant
+                    time.sleep(2)
                     continue
-                return f"❌ Erreur Gemini ({modele}) : {e}"
+                # Autre erreur HTTP (403, 400...) → arrêter, afficher
+                return f"❌ Erreur Gemini ({modele}) HTTP {e.code} : {erreur_detail}"
+            except Exception as e:
+                erreurs.append(f"{modele} → {type(e).__name__}: {e}")
+                continue
 
-        return "❌ Tous les modèles Gemini sont saturés. Réessaie dans quelques minutes."
+        # Tous les modèles ont échoué → afficher les vraies erreurs
+        detail = " | ".join(erreurs)
+        return f"❌ Gemini indisponible. Détails : {detail}"
 
     except Exception as e:
         return f"❌ Erreur Gemini : {e}"
