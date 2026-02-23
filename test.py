@@ -187,7 +187,7 @@ def generer_avec_gemini(service, description, client_nom):
         api_key = st.secrets["GEMINI_API_KEY"]
         prompt = construire_prompt_gemini(service, description, client_nom)
         payload = json.dumps({"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4096}}).encode("utf-8")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         req = _ur.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
         with _ur.urlopen(req, timeout=60) as response:
             result = json.loads(response.read().decode("utf-8"))
@@ -1641,7 +1641,7 @@ Rédige en français, sois très précis et pratique."""
                                     }).encode("utf-8")
 
                                     req_gemini = ur.Request(
-                                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}",
+                                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}",
                                         data=payload,
                                         headers={"Content-Type": "application/json"},
                                         method="POST"
