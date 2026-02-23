@@ -403,6 +403,174 @@ def creer_docx(contenu, service, client_nom):
     return buf
 
 
+def creer_xlsx(description, client_nom):
+    """Génère un vrai fichier Excel .xlsx de suivi des dépenses."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+
+    wb = Workbook()
+    BLEU_FONCE = "1F4E79"
+    BLEU_CLAIR = "BDD7EE"
+    BLANC      = "FFFFFF"
+    GRIS       = "F2F2F2"
+
+    def hdr(cell, bg=BLEU_FONCE, fg=BLANC, bold=True, size=11):
+        cell.font = Font(bold=bold, color=fg, name="Arial", size=size)
+        cell.fill = PatternFill("solid", start_color=bg)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    def brd(cell):
+        s = Side(style="thin", color="CCCCCC")
+        cell.border = Border(top=s, bottom=s, left=s, right=s)
+
+    # ─── Feuille 1 : Saisie Dépenses ───────────────────────────────
+    ws1 = wb.active
+    ws1.title = "Saisie Dépenses"
+    ws1.sheet_view.showGridLines = False
+
+    ws1.merge_cells("A1:H1")
+    t = ws1["A1"]
+    t.value = f"SUIVI DES DÉPENSES — JANVIER 2026  |  {client_nom}"
+    hdr(t, size=13); ws1.row_dimensions[1].height = 34
+
+    ws1.merge_cells("A2:H2")
+    ws1["A2"].value = f"Généré le {datetime.now().strftime('%d/%m/%Y')} — Nova AI"
+    ws1["A2"].font = Font(italic=True, color="7F7F7F", name="Arial", size=10)
+    ws1["A2"].alignment = Alignment(horizontal="center")
+
+    cols   = ["N°","Date","Description","Catégorie","Bénéficiaire","Montant (FCFA)","Mode Paiement","Notes"]
+    widths = [5, 13, 30, 18, 20, 18, 16, 25]
+    for c,(h,w) in enumerate(zip(cols,widths),1):
+        cell = ws1.cell(row=3,column=c,value=h); hdr(cell); brd(cell)
+        ws1.column_dimensions[get_column_letter(c)].width = w
+    ws1.row_dimensions[3].height = 26
+
+    rows = [
+        [1,"01/01/2026","Courses alimentaires","Alimentation","Supermarché",15000,"Espèces",""],
+        [2,"03/01/2026","Transport taxi","Transport","Taxi",5000,"Mobile Money",""],
+        [3,"05/01/2026","Facture électricité","Factures","CIE",22000,"Virement","Janvier 2026"],
+        [4,"07/01/2026","Restaurant déjeuner","Restauration","Maquis du coin",7500,"Espèces",""],
+        [5,"10/01/2026","Recharge téléphone","Communication","Orange CI",3000,"Mobile Money",""],
+        [6,"12/01/2026","Médicaments pharmacie","Santé","Pharmacie Plus",12000,"Espèces",""],
+        [7,"15/01/2026","Internet mensuel","Communication","MTN CI",8000,"Virement","Abonnement mensuel"],
+        [8,"18/01/2026","Vêtements enfants","Habillement","Marché",20000,"Espèces",""],
+        [9,"22/01/2026","Loyer","Logement","Propriétaire",150000,"Virement","Loyer janvier"],
+        [10,"28/01/2026","Courses alimentaires","Alimentation","Marché",18000,"Espèces","Fin de mois"],
+    ]
+    for r,row in enumerate(rows,4):
+        bg = GRIS if r%2==0 else BLANC
+        for c,val in enumerate(row,1):
+            cell = ws1.cell(row=r,column=c,value=val)
+            cell.font = Font(name="Arial",size=10,
+                             bold=(c==6), color=("1F4E79" if c==6 else "000000"))
+            cell.fill = PatternFill("solid",start_color=bg)
+            cell.alignment = Alignment(vertical="center",
+                                       horizontal="center" if c in [1,2,6,7] else "left")
+            brd(cell)
+            if c==6: cell.number_format = '#,##0 "FCFA"'
+
+    tr = len(rows)+4
+    ws1.merge_cells(f"A{tr}:E{tr}")
+    hdr(ws1[f"A{tr}"],size=11); ws1[f"A{tr}"].value="TOTAL JANVIER"; brd(ws1[f"A{tr}"])
+    tot = ws1[f"F{tr}"]
+    tot.value=f"=SUM(F4:F{tr-1})"
+    tot.number_format='#,##0 "FCFA"'; hdr(tot); brd(tot)
+    ws1.row_dimensions[tr].height=28
+
+    # ─── Feuille 2 : Catégories ─────────────────────────────────────
+    ws2 = wb.create_sheet("Catégories")
+    ws2.sheet_view.showGridLines = False
+    ws2.merge_cells("A1:D1"); t2=ws2["A1"]; t2.value="CATÉGORIES DE DÉPENSES"; hdr(t2,size=13); ws2.row_dimensions[1].height=32
+
+    h2=["Catégorie","Budget Prévu (FCFA)","Total Réel (FCFA)","Écart (FCFA)"]
+    for c,(h,w) in enumerate(zip(h2,[25,22,22,22]),1):
+        cell=ws2.cell(row=2,column=c,value=h); hdr(cell,bg="2E75B6"); brd(cell)
+        ws2.column_dimensions[get_column_letter(c)].width=w
+
+    cats=[("Alimentation",50000),("Transport",20000),("Factures",30000),
+          ("Restauration",15000),("Communication",15000),("Santé",20000),
+          ("Habillement",25000),("Logement",150000),("Loisirs",10000),("Autres",10000)]
+    for r,(cat,budget) in enumerate(cats,3):
+        bg = BLEU_CLAIR if r%2==0 else BLANC
+        c1=ws2.cell(row=r,column=1,value=cat); c1.font=Font(name="Arial",size=10,bold=True)
+        c1.fill=PatternFill("solid",start_color=bg); c1.alignment=Alignment(vertical="center"); brd(c1)
+        c2=ws2.cell(row=r,column=2,value=budget); c2.number_format='#,##0 "FCFA"'
+        c2.font=Font(name="Arial",size=10,color="0000FF")
+        c2.fill=PatternFill("solid",start_color=bg); c2.alignment=Alignment(horizontal="center"); brd(c2)
+        c3=ws2.cell(row=r,column=3,value=f"=SUMIF('Saisie Dépenses'!D:D,A{r},'Saisie Dépenses'!F:F)")
+        c3.number_format='#,##0 "FCFA"'; c3.fill=PatternFill("solid",start_color=bg)
+        c3.alignment=Alignment(horizontal="center"); brd(c3); c3.font=Font(name="Arial",size=10)
+        c4=ws2.cell(row=r,column=4,value=f"=B{r}-C{r}"); c4.number_format='#,##0 "FCFA"'
+        c4.fill=PatternFill("solid",start_color=bg); c4.alignment=Alignment(horizontal="center"); brd(c4)
+        c4.font=Font(name="Arial",size=10)
+
+    tr2=len(cats)+3
+    ws2.cell(row=tr2,column=1,value="TOTAL")
+    hdr(ws2.cell(row=tr2,column=1)); brd(ws2.cell(row=tr2,column=1))
+    for col in [2,3,4]:
+        cell=ws2.cell(row=tr2,column=col,value=f"=SUM({get_column_letter(col)}3:{get_column_letter(col)}{tr2-1})")
+        cell.number_format='#,##0 "FCFA"'; hdr(cell); brd(cell)
+
+    # ─── Feuille 3 : Tableau de Bord ────────────────────────────────
+    ws3 = wb.create_sheet("Tableau de Bord")
+    ws3.sheet_view.showGridLines = False
+    ws3.merge_cells("A1:E1"); t3=ws3["A1"]; t3.value="TABLEAU DE BORD — JANVIER 2026"
+    hdr(t3,size=13); ws3.row_dimensions[1].height=34
+
+    ws3.column_dimensions["A"].width=26; ws3.column_dimensions["B"].width=22
+    ws3.column_dimensions["C"].width=4;  ws3.column_dimensions["D"].width=26
+    ws3.column_dimensions["E"].width=22
+
+    kpis=[
+        ("Total Dépenses Janvier","='Saisie Dépenses'!F14",BLEU_FONCE),
+        ("Budget Total Prévu",    "='Catégories'!B13",    "2E75B6"),
+        ("Écart Budget/Réel",     "='Catégories'!D13",    "375623"),
+        ("Nb de Transactions",    "=COUNTA('Saisie Dépenses'!A4:A1000)-1","7F7F7F"),
+    ]
+    positions=[(3,1,2),(3,4,5),(6,1,2),(6,4,5)]
+    for (row,cl,cv),(label,formula,bg) in zip(positions,kpis):
+        lc=ws3.cell(row=row,column=cl,value=label)
+        lc.font=Font(bold=True,name="Arial",size=11,color=BLANC)
+        lc.fill=PatternFill("solid",start_color=bg)
+        lc.alignment=Alignment(horizontal="center",vertical="center"); ws3.row_dimensions[row].height=32
+        vc=ws3.cell(row=row,column=cv,value=formula)
+        vc.number_format='#,##0 "FCFA"' if "Nb" not in label else "0"
+        vc.font=Font(bold=True,name="Arial",size=13,color=BLANC)
+        vc.fill=PatternFill("solid",start_color=bg)
+        vc.alignment=Alignment(horizontal="center",vertical="center")
+
+    ws3.merge_cells("A9:E9"); rh=ws3["A9"]
+    rh.value="RÉCAPITULATIF PAR CATÉGORIE"; hdr(rh,bg="2E75B6",size=12); ws3.row_dimensions[9].height=28
+
+    rh2=["Catégorie","Budget (FCFA)","Réel (FCFA)","Écart (FCFA)","% Consommé"]
+    for c,h in enumerate(rh2,1):
+        cell=ws3.cell(row=10,column=c,value=h); hdr(cell); brd(cell)
+        ws3.column_dimensions[get_column_letter(c)].width=[26,18,18,18,14][c-1]
+
+    for r,cat in enumerate([c for c,_ in cats],11):
+        cat_row=r-8
+        bg=BLEU_CLAIR if r%2==0 else BLANC
+        c1=ws3.cell(row=r,column=1,value=cat)
+        c1.font=Font(name="Arial",size=10,bold=True)
+        c1.fill=PatternFill("solid",start_color=bg); c1.alignment=Alignment(vertical="center"); brd(c1)
+        for col,formula in enumerate([
+            f"='Catégories'!B{cat_row+2}",
+            f"='Catégories'!C{cat_row+2}",
+            f"='Catégories'!D{cat_row+2}",
+            f"=IF(B{r}=0,0,C{r}/B{r})",
+        ],2):
+            cell=ws3.cell(row=r,column=col,value=formula)
+            cell.font=Font(name="Arial",size=10)
+            cell.fill=PatternFill("solid",start_color=bg)
+            cell.alignment=Alignment(horizontal="center"); brd(cell)
+            cell.number_format='#,##0 "FCFA"' if col<6 else "0.0%"
+
+    buf=BytesIO(); wb.save(buf); buf.seek(0)
+    return buf
+
+
 # --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
@@ -1787,29 +1955,37 @@ def main_dashboard():
                         with st.expander("👁️ Aperçu du contenu généré", expanded=False):
                             st.markdown(result["contenu"])
 
-                        # Téléchargement .docx
+                        # Téléchargement selon le service :
+                        # 📊 Data & Excel Analytics → .xlsx
+                        # Tous les autres (Exposé, CV, Sujets, Pack Office...) → .docx
                         try:
-                            buf = creer_docx(result["contenu"], result["service"], result["client"])
-                            nom_fichier = f"NovaAI_{client_nom}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
-                            st.download_button(
-                                label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
-                                data=buf,
-                                file_name=nom_fichier,
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key=f"dl_{req_id}",
-                                use_container_width=True
-                            )
-                        except ImportError:
-                            nom_fichier = f"NovaAI_{client_nom}_{service[:20].strip()}.txt".replace(" ", "_").replace("/", "-")
-                            st.download_button(
-                                label="📥 TÉLÉCHARGER (.txt)",
-                                data=result["contenu"].encode("utf-8"),
-                                file_name=nom_fichier,
-                                mime="text/plain",
-                                key=f"dl_{req_id}",
-                                use_container_width=True
-                            )
-                            st.warning("⚠️ Ajoute `python-docx` dans requirements.txt pour le format .docx")
+                            SERVICE_EXCEL = "📊 Data & Excel Analytics"
+                            if result["service"] == SERVICE_EXCEL:
+                                buf = creer_xlsx(result.get("desc", ""), result["client"])
+                                nom_fichier = f"NovaAI_{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
+                                st.download_button(
+                                    label="📥 TÉLÉCHARGER LE FICHIER EXCEL (.xlsx)",
+                                    data=buf,
+                                    file_name=nom_fichier,
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    key=f"dl_{req_id}",
+                                    use_container_width=True
+                                )
+                                st.info("📊 Fichier Excel avec 3 feuilles : Saisie, Catégories, Tableau de Bord")
+                            else:
+                                # Exposé, CV, Sujets/Examens, Pack Office, Affiches, PDF → .docx
+                                buf = creer_docx(result["contenu"], result["service"], result["client"])
+                                nom_fichier = f"NovaAI_{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                st.download_button(
+                                    label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
+                                    data=buf,
+                                    file_name=nom_fichier,
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key=f"dl_{req_id}",
+                                    use_container_width=True
+                                )
+                        except Exception as e:
+                            st.error(f"Erreur génération fichier : {e}")
 
                         st.info("💡 Télécharge → upload sur Google Drive → colle le lien ci-dessous pour livrer au client.")
 
