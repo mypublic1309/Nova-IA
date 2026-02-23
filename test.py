@@ -282,8 +282,8 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
             }
         }).encode("utf-8")
 
-        # Modèles en fallback automatique (ordre priorité)
-        modeles = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        # Modèles en fallback automatique (ordre priorité) — compatibles version gratuite
+        modeles = ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash-8b"]
         erreurs = []
 
         for modele in modeles:
