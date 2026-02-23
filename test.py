@@ -238,8 +238,20 @@ Barème total : /20
 # EXERCICE 1 — [Titre] ([X] points)
 [Contenu complet de l'exercice avec toutes les questions réelles]
 
-# EXERCICE 2 — [Titre] ([X] points)
-[Contenu complet de l'exercice avec toutes les questions réelles]
+# EXERCICE 2 — [Titre Vrai ou Faux] ([X] points)
+Consigne : Pour chacune des affirmations suivantes, indiquez V (Vrai) ou F (Faux) dans la colonne prévue.
+
+⚠️ IMPORTANT : Tu DOIS ABSOLUMENT présenter les affirmations dans un tableau markdown exactement comme ci-dessous. N'utilise JAMAIS une liste numérotée pour cet exercice.
+
+| N° | Affirmation | Réponse (V/F) |
+|----|-------------|---------------|
+| 1 | [affirmation complète et précise sur le sujet demandé] |  |
+| 2 | [affirmation complète et précise sur le sujet demandé] |  |
+| 3 | [affirmation complète et précise sur le sujet demandé] |  |
+| 4 | [affirmation complète et précise sur le sujet demandé] |  |
+| 5 | [affirmation complète et précise sur le sujet demandé] |  |
+
+RÈGLES pour la colonne "Réponse (V/F)" : laisser VIDE (juste un espace) — c'est l'étudiant qui remplira.
 
 # EXERCICE 3 — [Titre] ([X] points)
 [Contenu complet de l'exercice avec toutes les questions réelles]
@@ -535,6 +547,93 @@ def creer_docx(contenu, service, client_nom):
         if l.startswith("# "):
             p = doc.add_heading(l[2:].strip(), level=1)
             i += 1
+            continue
+
+        # ─── Tableau Markdown | col1 | col2 | ───────────────────────
+        if l.startswith("|") and l.endswith("|"):
+            # Collecter toutes les lignes du tableau
+            table_lines = []
+            while i < len(lignes) and lignes[i].strip().startswith("|") and lignes[i].strip().endswith("|"):
+                row = lignes[i].strip()
+                # Ignorer les séparateurs |---|---|
+                if not re.match(r"^[\|\s\-:]+$", row):
+                    cells = [c.strip() for c in row.strip("|").split("|")]
+                    table_lines.append(cells)
+                i += 1
+
+            if table_lines:
+                from docx.shared import Inches
+                from docx.oxml.ns import qn
+                from docx.oxml import OxmlElement
+
+                # Largeurs colonnes adaptées
+                n_cols = max(len(r) for r in table_lines)
+                col_widths_map = {
+                    2: [3.0, 6.0],
+                    3: [1.0, 7.5, 2.5],   # N° | Affirmation | Réponse
+                    4: [1.0, 5.0, 2.5, 2.5],
+                }
+                col_widths = col_widths_map.get(n_cols, [9.0/n_cols]*n_cols)
+
+                from docx.shared import Cm as DocxCm
+                table = doc.add_table(rows=0, cols=n_cols)
+                table.style = "Table Grid"
+
+                for r_idx, row_data in enumerate(table_lines):
+                    row_obj = table.add_row()
+                    is_header = (r_idx == 0)
+                    # En-tête plus compact, lignes de données plus hautes pour aérer
+                    row_obj.height = DocxCm(0.9 if is_header else 1.5)
+                    from docx.oxml.ns import qn as _qn
+                    from docx.oxml import OxmlElement as _OE
+                    # Fixer la hauteur exacte
+                    trPr = row_obj._tr.get_or_add_trPr()
+                    trHeight = _OE("w:trHeight")
+                    trHeight.set(_qn("w:val"), str(int((0.9 if is_header else 1.5) * 567)))
+                    trHeight.set(_qn("w:hRule"), "exact")
+                    trPr.append(trHeight)
+
+                    for c_idx, cell_text in enumerate(row_data):
+                        cell = row_obj.cells[c_idx]
+                        if c_idx < len(col_widths):
+                            cell.width = DocxCm(col_widths[c_idx])
+                        # Padding interne
+                        tc = cell._tc
+                        tcPr = tc.get_or_add_tcPr()
+                        tcMar = _OE("w:tcMar")
+                        for side in ["top","bottom","left","right"]:
+                            m = _OE(f"w:{side}")
+                            m.set(_qn("w:w"), "120")
+                            m.set(_qn("w:type"), "dxa")
+                            tcMar.append(m)
+                        tcPr.append(tcMar)
+                        # Fond bleu pour en-tête, gris alternant pour données
+                        if is_header:
+                            shd = _OE("w:shd")
+                            shd.set(_qn("w:val"), "clear")
+                            shd.set(_qn("w:color"), "auto")
+                            shd.set(_qn("w:fill"), "1F4E79")
+                            tcPr.append(shd)
+                        elif r_idx % 2 == 0:
+                            shd = _OE("w:shd")
+                            shd.set(_qn("w:val"), "clear")
+                            shd.set(_qn("w:color"), "auto")
+                            shd.set(_qn("w:fill"), "EEF3FA")
+                            tcPr.append(shd)
+
+                        para = cell.paragraphs[0]
+                        para.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_idx in [0, n_cols-1] else WD_ALIGN_PARAGRAPH.LEFT
+                        # Espacement vertical dans la cellule
+                        para.paragraph_format.space_before = Pt(2)
+                        para.paragraph_format.space_after = Pt(2)
+                        run = para.add_run(cell_text)
+                        run.font.name = "Arial"
+                        run.font.size = Pt(10)
+                        run.bold = is_header
+                        if is_header:
+                            run.font.color.rgb = RC(0xFF, 0xFF, 0xFF)
+
+                doc.add_paragraph("")
             continue
 
         # Listes numérotées  1. ou 1)
