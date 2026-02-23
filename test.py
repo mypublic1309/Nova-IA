@@ -212,30 +212,52 @@ Structure OBLIGATOIRE :
 Rédige en français, sois détaillé et professionnel. Minimum 3 pages."""
 
         elif "Examens" in service or "Sujets" in service:
-            prompt = f"""Tu es un professeur expérimenté. Crée un sujet d'examen complet et officiel sur :
+            prompt = f"""Tu es un professeur expérimenté. Crée un sujet d'examen COMPLET et DÉTAILLÉ basé sur cette demande :
 
 {description}
 
+RÈGLES ABSOLUES :
+- Rédige le sujet COMPLET avec toutes les questions réelles et précises (PAS de pointillés, PAS de [À compléter])
+- Pour le texte à trous : écris le texte COMPLET avec les mots manquants remplacés par ___________ (10 underscores)
+- Pour Vrai/Faux : écris chaque affirmation complète et précise
+- Pour les exercices complexes : donne tous les données numériques, schémas décrits en texte, questions détaillées
+- Termine TOUJOURS avec le CORRIGÉ COMPLET avec les bonnes réponses
+
 Structure OBLIGATOIRE :
+
 # EN-TÊTE OFFICIEL
-(Établissement, matière, niveau, durée, date, barème total /20)
+Établissement : [nom]
+Matière : [matière]
+Niveau : [niveau]
+Durée : [durée]
+Barème total : /20
 
 # CONSIGNES GÉNÉRALES
+[consignes précises]
 
-# PARTIE I — (titre)
-(Questions numérotées avec points)
+# EXERCICE 1 — [Titre] ([X] points)
+[Contenu complet de l'exercice avec toutes les questions réelles]
 
-# PARTIE II — (titre)
-(Questions numérotées avec points)
+# EXERCICE 2 — [Titre] ([X] points)
+[Contenu complet de l'exercice avec toutes les questions réelles]
 
-# PARTIE III — (titre)
-(Questions numérotées avec points)
+# EXERCICE 3 — [Titre] ([X] points)
+[Contenu complet de l'exercice avec toutes les questions réelles]
 
 ---
-# CORRIGÉ COMPLET
-(Réponses détaillées avec barème)
 
-Rédige en français, format officiel d'examen."""
+# CORRIGÉ COMPLET
+
+## Corrigé Exercice 1
+[Réponses complètes et détaillées]
+
+## Corrigé Exercice 2
+[Réponses complètes et détaillées]
+
+## Corrigé Exercice 3
+[Réponses complètes et détaillées]
+
+Rédige en français, sois précis et technique, niveau adapté à la demande."""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -358,44 +380,174 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
 
 
 def creer_docx(contenu, service, client_nom):
-    """Génère un fichier .docx à partir du contenu Gemini."""
+    """Génère un fichier .docx propre et professionnel à partir du contenu Gemini."""
     from docx import Document
-    from docx.shared import Pt, RGBColor
+    from docx.shared import Pt, RGBColor, Cm
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
     from io import BytesIO
+    import re
 
     doc = Document()
 
-    # En-tête
-    titre = doc.add_heading("NOVA AI", 0)
-    titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Marges
+    for section in doc.sections:
+        section.top_margin    = Cm(2)
+        section.bottom_margin = Cm(2)
+        section.left_margin   = Cm(2.5)
+        section.right_margin  = Cm(2.5)
 
-    sous = doc.add_heading(service, level=1)
-    sous.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Style par défaut
+    style = doc.styles["Normal"]
+    style.font.name = "Arial"
+    style.font.size = Pt(11)
 
-    info = doc.add_paragraph(f"Client : {client_nom}     |     Généré le : {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
-    info.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # ─── Bandeau en-tête ────────────────────────────────────────────
+    from docx.oxml import OxmlElement
+    def set_cell_bg(cell, hex_color):
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear")
+        shd.set(qn("w:color"), "auto")
+        shd.set(qn("w:fill"), hex_color)
+        tcPr.append(shd)
+
+    from docx.shared import RGBColor as RC
+    # Titre centré avec fond bleu
+    p_titre = doc.add_paragraph()
+    p_titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_t = p_titre.add_run("⚡ NOVA AI  —  " + service.replace("📝","").replace("👔","").replace("📊","").replace("⚙️","").replace("🎨","").replace("📚","").replace("📄","").strip())
+    run_t.bold = True
+    run_t.font.size = Pt(16)
+    run_t.font.color.rgb = RC(0x1F, 0x4E, 0x79)
+    run_t.font.name = "Arial"
+
+    p_info = doc.add_paragraph()
+    p_info.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_i = p_info.add_run(f"Client : {client_nom}     |     Généré le : {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
+    run_i.font.size = Pt(10)
+    run_i.font.color.rgb = RC(0x7F, 0x7F, 0x7F)
+    run_i.font.name = "Arial"
+    run_i.italic = True
+
+    # Ligne séparatrice
+    p_sep = doc.add_paragraph()
+    pPr = p_sep._p.get_or_add_pPr()
+    pBdr = OxmlElement("w:pBdr")
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single")
+    bottom.set(qn("w:sz"), "6")
+    bottom.set(qn("w:space"), "1")
+    bottom.set(qn("w:color"), "1F4E79")
+    pBdr.append(bottom)
+    pPr.append(pBdr)
     doc.add_paragraph("")
 
-    # Parsing du contenu markdown → docx
-    for ligne in contenu.split("\n"):
-        l = ligne.strip()
-        if not l:
+    # ─── Parsing Markdown → Word propre ─────────────────────────────
+    def add_formatted_para(doc, text, style_name="Normal", bold=False, size=11, color=None, align=None):
+        """Ajoute un paragraphe en gérant le gras inline **texte**"""
+        p = doc.add_paragraph(style=style_name)
+        if align:
+            p.alignment = align
+        # Découper sur **bold**
+        parts = re.split(r"(\*\*[^*]+\*\*)", text)
+        for part in parts:
+            if part.startswith("**") and part.endswith("**"):
+                run = p.add_run(part[2:-2])
+                run.bold = True
+            else:
+                # Nettoyer les * simples résiduels
+                clean = part.replace("*", "").replace("`", "")
+                run = p.add_run(clean)
+                run.bold = bold
+            run.font.name = "Arial"
+            run.font.size = Pt(size)
+            if color:
+                run.font.color.rgb = RC(*color)
+        return p
+
+    lignes = contenu.split("\n")
+    i = 0
+    while i < len(lignes):
+        l = lignes[i].rstrip()
+
+        # Sauter les séparateurs markdown
+        if l.strip() in ["---", "***", "___", "*"]:
             doc.add_paragraph("")
-        elif l.startswith("# "):
-            doc.add_heading(l[2:], level=1)
-        elif l.startswith("## "):
-            doc.add_heading(l[3:], level=2)
-        elif l.startswith("### "):
-            doc.add_heading(l[4:], level=3)
-        elif l.startswith("- ") or l.startswith("* "):
-            doc.add_paragraph(l[2:], style="List Bullet")
-        elif l.startswith("**") and l.endswith("**"):
+            i += 1
+            continue
+
+        # Headings
+        if l.startswith("#### "):
+            p = doc.add_heading(l[5:].strip(), level=4)
+            i += 1
+            continue
+        if l.startswith("### "):
+            p = doc.add_heading(l[4:].strip(), level=3)
+            i += 1
+            continue
+        if l.startswith("## "):
+            p = doc.add_heading(l[3:].strip(), level=2)
+            i += 1
+            continue
+        if l.startswith("# "):
+            p = doc.add_heading(l[2:].strip(), level=1)
+            i += 1
+            continue
+
+        # Listes numérotées  1. ou 1)
+        m_num = re.match(r"^(\d+)[.)]\s+(.*)", l)
+        if m_num:
+            p = doc.add_paragraph(style="List Number")
+            parts = re.split(r"(\*\*[^*]+\*\*)", m_num.group(2))
+            for part in parts:
+                if part.startswith("**") and part.endswith("**"):
+                    run = p.add_run(part[2:-2]); run.bold = True
+                else:
+                    run = p.add_run(part.replace("*","").replace("`",""))
+            for run in p.runs:
+                run.font.name = "Arial"; run.font.size = Pt(11)
+            i += 1
+            continue
+
+        # Listes à puces  - ou *
+        if re.match(r"^[\-\*\•]\s+", l):
+            texte = re.sub(r"^[\-\*\•]\s+", "", l)
+            p = doc.add_paragraph(style="List Bullet")
+            parts = re.split(r"(\*\*[^*]+\*\*)", texte)
+            for part in parts:
+                if part.startswith("**") and part.endswith("**"):
+                    run = p.add_run(part[2:-2]); run.bold = True
+                else:
+                    run = p.add_run(part.replace("*","").replace("`",""))
+            for run in p.runs:
+                run.font.name = "Arial"; run.font.size = Pt(11)
+            i += 1
+            continue
+
+        # Ligne vide
+        if not l.strip():
+            doc.add_paragraph("")
+            i += 1
+            continue
+
+        # Ligne tout en gras (ex: **TITRE**)
+        if l.strip().startswith("**") and l.strip().endswith("**") and l.strip().count("**") == 2:
+            texte = l.strip()[2:-2]
             p = doc.add_paragraph()
-            run = p.add_run(l.replace("**", ""))
+            run = p.add_run(texte)
             run.bold = True
-        else:
-            doc.add_paragraph(l)
+            run.font.name = "Arial"
+            run.font.size = Pt(12)
+            run.font.color.rgb = RC(0x1F, 0x4E, 0x79)
+            i += 1
+            continue
+
+        # Paragraphe normal avec gras inline possible
+        add_formatted_para(doc, l.strip())
+        i += 1
 
     buf = BytesIO()
     doc.save(buf)
