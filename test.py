@@ -257,6 +257,14 @@ Barème total : /20
 ## Corrigé Exercice 3
 [Réponses complètes et détaillées]
 
+IMPORTANT :
+- Si la demande ne mentionne PAS de corrigé, génère UNIQUEMENT le sujet (PAS de corrigé)
+- Si la demande mentionne explicitement "avec corrigé" ou "corrigé", alors ajoute le corrigé
+- N'utilise JAMAIS de notation LaTeX ($, \\, \\text{{}}, \\frac{{}}) dans le document final
+- Écris les formules en texte simple : ex "omega = 2*pi*f", "XL = L*omega", "|Z| = sqrt(R² + X²)"
+- Écris les unités en clair : Ohm, Hz, rad/s, W, V, A, VA, VAR
+- Les symboles grecs s'écrivent en toutes lettres : omega, phi, delta, sigma
+
 Rédige en français, sois précis et technique, niveau adapté à la demande."""
 
         elif "CV" in service:
@@ -467,6 +475,38 @@ def creer_docx(contenu, service, client_nom):
             if color:
                 run.font.color.rgb = RC(*color)
         return p
+
+    # ─── Nettoyage LaTeX → texte lisible ───────────────────────────
+    import re as _re
+    def nettoyer_latex(texte):
+        # Supprimer environnements LaTeX $...$
+        texte = _re.sub(r"\$([^$]+)\$", lambda m: nettoyer_formule(m.group(1)), texte)
+        return texte
+
+    def nettoyer_formule(f):
+        f = f.replace(r"\,", " ")
+        f = f.replace(r"\text{", "").replace("}", "")
+        f = f.replace(r"\frac{", "(").replace("}{", ")/(")
+        f = f.replace(r"\sqrt{", "sqrt(")
+        f = f.replace(r"\omega", "omega")
+        f = f.replace(r"\varphi", "phi")
+        f = f.replace(r"\pi", "pi")
+        f = f.replace(r"\cdot", "x")
+        f = f.replace(r"\times", "x")
+        f = f.replace(r"\approx", "≈")
+        f = f.replace(r"\left(", "(").replace(r"\right)", ")")
+        f = f.replace("\\\\", "")
+        f = f.replace("{", "").replace("}", "")
+        f = f.strip()
+        # Fermer les parenthèses ouvertes non fermées
+        opens = f.count("(") - f.count(")")
+        if opens > 0:
+            f += ")" * opens
+        return f
+
+    contenu = nettoyer_latex(contenu)
+    # Nettoyer aussi les \ résiduels hors $
+    contenu = contenu.replace("\\,", " ").replace("\\text{", "").replace("\\", "")
 
     lignes = contenu.split("\n")
     i = 0
