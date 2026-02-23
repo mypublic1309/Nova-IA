@@ -189,9 +189,19 @@ def generer_avec_gemini(service, description, client_nom):
         payload = json.dumps({"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4096}}).encode("utf-8")
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         req = _ur.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-        with _ur.urlopen(req, timeout=60) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            return result["candidates"][0]["content"]["parts"][0]["text"]
+        
+        # Retry automatique si 429 (limite atteinte)
+        for tentative in range(3):
+            try:
+                with _ur.urlopen(req, timeout=60) as response:
+                    result = json.loads(response.read().decode("utf-8"))
+                    return result["candidates"][0]["content"]["parts"][0]["text"]
+            except Exception as e:
+                err_str = str(e)
+                if "429" in err_str and tentative < 2:
+                    time.sleep(10 * (tentative + 1))  # 10s, puis 20s
+                    continue
+                return f"❌ Erreur Gemini : {e}"
     except Exception as e:
         return f"❌ Erreur Gemini : {e}"
 
