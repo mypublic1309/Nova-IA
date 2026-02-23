@@ -1539,8 +1539,9 @@ def main_dashboard():
                 SERVICES_GEMINI = [
                     "📝 Exposé scolaire complet IA",
                     "📝 Création de Sujets & Examens",
-                    "👔 CV & Lettre de motivation",
-                    "⚙️ Pack Office (Word/Excel/PPT)"
+                    "👔 CV & Lettre de Motivation",
+                    "⚙️ Pack Office (Word/Excel/PPT)",
+                    "📊 Data & Excel Analytics"
                 ]
 
                 if service in SERVICES_GEMINI:
@@ -1614,6 +1615,21 @@ Fournis :
 - Prêt à être copié dans Word/PowerPoint/Excel
 
 Rédige en français, format professionnel et détaillé."""
+
+                                    elif "Excel" in service or "Data" in service:
+                                        prompt_gemini = f"""Tu es un expert Excel et analyse de données. Crée une structure complète pour le fichier Excel demandé :
+
+{description}
+
+Fournis :
+- La liste des feuilles (onglets) à créer
+- Les en-têtes de colonnes pour chaque feuille
+- Des exemples de données à insérer
+- Les formules Excel recommandées (avec syntaxe exacte)
+- Les graphiques ou tableaux croisés à créer
+- Des conseils de mise en forme (couleurs, styles)
+
+Rédige en français, sois très précis et pratique."""
 
                                     # Appel API Gemini
                                     payload = json.dumps({
