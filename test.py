@@ -145,6 +145,33 @@ Connectez-vous à la console admin pour traiter cette mission.
 # GEMINI AI — GÉNÉRATION AUTOMATIQUE
 # ==========================================
 
+def get_modeles_disponibles(api_key):
+    """Appelle ListModels et retourne les modèles supportant generateContent."""
+    import urllib.request as _ur
+    import urllib.error
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+        req = _ur.Request(url, headers={"Content-Type": "application/json"}, method="GET")
+        with _ur.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+        modeles = []
+        for m in data.get("models", []):
+            if "generateContent" in m.get("supportedGenerationMethods", []):
+                # Extraire juste le nom court ex: "models/gemini-2.0-flash" → "gemini-2.0-flash"
+                nom = m["name"].replace("models/", "")
+                modeles.append(nom)
+        # Priorité : flash en premier, pro ensuite
+        modeles_tries = sorted(modeles, key=lambda x: (
+            0 if "flash" in x and "lite" in x else
+            1 if "flash" in x else
+            2
+        ))
+        return modeles_tries
+    except Exception as e:
+        # Fallback statique si ListModels échoue
+        return ["gemini-2.0-flash-lite-001", "gemini-2.0-flash-001", "gemini-1.5-flash-002"]
+
+
 def generer_avec_gemini(service, description, client_nom):
     """Génère un document complet via Gemini AI."""
     try:
@@ -282,8 +309,10 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
             }
         }).encode("utf-8")
 
-        # Modèles en fallback automatique (ordre priorité) — compatibles version gratuite
-        modeles = ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash-8b"]
+        # Découverte automatique des modèles disponibles via ListModels
+        modeles = get_modeles_disponibles(api_key)
+        if not modeles:
+            return "❌ Aucun modèle Gemini disponible pour generateContent avec cette clé API."
         erreurs = []
 
         for modele in modeles:
