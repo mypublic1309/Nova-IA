@@ -1545,186 +1545,6 @@ def main_dashboard():
                 with col_succes:
                     st.markdown(f'<a href="{url_succes}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; font-weight:700; text-decoration:none;">✅ Succès</a>', unsafe_allow_html=True)
 
-                # --- BOUTON GEMINI (services éligibles) ---
-                SERVICES_GEMINI = [
-                    "📝 Exposé scolaire complet IA",
-                    "📝 Création de Sujets & Examens",
-                    "👔 CV & Lettre de Motivation",
-                    "⚙️ Pack Office (Word/Excel/PPT)",
-                    "📊 Data & Excel Analytics"
-                ]
-
-                if service in SERVICES_GEMINI:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    col_gemini, col_spacer = st.columns([2, 1])
-                    with col_gemini:
-                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{i}"):
-                            with st.spinner("🤖 Gemini génère le document..."):
-                                try:
-                                    import urllib.request as ur
-
-                                    GEMINI_KEY = st.secrets["GEMINI_API_KEY"]
-
-                                    # Prompt selon service
-                                    if "Exposé" in service:
-                                        prompt_gemini = f"""Tu es un expert académique. Rédige un exposé scolaire complet, structuré et professionnel basé sur la demande suivante :
-
-{description}
-
-Structure obligatoire :
-- Page de garde (titre, matière, niveau, établissement, date)
-- Introduction
-- Développement (3 à 5 parties avec sous-parties)
-- Conclusion
-- Bibliographie
-
-Rédige en français, avec des titres clairs. Sois détaillé et professionnel."""
-
-                                    elif "Examens" in service or "Sujets" in service:
-                                        prompt_gemini = f"""Tu es un professeur expérimenté. Crée un sujet d'examen complet et professionnel basé sur :
-
-{description}
-
-Structure obligatoire :
-- En-tête (établissement, matière, niveau, durée, date)
-- Instructions générales
-- Toutes les questions/exercices numérotés avec barème
-- Corrigé complet en fin de document
-
-Rédige en français, format officiel d'examen."""
-
-                                    elif "CV" in service:
-                                        prompt_gemini = f"""Tu es un expert RH et rédacteur professionnel. Crée un CV et une lettre de motivation complets basés sur :
-
-{description}
-
-Pour le CV :
-- En-tête avec informations personnelles
-- Résumé professionnel
-- Expériences professionnelles
-- Formation / Diplômes
-- Compétences
-- Langues & Centres d'intérêt
-
-Pour la lettre de motivation :
-- Structure professionnelle complète
-- Adapté au poste ciblé
-- Ton percutant et convaincant
-
-Rédige en français, format professionnel."""
-
-                                    elif "Pack Office" in service or "Word" in service or "PPT" in service:
-                                        prompt_gemini = f"""Tu es un expert bureautique professionnel. Crée le contenu complet du document demandé :
-
-{description}
-
-Fournis :
-- Contenu structuré et complet
-- Tous les titres, sous-titres, paragraphes
-- Tableaux si nécessaire (en format texte)
-- Prêt à être copié dans Word/PowerPoint/Excel
-
-Rédige en français, format professionnel et détaillé."""
-
-                                    elif "Excel" in service or "Data" in service:
-                                        prompt_gemini = f"""Tu es un expert Excel et analyse de données. Crée une structure complète pour le fichier Excel demandé :
-
-{description}
-
-Fournis :
-- La liste des feuilles (onglets) à créer
-- Les en-têtes de colonnes pour chaque feuille
-- Des exemples de données à insérer
-- Les formules Excel recommandées (avec syntaxe exacte)
-- Les graphiques ou tableaux croisés à créer
-- Des conseils de mise en forme (couleurs, styles)
-
-Rédige en français, sois très précis et pratique."""
-
-                                    # Appel API Gemini
-                                    payload = json.dumps({
-                                        "contents": [{"parts": [{"text": prompt_gemini}]}],
-                                        "generationConfig": {
-                                            "temperature": 0.7,
-                                            "maxOutputTokens": 8192
-                                        }
-                                    }).encode("utf-8")
-
-                                    req_gemini = ur.Request(
-                                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}",
-                                        data=payload,
-                                        headers={"Content-Type": "application/json"},
-                                        method="POST"
-                                    )
-
-                                    with ur.urlopen(req_gemini) as resp:
-                                        result = json.loads(resp.read().decode())
-                                        contenu = result["candidates"][0]["content"]["parts"][0]["text"]
-
-                                    # Sauvegarder dans session pour affichage
-                                    st.session_state[f"gemini_result_{req_id}"] = contenu
-                                    st.success("✅ Gemini a généré le document !")
-                                    st.rerun()
-
-                                except Exception as e:
-                                    st.error(f"❌ Erreur Gemini : {e}")
-
-                # Afficher le résultat Gemini si disponible
-                if f"gemini_result_{req_id}" in st.session_state:
-                    contenu_genere = st.session_state[f"gemini_result_{req_id}"]
-
-                    with st.expander("📄 Contenu généré par Gemini — Cliquez pour voir", expanded=True):
-                        st.markdown(contenu_genere)
-
-                    # Téléchargement .docx
-                    try:
-                        from docx import Document
-                        from io import BytesIO
-
-                        doc = Document()
-                        doc.add_heading(f"Nova AI — {service}", 0)
-                        doc.add_paragraph(f"Client : {client_nom} | Date : {datetime.now().strftime('%d/%m/%Y')}")
-                        doc.add_paragraph("")
-
-                        for ligne in contenu_genere.split("\n"):
-                            ligne = ligne.strip()
-                            if not ligne:
-                                doc.add_paragraph("")
-                            elif ligne.startswith("# "):
-                                doc.add_heading(ligne[2:], level=1)
-                            elif ligne.startswith("## "):
-                                doc.add_heading(ligne[3:], level=2)
-                            elif ligne.startswith("### "):
-                                doc.add_heading(ligne[4:], level=3)
-                            elif ligne.startswith("- ") or ligne.startswith("* "):
-                                doc.add_paragraph(ligne[2:], style="List Bullet")
-                            else:
-                                doc.add_paragraph(ligne)
-
-                        buf = BytesIO()
-                        doc.save(buf)
-                        buf.seek(0)
-
-                        nom_fichier = f"Nova_{service.replace(' ', '_').replace('/', '_')}_{client_nom}.docx"
-                        st.download_button(
-                            label="📥 TÉLÉCHARGER LE DOCUMENT (.docx)",
-                            data=buf,
-                            file_name=nom_fichier,
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            key=f"dl_docx_{req_id}"
-                        )
-                    except ImportError:
-                        st.warning("⚠️ Module python-docx non installé. Téléchargement en .txt disponible.")
-                        st.download_button(
-                            label="📥 TÉLÉCHARGER (.txt)",
-                            data=contenu_genere.encode("utf-8"),
-                            file_name=f"Nova_{client_nom}.txt",
-                            mime="text/plain",
-                            key=f"dl_txt_{req_id}"
-                        )
-
-                st.markdown("<br>", unsafe_allow_html=True)
-
                 # ==========================================
                 # BOUTON GEMINI — GÉNÉRATION AUTOMATIQUE
                 # ==========================================
@@ -1744,15 +1564,18 @@ Rédige en français, sois très précis et pratique."""
                     """, unsafe_allow_html=True)
 
                     if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
-                        with st.spinner("🤖 Gemini génère le contenu... (peut prendre 15-30 secondes)"):
+                        with st.spinner("🤖 Gemini génère le contenu... (30-60 secondes)"):
                             contenu = generer_avec_gemini(service, description, client_nom)
-                            st.session_state["gemini_results"][req_id] = {
-                                "contenu": contenu,
-                                "service": service,
-                                "client": client_nom
-                            }
-                        st.success("✅ Contenu généré ! Télécharge le fichier ci-dessous.")
-                        st.rerun()
+                            if contenu.startswith("❌"):
+                                st.error(contenu)
+                            else:
+                                st.session_state["gemini_results"][req_id] = {
+                                    "contenu": contenu,
+                                    "service": service,
+                                    "client": client_nom
+                                }
+                                st.success("✅ Contenu généré ! Télécharge le fichier ci-dessous.")
+                                st.rerun()
 
                     if req_id in st.session_state["gemini_results"]:
                         result = st.session_state["gemini_results"][req_id]
