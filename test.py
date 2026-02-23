@@ -37,11 +37,9 @@ def normalize_wa(numero):
 # --- FONCTIONS SUPABASE ---
 def load_db():
     try:
-        # Charger users
         users_rows = supabase.table("users").select("*").execute().data
         users = {r["uid"]: {"whatsapp": r["whatsapp"], "email": r["email"], "joined": r["joined"]} for r in users_rows}
 
-        # Charger demandes
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
         for r in demandes_rows:
@@ -57,7 +55,6 @@ def load_db():
                 "timestamp": r["timestamp"]
             })
 
-        # Charger liens
         liens_rows = supabase.table("liens").select("*").execute().data
         liens = {}
         for r in liens_rows:
@@ -110,7 +107,6 @@ def save_lien(uid, name, url, date):
         st.error(f"Erreur sauvegarde lien : {e}")
 
 def save_db(data):
-    # Compatibilité — non utilisée directement, remplacée par les fonctions spécifiques
     pass
 
 # --- NOTIFICATION EMAIL ---
@@ -144,6 +140,220 @@ Connectez-vous à la console admin pour traiter cette mission.
 
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
+
+# ==========================================
+# GEMINI AI — GÉNÉRATION AUTOMATIQUE
+# ==========================================
+
+def generer_avec_gemini(service, description, client_nom):
+    """Génère un document complet via Gemini AI."""
+    try:
+        import urllib.request as _ur
+
+        api_key = st.secrets["GEMINI_API_KEY"]
+
+        # --- Prompts spécialisés par service ---
+        if "Exposé" in service:
+            prompt = f"""Tu es un expert académique. Rédige un exposé scolaire complet, structuré et professionnel sur :
+
+{description}
+
+Structure OBLIGATOIRE :
+# PAGE DE GARDE
+(Titre, matière, niveau scolaire, établissement, date)
+
+# INTRODUCTION
+(Accroche, problématique, annonce du plan)
+
+# DÉVELOPPEMENT
+## Partie 1 : (titre pertinent)
+## Partie 2 : (titre pertinent)
+## Partie 3 : (titre pertinent)
+
+# CONCLUSION
+(Synthèse, ouverture)
+
+# BIBLIOGRAPHIE
+(Sources et références)
+
+Rédige en français, sois détaillé et professionnel. Minimum 3 pages."""
+
+        elif "Examens" in service or "Sujets" in service:
+            prompt = f"""Tu es un professeur expérimenté. Crée un sujet d'examen complet et officiel sur :
+
+{description}
+
+Structure OBLIGATOIRE :
+# EN-TÊTE OFFICIEL
+(Établissement, matière, niveau, durée, date, barème total /20)
+
+# CONSIGNES GÉNÉRALES
+
+# PARTIE I — (titre)
+(Questions numérotées avec points)
+
+# PARTIE II — (titre)
+(Questions numérotées avec points)
+
+# PARTIE III — (titre)
+(Questions numérotées avec points)
+
+---
+# CORRIGÉ COMPLET
+(Réponses détaillées avec barème)
+
+Rédige en français, format officiel d'examen."""
+
+        elif "CV" in service:
+            prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
+
+{description}
+
+# CURRICULUM VITAE
+
+## INFORMATIONS PERSONNELLES
+## PROFIL / RÉSUMÉ PROFESSIONNEL
+## EXPÉRIENCES PROFESSIONNELLES
+## FORMATION & DIPLÔMES
+## COMPÉTENCES TECHNIQUES
+## COMPÉTENCES LINGUISTIQUES
+## CENTRES D'INTÉRÊT
+
+---
+
+# LETTRE DE MOTIVATION
+
+(Structure complète : accroche percutante, présentation, motivation, valeur ajoutée, conclusion)
+
+Rédige en français, ton professionnel et percutant."""
+
+        elif "Pack Office" in service:
+            prompt = f"""Tu es un expert bureautique. Crée le contenu complet et professionnel pour :
+
+{description}
+
+Fournis un document structuré avec :
+- Titres et sous-titres hiérarchisés
+- Paragraphes complets et détaillés
+- Tableaux si pertinent
+- Recommandations de mise en forme
+
+Rédige en français, format professionnel et exhaustif."""
+
+        elif "Excel" in service or "Data" in service:
+            prompt = f"""Tu es un expert Excel et Data Analytics. Crée une structure complète pour :
+
+{description}
+
+## FEUILLES À CRÉER
+(Liste des onglets avec description)
+
+## STRUCTURE DES COLONNES PAR FEUILLE
+(En-têtes, types de données)
+
+## FORMULES EXCEL CLÉS
+(Avec syntaxe exacte : =SOMME(), =RECHERCHEV(), =SI(), etc.)
+
+## DONNÉES D'EXEMPLE
+(5-10 lignes d'exemple réalistes)
+
+## MISE EN FORME RECOMMANDÉE
+(Couleurs, styles, graphiques suggérés)
+
+## TABLEAU DE BORD
+(Description du tableau de bord final)
+
+Rédige en français, sois très précis et technique."""
+
+        else:
+            prompt = f"""Tu es un expert professionnel. Réalise cette mission de façon complète et professionnelle :
+
+{description}
+
+Rédige en français avec une structure claire : titres, sous-titres, paragraphes détaillés. Sois exhaustif et professionnel."""
+
+        # Payload Gemini
+        payload = json.dumps({
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": 8192
+            }
+        }).encode("utf-8")
+
+        # Modèles en fallback automatique
+        modeles = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+
+        for modele in modeles:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{modele}:generateContent?key={api_key}"
+                req = _ur.Request(
+                    url, data=payload,
+                    headers={"Content-Type": "application/json"},
+                    method="POST"
+                )
+                with _ur.urlopen(req, timeout=60) as response:
+                    result = json.loads(response.read().decode("utf-8"))
+                    texte = result["candidates"][0]["content"]["parts"][0]["text"]
+                    return texte
+            except Exception as e:
+                err = str(e)
+                if "429" in err or "404" in err or "quota" in err.lower():
+                    time.sleep(3)
+                    continue
+                return f"❌ Erreur Gemini ({modele}) : {e}"
+
+        return "❌ Tous les modèles Gemini sont saturés. Réessaie dans quelques minutes."
+
+    except Exception as e:
+        return f"❌ Erreur Gemini : {e}"
+
+
+def creer_docx(contenu, service, client_nom):
+    """Génère un fichier .docx à partir du contenu Gemini."""
+    from docx import Document
+    from docx.shared import Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from io import BytesIO
+
+    doc = Document()
+
+    # En-tête
+    titre = doc.add_heading("NOVA AI", 0)
+    titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    sous = doc.add_heading(service, level=1)
+    sous.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    info = doc.add_paragraph(f"Client : {client_nom}     |     Généré le : {datetime.now().strftime('%d/%m/%Y à %H:%M')}")
+    info.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph("")
+
+    # Parsing du contenu markdown → docx
+    for ligne in contenu.split("\n"):
+        l = ligne.strip()
+        if not l:
+            doc.add_paragraph("")
+        elif l.startswith("# "):
+            doc.add_heading(l[2:], level=1)
+        elif l.startswith("## "):
+            doc.add_heading(l[3:], level=2)
+        elif l.startswith("### "):
+            doc.add_heading(l[4:], level=3)
+        elif l.startswith("- ") or l.startswith("* "):
+            doc.add_paragraph(l[2:], style="List Bullet")
+        elif l.startswith("**") and l.endswith("**"):
+            p = doc.add_paragraph()
+            run = p.add_run(l.replace("**", ""))
+            run.bold = True
+        else:
+            doc.add_paragraph(l)
+
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+
 
 # --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
@@ -179,19 +389,20 @@ if "warning_triggered" not in st.session_state:
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
 
+# ← NOUVEAU : stockage des résultats Gemini
+if "gemini_results" not in st.session_state:
+    st.session_state["gemini_results"] = {}
+
 # Reconnaissance automatique via cookie navigateur (session persistante)
 if st.session_state["current_user"] is None:
-    # 1. Vérifier d'abord l'URL
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
         st.session_state["current_user"] = stored_user
     else:
-        # 2. Lire le cookie via localStorage
         components.html("""
             <script>
             var uid = localStorage.getItem('nova_user_id');
             if (uid) {
-                // Passer l'uid à Streamlit via l'URL
                 var url = new URL(window.location.href);
                 url.searchParams.set('user_id', uid);
                 window.location.href = url.toString();
@@ -199,7 +410,6 @@ if st.session_state["current_user"] is None:
             </script>
         """, height=0)
 
-# Sauvegarder dans localStorage à chaque connexion
 if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
     components.html(f"""
@@ -219,7 +429,6 @@ def inject_custom_css():
         
         * { font-family: 'Poppins', sans-serif; }
 
-        /* FOND APP */
         .stApp {
             background: #0f0c29;
             background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
@@ -228,14 +437,12 @@ def inject_custom_css():
             transition: filter 0.5s ease;
         }
         
-        /* EFFET D'ILLUMINATION GLOBALE */
         @keyframes glow-pulse {
             0% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0px transparent; }
             50% { filter: brightness(1.8) saturate(1.5); box-shadow: inset 0 0 100px rgba(0, 210, 255, 0.5); }
             100% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0px transparent; }
         }
 
-        /* TITRE PRINCIPAL */
         .main-title {
             background: linear-gradient(90deg, #00d2ff, #3a7bd5);
             -webkit-background-clip: text;
@@ -247,7 +454,6 @@ def inject_custom_css():
             text-shadow: 0px 0px 20px rgba(0, 210, 255, 0.3);
         }
 
-        /* --- STYLISATION DES ONGLETS (TABS) --- */
         .stTabs [data-baseweb="tab-list"] {
             gap: 20px;
             background-color: rgba(255, 255, 255, 0.05);
@@ -286,7 +492,6 @@ def inject_custom_css():
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
 
-        /* --- ANIMATION BORDURE MULTICOLORE --- */
         @keyframes border-rainbow {
             0% { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
             25% { border-color: #3a7bd5; box-shadow: 0 0 10px rgba(58, 123, 213, 0.3); }
@@ -295,7 +500,6 @@ def inject_custom_css():
             100% { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
         }
 
-        /* --- ELEMENTS DE FORMULAIRE --- */
         .stTextInput label, .stSelectbox label, .stTextArea label {
             color: #00d2ff !important;
             font-weight: 600 !important;
@@ -310,7 +514,6 @@ def inject_custom_css():
             border-radius: 10px !important;
         }
 
-        /* ZONE DE TEXTE ARC-EN-CIEL */
         .stTextArea textarea {
             background-color: rgba(0, 0, 0, 0.6) !important;
             color: white !important;
@@ -325,7 +528,6 @@ def inject_custom_css():
             animation: border-rainbow 1.5s linear infinite;
         }
 
-        /* --- LOGO STRIP --- */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -347,7 +549,6 @@ def inject_custom_css():
             transform: translateY(-5px) scale(1.1);
         }
 
-        /* --- CARTE PREMIUM --- */
         .premium-card {
             background: rgba(20, 20, 30, 0.8);
             border: 2px solid #FFD700;
@@ -402,7 +603,6 @@ def inject_custom_css():
             box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
         }
 
-        /* BOUTONS STREAMLIT */
         .stButton>button {
             border-radius: 12px;
             padding: 0.8rem 2rem;
@@ -421,7 +621,6 @@ def inject_custom_css():
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
 
-        /* --- INFO BOX (Sidebar) --- */
         .info-card {
             background: rgba(0, 0, 0, 0.4) !important;
             border-left: 4px solid #00d2ff;
@@ -439,7 +638,6 @@ def inject_custom_css():
             text-transform: uppercase;
         }
 
-        /* --- CARTE DE LIVRABLE --- */
         .file-card {
             background: rgba(255, 255, 255, 0.08);
             border: 2px solid rgba(46, 204, 113, 0.5);
@@ -476,6 +674,25 @@ def inject_custom_css():
         .stProgress > div > div > div > div {
             background-image: linear-gradient(to right, #00d2ff , #3a7bd5);
         }
+
+        /* GEMINI CARD */
+        .gemini-card {
+            background: linear-gradient(135deg, rgba(0,210,255,0.08), rgba(58,123,213,0.12));
+            border: 2px solid rgba(0,210,255,0.4);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin: 12px 0;
+        }
+        .gemini-title {
+            color: #00d2ff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+        .gemini-sub {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.75rem;
+        }
         </style>
     """, unsafe_allow_html=True)
     
@@ -483,15 +700,13 @@ def inject_custom_css():
         st.markdown('<style>.stApp { animation: glow-pulse 1.5s ease-in-out infinite; }</style>', unsafe_allow_html=True)
 
 # ==========================================
-# PAGES ET COMPOSANTS
+# PAGE AUTH
 # ==========================================
 
 def show_auth_page():
 
-    # --- CSS exclusif à la page d'authentification ---
     st.markdown("""
     <style>
-    /* ===== ANIMATIONS ===== */
     @keyframes shimmer {
         0%   { background-position: -200% center; }
         100% { background-position:  200% center; }
@@ -525,7 +740,6 @@ def show_auth_page():
         50%       { opacity: 0.4; transform: scale(0.6); }
     }
 
-    /* ===== HERO HEADER ===== */
     .auth-hero {
         text-align: center;
         padding: 40px 20px 10px 20px;
@@ -551,7 +765,6 @@ def show_auth_page():
         animation: particle-drift 6s linear infinite;
     }
 
-    /* ===== TITRE ANIMÉ LETTRE PAR LETTRE ===== */
     .auth-title-wrap { display: flex; justify-content: center; gap: 2px; flex-wrap: wrap; margin-bottom: 6px; }
     .auth-letter {
         font-size: 3rem;
@@ -579,7 +792,6 @@ def show_auth_page():
         animation: float-up 1s ease 0.8s both;
     }
 
-    /* ===== SÉPARATEUR ===== */
     .auth-divider {
         display: flex; align-items: center; gap: 14px;
         margin: 28px auto 32px auto; max-width: 420px;
@@ -591,7 +803,6 @@ def show_auth_page():
         animation: pulse-dot 1.8s ease-in-out infinite;
     }
 
-    /* ===== CARTES DE FORMULAIRE ===== */
     .auth-card {
         background: linear-gradient(145deg, rgba(20,15,5,0.95), rgba(35,25,5,0.9));
         border: 1px solid rgba(255,215,0,0.35);
@@ -620,7 +831,6 @@ def show_auth_page():
         bottom: -60px; right: -60px;
         pointer-events: none;
     }
-    /* Scanline subtile */
     .auth-card .scanline {
         position: absolute;
         left: 0; right: 0; height: 2px;
@@ -629,7 +839,6 @@ def show_auth_page():
         pointer-events: none;
     }
 
-    /* ===== EN-TÊTE CARTE ===== */
     .auth-card-header {
         display: flex; align-items: center; gap: 12px;
         margin-bottom: 22px;
@@ -657,7 +866,6 @@ def show_auth_page():
         letter-spacing: 0.5px;
     }
 
-    /* ===== CHAMPS DE FORMULAIRE (override doré) ===== */
     .auth-page .stTextInput label {
         color: rgba(255,215,0,0.8) !important;
         font-size: 0.82rem !important;
@@ -676,7 +884,6 @@ def show_auth_page():
         box-shadow: 0 0 0 3px rgba(255,215,0,0.12) !important;
     }
 
-    /* ===== ANIMATIONS PERMANENTES BOUTONS ===== */
     @keyframes btn-shimmer {
         0%   { background-position: -300% center; }
         100% { background-position:  300% center; }
@@ -690,7 +897,6 @@ def show_auth_page():
         50%       { box-shadow: 0 6px 25px rgba(255,215,0,0.45), 0 0 22px rgba(255,215,0,0.35); }
     }
 
-    /* ===== BOUTONS DORÉ PREMIUM ===== */
     .auth-page .stButton > button {
         background: linear-gradient(
             90deg,
@@ -708,11 +914,9 @@ def show_auth_page():
         width: 100% !important;
         position: relative !important;
         overflow: hidden !important;
-        /* Shimmer en boucle permanente */
         animation: btn-shimmer 3s linear infinite, btn-float 3.5s ease-in-out infinite !important;
         cursor: pointer !important;
     }
-    /* Reflet blanc glissant par-dessus */
     .auth-page .stButton > button::before {
         content: '' !important;
         position: absolute !important;
@@ -727,7 +931,6 @@ def show_auth_page():
         animation: btn-shimmer 3s linear infinite !important;
         pointer-events: none !important;
     }
-    /* Anneau de glow en dessous du bouton */
     .auth-page .stButton > button::after {
         content: '' !important;
         position: absolute !important;
@@ -738,7 +941,6 @@ def show_auth_page():
         pointer-events: none !important;
     }
 
-    /* ===== BADGE SÉCURITÉ ===== */
     .auth-secure-badge {
         display: flex; align-items: center; justify-content: center;
         gap: 8px; margin-top: 28px;
@@ -750,7 +952,6 @@ def show_auth_page():
     </style>
     """, unsafe_allow_html=True)
 
-    # --- Hero header ---
     letters = list("NOVA AI")
     letter_spans = "".join(
         f'<span class="auth-letter" style="animation-delay:{i*0.07:.2f}s">'
@@ -771,7 +972,6 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Deux colonnes de formulaires ---
     st.markdown('<div class="auth-page">', unsafe_allow_html=True)
     col1, col2 = st.columns(2, gap="large")
 
@@ -839,14 +1039,12 @@ def show_auth_page():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Badge sécurité bas de page ---
     st.markdown("""
     <div class="auth-secure-badge">
         <span>🔒</span> Connexion sécurisée &nbsp;·&nbsp; <span>⚡</span> Nova AI &nbsp;·&nbsp; <span>🛡️</span> Données protégées
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Voix de guidage à la connexion (ElevenLabs login.mp3) ---
     audio_path_login = "login.mp3"
     if os.path.exists(audio_path_login):
         with open(audio_path_login, "rb") as f:
@@ -870,6 +1068,10 @@ def show_auth_page():
             }})();
             </script>
         """, height=0)
+
+# ==========================================
+# DASHBOARD PRINCIPAL
+# ==========================================
 
 def main_dashboard():
     user = st.session_state["current_user"]
@@ -904,7 +1106,6 @@ def main_dashboard():
 
     st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
 
-    # --- Message vocal d'accueil ElevenLabs (une seule fois par session, après 3 secondes) ---
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
         audio_path = "intro.mp3"
@@ -932,13 +1133,12 @@ def main_dashboard():
             """, height=0)
 
     # ==========================================
-    # CARTE PREMIUM + FENÊTRE INTERNE (session_state)
+    # PREMIUM CARD
     # ==========================================
     wa_jour = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%20Journalier%20%C3%A0%20600%20FC."
     wa_10j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2010%20Jours%20%C3%A0%201000%20FC."
     wa_30j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2030%20Jours%20%C3%A0%202500%20FC."
 
-    # --- Bouton d'ouverture de la fenêtre premium ---
     st.markdown("""
         <div class="premium-card">
             <div class="premium-title">⭐ ACCÉLÉRATEUR NOVA PREMIUM ⭐</div>
@@ -954,7 +1154,6 @@ def main_dashboard():
             st.session_state["show_premium_modal"] = True
             st.rerun()
 
-    # --- Fenêtre interne des formules (affichée si show_premium_modal = True) ---
     if st.session_state["show_premium_modal"]:
         st.markdown("""
             <div style="
@@ -978,14 +1177,7 @@ def main_dashboard():
 
         with col1_p:
             st.markdown("""
-                <div style="
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,215,0,0.4);
-                    border-radius: 18px;
-                    padding: 28px 16px;
-                    text-align: center;
-                    min-height: 300px;
-                ">
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,215,0,0.4); border-radius: 18px; padding: 28px 16px; text-align: center; min-height: 300px;">
                     <div style="font-size:2.5rem; margin-bottom:10px;">🌅</div>
                     <div style="color:#FFD700; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">Journalier</div>
                     <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">600 FC</div>
@@ -999,21 +1191,8 @@ def main_dashboard():
 
         with col2_p:
             st.markdown("""
-                <div style="
-                    background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(58,123,213,0.15));
-                    border: 2px solid #00d2ff;
-                    border-radius: 18px;
-                    padding: 28px 16px;
-                    text-align: center;
-                    min-height: 300px;
-                    position: relative;
-                ">
-                    <div style="
-                        background:linear-gradient(90deg,#00d2ff,#3a7bd5);
-                        color:white; font-size:0.75rem; font-weight:800;
-                        padding:4px 16px; border-radius:20px;
-                        display:inline-block; margin-bottom:12px;
-                    ">⭐ POPULAIRE</div>
+                <div style="background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(58,123,213,0.15)); border: 2px solid #00d2ff; border-radius: 18px; padding: 28px 16px; text-align: center; min-height: 300px; position: relative;">
+                    <div style="background:linear-gradient(90deg,#00d2ff,#3a7bd5); color:white; font-size:0.75rem; font-weight:800; padding:4px 16px; border-radius:20px; display:inline-block; margin-bottom:12px;">⭐ POPULAIRE</div>
                     <div style="font-size:2.5rem; margin-bottom:10px;">🔟</div>
                     <div style="color:#00d2ff; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">10 Jours</div>
                     <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">1 000 FC</div>
@@ -1027,14 +1206,7 @@ def main_dashboard():
 
         with col3_p:
             st.markdown("""
-                <div style="
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(46,204,113,0.4);
-                    border-radius: 18px;
-                    padding: 28px 16px;
-                    text-align: center;
-                    min-height: 300px;
-                ">
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(46,204,113,0.4); border-radius: 18px; padding: 28px 16px; text-align: center; min-height: 300px;">
                     <div style="font-size:2.5rem; margin-bottom:10px;">👑</div>
                     <div style="color:#2ecc71; font-weight:800; font-size:1.1rem; margin-bottom:6px; text-transform:uppercase;">30 Jours</div>
                     <div style="color:white; font-size:2rem; font-weight:800; margin:10px 0;">2 500 FC</div>
@@ -1057,7 +1229,6 @@ def main_dashboard():
 
     with tab1:
 
-        # --- Dictionnaire des prérequis par service ---
         SERVICE_PREREQUIS = {
             "📝 Exposé scolaire complet IA": {
                 "icone": "📝",
@@ -1183,23 +1354,18 @@ def main_dashboard():
             default_wa = db["users"][user]["whatsapp"] if user else ""
             wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
 
-        # Service Excel : déclenchement uniquement à la saisie
         SERVICE_SAISIE = "📊 Data & Excel Analytics"
 
-        # Reset quand le service change
         if service != st.session_state["last_service_seen"]:
             st.session_state["last_service_seen"] = service
             st.session_state["warning_triggered"] = False
             st.session_state["show_service_warning"] = False
-            # Pour les autres services : déclencher immédiatement
             if service != SERVICE_SAISIE and service in SERVICE_PREREQUIS:
                 st.session_state["show_service_warning"] = True
 
-        # --- Fenêtre d'avertissement (affichée AVANT le textarea pour les autres services) ---
         if st.session_state["show_service_warning"] and service in SERVICE_PREREQUIS and service != SERVICE_SAISIE:
             info = SERVICE_PREREQUIS[service]
 
-            # Mapping service → fichier MP3
             SERVICE_AUDIO = {
                 "📝 Exposé scolaire complet IA":   "prerequis_expose.mp3",
                 "📝 Création de Sujets & Examens": "prerequis_examens.mp3",
@@ -1218,7 +1384,6 @@ def main_dashboard():
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
-            # Lecture MP3 ElevenLabs si disponible, sinon Web Speech
             audio_file = SERVICE_AUDIO.get(service)
             if audio_file and os.path.exists(audio_file):
                 with open(audio_file, "rb") as f:
@@ -1243,11 +1408,9 @@ def main_dashboard():
                     components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
                     st.rerun()
 
-        # --- Champ de saisie ---
         st.markdown("#### 📝 Spécifications de la mission")
         prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
 
-        # --- Excel uniquement : déclenchement à la première frappe ---
         if service == SERVICE_SAISIE and service in SERVICE_PREREQUIS:
             if prompt and not st.session_state["warning_triggered"]:
                 st.session_state["warning_triggered"] = True
@@ -1265,7 +1428,6 @@ def main_dashboard():
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
-                # Lecture MP3 ElevenLabs Excel
                 if os.path.exists("prerequis_excel.mp3"):
                     with open("prerequis_excel.mp3", "rb") as f:
                         b64_excel = __import__('base64').b64encode(f.read()).decode()
@@ -1289,7 +1451,6 @@ def main_dashboard():
                         components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
                         st.rerun()
         
-        # LOGO STRIP
         st.markdown("""
         <div class="logo-container">
             <svg class="logo-item" viewBox="0 0 24 24" fill="#217346"><path d="M16.2 21H2.8c-.4 0-.8-.4-.8-.8V3.8c0-.4.4-.8.8-.8h13.4c.4 0 .8.4.8.8v16.4c0 .4-.4.8-.8.8z"/><path d="M14.7 15.3l-2.2-3.3 2.2-3.3h-1.6l-1.4 2.2-1.4-2.2H8.7l2.2 3.3-2.2 3.3h1.6l1.4-2.2 1.4 2.2z" fill="white"/></svg>
@@ -1301,7 +1462,6 @@ def main_dashboard():
         <p style="text-align:center; color:rgba(255,255,255,0.4); font-size:0.8rem; margin-top:5px;">Data • Dev • Design • Expertise • Rapidité</p>
         """, unsafe_allow_html=True)
 
-        # Indicateur visuel des champs manquants (sans bloquer)
         champs_manquants = []
         if not wa_display:
             champs_manquants.append("WhatsApp de contact")
@@ -1335,7 +1495,6 @@ def main_dashboard():
                 bar.progress(percent_complete + 1)
                 status_text.markdown(f"<p style='text-align:center; color:#00d2ff; font-size:1.2rem; font-weight:bold;'>NOVA PROCESSING : {percent_complete + 1}%</p>", unsafe_allow_html=True)
 
-            # Statut selon complétude
             statut = "En attente de vérification (informations incomplètes)" if champs_manquants else "Traitement Nova en cours..."
 
             new_req = {
@@ -1364,7 +1523,6 @@ def main_dashboard():
             if user:
                 st.success("✅ Mission enregistrée ! L'équipe Nova examinera votre demande.")
 
-                # Voix ElevenLabs confirmation.mp3
                 audio_path_confirm = "confirmation.mp3"
                 if os.path.exists(audio_path_confirm):
                     with open(audio_path_confirm, "rb") as f:
@@ -1416,7 +1574,7 @@ def main_dashboard():
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <h3 style="color:#00d2ff; margin:0;">💎 {link['name']}</h3>
-                                <p style="color:#aaa; font-size:0.85rem; margin: 5px 0;">Finalisé le {link.get('date', 'Aujourd\'hui')}</p>
+                                <p style="color:#aaa; font-size:0.85rem; margin: 5px 0;">Finalisé le {link.get('date', "Aujourd'hui")}</p>
                             </div>
                             <a href="{link['url']}" target="_blank" style="text-decoration:none;">
                                 <button style="padding:10px 25px; background:#2ecc71; color:white; border:none; border-radius:30px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(46,204,113,0.3);">
@@ -1456,11 +1614,13 @@ def main_dashboard():
             with col_sup:
                 st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">🙋 Agent Nova</a>', unsafe_allow_html=True)
 
+    # ==========================================
+    # CONSOLE ADMIN
+    # ==========================================
     with st.expander("🛠 Console Admin Nova"):
         if st.text_input("Master Key", type="password") == ADMIN_CODE:
 
             current_db = st.session_state["db"]
-
             st.markdown("### 🛡️ Panneau de contrôle Nova")
 
             if not current_db["demandes"]:
@@ -1469,6 +1629,15 @@ def main_dashboard():
             def wa_url(numero, texte):
                 encoded = texte.replace(" ", "%20").replace("'", "%27").replace("\n", "%0A")
                 return f"https://wa.me/{numero}?text={encoded}"
+
+            # Services éligibles à la génération Gemini automatique
+            SERVICES_GEMINI = [
+                "📝 Exposé scolaire complet IA",
+                "📝 Création de Sujets & Examens",
+                "👔 CV & Lettre de Motivation",
+                "⚙️ Pack Office (Word/Excel/PPT)",
+                "📊 Data & Excel Analytics",
+            ]
 
             for i, req in enumerate(current_db["demandes"]):
                 client_wa_raw    = req.get("whatsapp", "(non renseigné)")
@@ -1481,18 +1650,15 @@ def main_dashboard():
                 est_incomplet    = req.get("incomplet", False)
                 champs_manquants = req.get("champs_manquants", [])
 
-                # Séparateur entre demandes
                 if i > 0:
                     st.divider()
 
-                # Infos de la mission sur des lignes simples
                 st.markdown(f"**Mission `#{req_id}`** · {timestamp}" + (" — ⚠️ *Incomplet : " + ", ".join(champs_manquants) + "*" if est_incomplet else ""))
                 st.markdown(f"👤 **Client :** {client_nom}")
                 st.markdown(f"📱 **WhatsApp :** {client_wa}")
                 st.markdown(f"🛠️ **Service demandé :** {service}")
                 st.markdown(f"📝 **Détails de la demande :** {description}")
 
-                # Messages WhatsApp
                 if est_incomplet and champs_manquants:
                     champs_str = ", ".join(champs_manquants)
                     msg_rejet = (f"Bonjour {client_nom}, nous avons reçu votre demande Nova AI "
@@ -1514,26 +1680,86 @@ def main_dashboard():
                             f"Nova AI : {service}. Votre mission est en cours de traitement. "
                             f"Vous serez notifié dès qu'elle sera finalisée. — Équipe Nova AI ⚡")
 
-                url_rejet  = wa_url(client_wa, msg_rejet)
-                url_succes = wa_url(client_wa, msg_succes)
-                url_recu   = wa_url(client_wa, msg_recu)
-
-                # 3 boutons WhatsApp
                 col_rejet, col_recu, col_succes = st.columns(3)
                 with col_rejet:
-                    st.markdown(f'<a href="{url_rejet}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.5); color:#e74c3c; font-weight:700; text-decoration:none;">❌ Rejeter</a>', unsafe_allow_html=True)
+                    st.markdown(f'<a href="{wa_url(client_wa, msg_rejet)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.5); color:#e74c3c; font-weight:700; text-decoration:none;">❌ Rejeter</a>', unsafe_allow_html=True)
                 with col_recu:
-                    st.markdown(f'<a href="{url_recu}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
+                    st.markdown(f'<a href="{wa_url(client_wa, msg_recu)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
                 with col_succes:
-                    st.markdown(f'<a href="{url_succes}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; font-weight:700; text-decoration:none;">✅ Succès</a>', unsafe_allow_html=True)
+                    st.markdown(f'<a href="{wa_url(client_wa, msg_succes)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; font-weight:700; text-decoration:none;">✅ Succès</a>', unsafe_allow_html=True)
+
+                # ==========================================
+                # BOUTON GEMINI (services éligibles)
+                # ==========================================
+                if service in SERVICES_GEMINI:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="gemini-card">
+                        <div class="gemini-title">🤖 GEMINI AI — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
+                        <div class="gemini-sub">Génère le document complet en .docx en 30-60 secondes</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
+                        with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
+                            contenu = generer_avec_gemini(service, description, client_nom)
+
+                        if contenu.startswith("❌"):
+                            st.error(contenu)
+                        else:
+                            st.session_state["gemini_results"][req_id] = {
+                                "contenu": contenu,
+                                "service": service,
+                                "client": client_nom
+                            }
+                            st.success("✅ Document généré avec succès !")
+                            st.rerun()
+
+                    # Afficher résultat si déjà généré
+                    if req_id in st.session_state["gemini_results"]:
+                        result = st.session_state["gemini_results"][req_id]
+
+                        with st.expander("👁️ Aperçu du contenu généré", expanded=False):
+                            st.markdown(result["contenu"])
+
+                        # Téléchargement .docx
+                        try:
+                            buf = creer_docx(result["contenu"], result["service"], result["client"])
+                            nom_fichier = f"NovaAI_{client_nom}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                            st.download_button(
+                                label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
+                                data=buf,
+                                file_name=nom_fichier,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_{req_id}",
+                                use_container_width=True
+                            )
+                        except ImportError:
+                            nom_fichier = f"NovaAI_{client_nom}_{service[:20].strip()}.txt".replace(" ", "_").replace("/", "-")
+                            st.download_button(
+                                label="📥 TÉLÉCHARGER (.txt)",
+                                data=result["contenu"].encode("utf-8"),
+                                file_name=nom_fichier,
+                                mime="text/plain",
+                                key=f"dl_{req_id}",
+                                use_container_width=True
+                            )
+                            st.warning("⚠️ Ajoute `python-docx` dans requirements.txt pour le format .docx")
+
+                        st.info("💡 Télécharge → upload sur Google Drive → colle le lien ci-dessous pour livrer au client.")
 
                 # Livraison
-                url_dl = st.text_input("🔗 Lien de livraison", key=f"url_{i}", placeholder="https://drive.google.com/...")
-                if st.button("📦 LIVRER LA MISSION", key=f"btn_{i}"):
+                st.markdown("<br>", unsafe_allow_html=True)
+                url_dl = st.text_input("🔗 Lien de livraison (Google Drive...)", key=f"url_{i}", placeholder="https://drive.google.com/...")
+                if st.button("📦 LIVRER LA MISSION AU CLIENT", key=f"btn_{i}", use_container_width=True):
                     if url_dl:
                         save_lien(req['user'], req['service'], url_dl, datetime.now().strftime("%d/%m/%Y"))
                         delete_demande(req['id'])
+                        # Nettoyer le résultat Gemini si existant
+                        if req_id in st.session_state["gemini_results"]:
+                            del st.session_state["gemini_results"][req_id]
                         st.session_state["db"] = load_db()
+                        st.success(f"✅ Mission livrée à {client_nom} !")
                         st.rerun()
 
 # ==========================================
@@ -1542,7 +1768,6 @@ def main_dashboard():
 
 inject_custom_css()
 
-# Gestion de la persistance via localStorage
 components.html("""
     <script>
     const user = localStorage.getItem('nova_user');
