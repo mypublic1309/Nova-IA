@@ -149,6 +149,7 @@ def generer_avec_gemini(service, description, client_nom):
     """Génère un document complet via Gemini AI."""
     try:
         import urllib.request as _ur
+        import urllib.error
 
         api_key = st.secrets["GEMINI_API_KEY"]
 
@@ -297,7 +298,7 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                     result = json.loads(response.read().decode("utf-8"))
                     texte = result["candidates"][0]["content"]["parts"][0]["text"]
                     return texte
-            except _ur.error.HTTPError as e:
+            except urllib.error.HTTPError as e:
                 # Lire le corps de la réponse pour voir la vraie erreur
                 try:
                     corps_erreur = e.read().decode("utf-8")
