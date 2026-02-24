@@ -1542,21 +1542,23 @@ def inject_custom_css():
         <style>
         /* ===== FOND OR PREMIUM ===== */
         .stApp {
-            background: #0a0800 !important;
-            background: -webkit-linear-gradient(135deg, #0a0800 0%, #1a1200 30%, #0d0900 60%, #1a1000 100%) !important;
-            background: linear-gradient(135deg, #0a0800 0%, #1a1200 30%, #0d0900 60%, #1a1000 100%) !important;
+            background: #2d1f00 !important;
+            background: -webkit-linear-gradient(135deg, #3d2800 0%, #4a3200 20%, #3a2600 40%, #4d3500 60%, #3d2900 80%, #2d1f00 100%) !important;
+            background: linear-gradient(135deg, #3d2800 0%, #4a3200 20%, #3a2600 40%, #4d3500 60%, #3d2900 80%, #2d1f00 100%) !important;
             color: #fff8e1 !important;
         }
 
-        /* Particules dorées en arrière-plan */
+        /* Halos lumineux dorés très visibles */
         .stApp::before {
             content: '';
             position: fixed;
             inset: 0;
             background:
-                radial-gradient(ellipse at 10% 20%, rgba(255,215,0,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(255,140,0,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(184,134,11,0.04) 0%, transparent 70%);
+                radial-gradient(ellipse at 10% 10%, rgba(255,215,0,0.30) 0%, transparent 40%),
+                radial-gradient(ellipse at 90% 90%, rgba(255,160,0,0.25) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 50%, rgba(255,200,0,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 85% 10%, rgba(255,215,0,0.20) 0%, transparent 35%),
+                radial-gradient(ellipse at 15% 90%, rgba(255,140,0,0.18) 0%, transparent 35%);
             pointer-events: none;
             z-index: 0;
         }
@@ -1605,53 +1607,55 @@ def inject_custom_css():
             color: #FFD700 !important;
         }
         div[data-baseweb="input"], div[data-baseweb="select"] > div {
-            border: 1px solid rgba(255,215,0,0.35) !important;
-            background-color: rgba(10,8,0,0.7) !important;
+            border: 1px solid rgba(255,215,0,0.6) !important;
+            background-color: rgba(70,48,0,0.80) !important;
             color: #fff8e1 !important;
         }
         .stTextArea textarea {
-            background-color: rgba(10,8,0,0.8) !important;
+            background-color: rgba(65,44,0,0.80) !important;
             color: #fff8e1 !important;
             border: 2px solid #FFD700 !important;
             animation: border-gold 4s linear infinite !important;
         }
         @keyframes border-gold {
-            0%   { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-            33%  { border-color: #FF8C00; box-shadow: 0 0 15px rgba(255,140,0,0.3); }
-            66%  { border-color: #b8860b; box-shadow: 0 0 10px rgba(184,134,11,0.3); }
-            100% { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+            0%   { border-color: #FFD700; box-shadow: 0 0 14px rgba(255,215,0,0.55); }
+            33%  { border-color: #FF8C00; box-shadow: 0 0 18px rgba(255,140,0,0.45); }
+            66%  { border-color: #b8860b; box-shadow: 0 0 14px rgba(184,134,11,0.45); }
+            100% { border-color: #FFD700; box-shadow: 0 0 14px rgba(255,215,0,0.55); }
         }
 
         /* ===== BOUTONS OR ===== */
         .stButton>button {
-            background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #b8860b, #7a5500) !important;
+            background: linear-gradient(90deg, #8a6200, #c49a00, #FFD700, #c49a00, #8a6200) !important;
             background-size: 200% auto !important;
-            color: #0a0800 !important;
-            box-shadow: 0 4px 15px rgba(255,215,0,0.4) !important;
+            color: #1a0f00 !important;
+            box-shadow: 0 4px 22px rgba(255,215,0,0.55) !important;
             animation: shimmer-gold 3s linear infinite !important;
+            font-weight: 800 !important;
         }
         .stButton>button:hover {
-            box-shadow: 0 6px 25px rgba(255,215,0,0.6) !important;
+            box-shadow: 0 6px 32px rgba(255,215,0,0.75) !important;
             transform: translateY(-2px) !important;
         }
 
         /* ===== SIDEBAR OR ===== */
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0d0900 0%, #1a1000 100%) !important;
-            border-right: 1px solid rgba(255,215,0,0.2) !important;
+            background: linear-gradient(180deg, #3a2800 0%, #4a3400 40%, #3a2800 100%) !important;
+            border-right: 2px solid rgba(255,215,0,0.4) !important;
+            box-shadow: 4px 0 25px rgba(255,215,0,0.12) !important;
         }
 
         /* ===== INFO-CARD OR ===== */
         .info-card {
             border-left: 4px solid #FFD700 !important;
-            background: rgba(255,215,0,0.05) !important;
+            background: rgba(255,215,0,0.10) !important;
         }
         .info-title { color: #FFD700 !important; }
 
         /* ===== FILE-CARD OR ===== */
         .file-card {
-            border: 2px solid rgba(255,215,0,0.4) !important;
-            background: rgba(255,215,0,0.04) !important;
+            border: 2px solid rgba(255,215,0,0.5) !important;
+            background: rgba(255,215,0,0.07) !important;
         }
 
         /* ===== PROGRESS BAR OR ===== */
@@ -1662,17 +1666,17 @@ def inject_custom_css():
         /* ===== EXPANDER OR ===== */
         .streamlit-expanderHeader {
             color: #FFD700 !important;
-            border: 1px solid rgba(255,215,0,0.2) !important;
-            background: rgba(255,215,0,0.05) !important;
+            border: 1px solid rgba(255,215,0,0.3) !important;
+            background: rgba(255,215,0,0.10) !important;
         }
 
         /* ===== DIVIDER OR ===== */
-        hr { border-color: rgba(255,215,0,0.2) !important; }
+        hr { border-color: rgba(255,215,0,0.3) !important; }
 
         /* ===== METRIC OR ===== */
         [data-testid="stMetric"] {
-            background: rgba(255,215,0,0.06) !important;
-            border: 1px solid rgba(255,215,0,0.2) !important;
+            background: rgba(255,215,0,0.10) !important;
+            border: 1px solid rgba(255,215,0,0.35) !important;
             border-radius: 12px !important;
             padding: 10px !important;
         }
@@ -1680,13 +1684,13 @@ def inject_custom_css():
 
         /* ===== SUCCESS / INFO / WARNING OR ===== */
         .stSuccess {
-            background: rgba(255,215,0,0.08) !important;
-            border: 1px solid rgba(255,215,0,0.3) !important;
+            background: rgba(255,215,0,0.12) !important;
+            border: 1px solid rgba(255,215,0,0.4) !important;
             color: #FFD700 !important;
         }
         .stInfo {
-            background: rgba(255,215,0,0.05) !important;
-            border: 1px solid rgba(255,215,0,0.2) !important;
+            background: rgba(255,215,0,0.08) !important;
+            border: 1px solid rgba(255,215,0,0.3) !important;
         }
 
         /* ===== SUPPORT BTN OR ===== */
