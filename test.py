@@ -246,7 +246,7 @@ Tu dois produire un exposé avec la structure EXACTE suivante, dans CET ORDRE PR
 5. CONCLUSION (toujours sur une nouvelle page)
 6. BIBLIOGRAPHIE (toujours sur une nouvelle page)
 
-Pour signaler un SAUT DE PAGE obligatoire entre chaque section, utilise EXACTEMENT cette ligne seule :
+Pour signaler une NOUVELLE SECTION, utilise EXACTEMENT cette ligne seule :
 ---SAUT_DE_PAGE---
 
 === SYSTÈME SCOLAIRE DE RÉFÉRENCE ===
@@ -512,7 +512,7 @@ Tu dois produire un sujet d'examen avec la structure EXACTE suivante, dans CET O
 3. LES EXERCICES (chaque exercice clairement séparé)
 4. CORRIGÉ COMPLET (sur nouvelle page, UNIQUEMENT si demandé)
 
-Pour signaler un SAUT DE PAGE obligatoire, utilise EXACTEMENT cette ligne seule :
+Pour signaler une NOUVELLE SECTION, utilise EXACTEMENT cette ligne seule :
 ---SAUT_DE_PAGE---
 
 === FORMATS D'EXERCICES QUE TU DOIS MAÎTRISER PARFAITEMENT ===
@@ -832,7 +832,7 @@ Union — Discipline — Travail
 
 [Sépare chaque exercice avec ════════════════════════════════════════════════════════]
 
-[Utilise ---SAUT_DE_PAGE--- si le sujet est long et nécessite une nouvelle page]
+[Utilise ---SAUT_DE_PAGE--- si le sujet est long et nécessite une nouvelle section]
 
 ---SAUT_DE_PAGE---  ← (uniquement si corrigé demandé)
 
@@ -1153,13 +1153,18 @@ def creer_docx(contenu, service, client_nom):
 
         # ── SAUT DE PAGE NOVA ──────────────────────────────────────
         if l.strip() == "---SAUT_DE_PAGE---":
-            from docx.oxml import OxmlElement as _OE
-            from docx.oxml.ns import qn as _qn
-            p_break = doc.add_paragraph()
-            run_break = p_break.add_run()
-            br = _OE("w:br")
-            br.set(_qn("w:type"), "page")
-            run_break._r.append(br)
+            # Séparateur visuel sans saut de page physique
+            p_sep2 = doc.add_paragraph()
+            pPr_sep = p_sep2._p.get_or_add_pPr()
+            pBdr_sep = OxmlElement("w:pBdr")
+            bot_sep = OxmlElement("w:bottom")
+            bot_sep.set(qn("w:val"), "single")
+            bot_sep.set(qn("w:sz"), "8")
+            bot_sep.set(qn("w:space"), "1")
+            bot_sep.set(qn("w:color"), "1F4E79")
+            pBdr_sep.append(bot_sep)
+            p_sep2._p.get_or_add_pPr().append(pBdr_sep)
+            doc.add_paragraph("")
             i += 1
             continue
 
