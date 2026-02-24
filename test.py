@@ -8,9 +8,6 @@ from io import BytesIO
 import streamlit.components.v1 as components
 from supabase import create_client
 
-# ==========================================
-# CONFIGURATION ET CONSTANTES
-# ==========================================
 st.set_page_config(
     page_title="L'IA bureautique NoVA AI", 
     page_icon="⚡", 
@@ -21,12 +18,10 @@ st.set_page_config(
 DATA_FILE = "data_nova_v3.json"
 ADMIN_CODE = "02110240"
 
-# --- CONNEXION SUPABASE ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- FONCTION NORMALISATION NUMÉRO WHATSAPP ---
 def normalize_wa(numero):
     if not numero:
         return ""
@@ -35,7 +30,6 @@ def normalize_wa(numero):
         numero = "225" + numero
     return numero
 
-# --- FONCTIONS SUPABASE ---
 def load_db():
     try:
         users_rows = supabase.table("users").select("*").execute().data
@@ -49,7 +43,6 @@ def load_db():
                 "premium_plan": r.get("premium_plan", None),
                 "premium_expiry": r.get("premium_expiry", None),
             }
-
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
         for r in demandes_rows:
@@ -64,14 +57,12 @@ def load_db():
                 "champs_manquants": json.loads(r["champs_manquants"]) if r["champs_manquants"] else [],
                 "timestamp": r["timestamp"]
             })
-
         liens_rows = supabase.table("liens").select("*").execute().data
         liens = {}
         for r in liens_rows:
             if r["uid"] not in liens:
                 liens[r["uid"]] = []
             liens[r["uid"]].append({"name": r["name"], "url": r["url"], "date": r["date"]})
-
         return {"users": users, "demandes": demandes, "liens": liens}
     except Exception as e:
         st.error(f"Erreur chargement Supabase : {e}")
@@ -128,13 +119,10 @@ def save_lien(uid, name, url, date):
 def save_db(data):
     pass
 
-# --- NOTIFICATION EMAIL ---
 def envoyer_notification(client_nom, client_wa, service, description):
     try:
         import resend
-
         resend.api_key = st.secrets["RESEND_API_KEY"]
-
         corps = f"""
 🔔 NOUVELLE COMMANDE NOVA AI
 
@@ -147,22 +135,15 @@ def envoyer_notification(client_nom, client_wa, service, description):
 
 Connectez-vous à la console admin pour traiter cette mission.
         """
-
         resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"🔔 Nouvelle commande Nova AI — {service}",
             "text": corps
         })
-
         st.toast("📧 Notification email envoyée !", icon="✅")
-
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
-
-# ==========================================
-# FONCTIONS PREMIUM
-# ==========================================
 
 PLANS_PREMIUM = {
     "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 1},
@@ -212,12 +193,7 @@ def desactiver_premium(uid):
             "premium": False, "premium_plan": None, "premium_expiry": None,
         })
 
-# ==========================================
-# GEMINI AI — GÉNÉRATION AUTOMATIQUE
-# ==========================================
-
 def get_modeles_disponibles(api_key):
-    """Appelle ListModels et retourne les modèles supportant generateContent."""
     import urllib.request as _ur
     import urllib.error
     try:
@@ -226,7 +202,6 @@ def get_modeles_disponibles(api_key):
         with _ur.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode())
         modeles = []
-        # Exclure les modèles non-texte (audio, image, tts, etc.)
         exclusions = ["tts", "audio", "image", "imagen", "veo", "robotics",
                       "embedding", "aqa", "computer-use", "research", "nano-banana",
                       "gemma", "preview"]
@@ -235,7 +210,6 @@ def get_modeles_disponibles(api_key):
                 nom = m["name"].replace("models/", "")
                 if not any(excl in nom.lower() for excl in exclusions):
                     modeles.append(nom)
-        # Priorité : flash-lite → flash → pro → autres
         def priorite(nom):
             if "flash-lite" in nom: return 0
             if "flash" in nom:      return 1
@@ -244,111 +218,263 @@ def get_modeles_disponibles(api_key):
         modeles_tries = sorted(modeles, key=priorite)
         return modeles_tries
     except Exception as e:
-        # Fallback statique si ListModels échoue
         return ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash"]
 
 
 def generer_avec_gemini(service, description, client_nom):
-    """Génère un document complet via Gemini AI."""
     try:
         import urllib.request as _ur
         import urllib.error
 
         api_key = st.secrets["GEMINI_API_KEY"]
 
-        # --- Prompts spécialisés par service ---
+        # ================================================================
+        # PROMPT — EXPOSÉ SCOLAIRE (Système scolaire ivoirien & africain)
+        # ================================================================
         if "Exposé" in service:
-            prompt = f"""Tu es un expert académique. Rédige un exposé scolaire complet, structuré et professionnel sur :
+            prompt = f"""Tu es un expert académique spécialisé dans le système scolaire ivoirien et africain francophone.
+Tu connais parfaitement les programmes officiels de Côte d'Ivoire et des pays d'Afrique francophone (Sénégal, Mali, Burkina Faso, Bénin, Togo, Cameroun, Guinée, Congo, Gabon, etc.).
 
-{description}
+=== SYSTÈME SCOLAIRE DE RÉFÉRENCE ===
 
-Structure OBLIGATOIRE :
-# PAGE DE GARDE
-(Titre, matière, niveau scolaire, établissement, date)
+PRIMAIRE (Côte d'Ivoire) :
+- Niveaux : CP1, CP2, CE1, CE2, CM1, CM2
+- Matières : Lecture, Écriture, Calcul, Sciences d'Éveil, Histoire-Géographie, Éducation Civique et Morale, EPS
+- Examen de fin de cycle : CEPE (Certificat d'Études Primaires Élémentaires) — fin CM2
+- Ton attendu : Simple, concret, illustré d'exemples locaux africains (animaux, fleuves, villages, personnages historiques africains)
+- Longueur : 1 à 2 pages, vocabulaire accessible, phrases courtes
 
-# INTRODUCTION
-(Accroche, problématique, annonce du plan)
+COLLÈGE — 1er Cycle du Secondaire :
+- Niveaux : 6ème, 5ème, 4ème, 3ème
+- Matières : Français, Mathématiques, Sciences Physiques et Chimie, SVT (Sciences de la Vie et de la Terre), Histoire-Géographie, Anglais (LV1), Espagnol (LV2 optionnel), EPS, EDHC (Éducation aux Droits de l'Homme et à la Citoyenneté)
+- Examen de fin de cycle : BEPC (Brevet d'Études du Premier Cycle) — fin 3ème
+- Auteurs ivoiriens & africains fréquemment étudiés : Bernard Dadié ("Climbié", "Un Nègre à Paris"), Ahmadou Kourouma ("Allah n'est pas obligé"), Camara Laye ("L'Enfant Noir"), Mongo Beti, Ferdinand Oyono, Cheikh Hamidou Kane
+- Ton attendu : Structuré et progressif, exemples tirés du quotidien africain et ivoirien
+- Longueur : 2 à 4 pages selon le niveau
 
-# DÉVELOPPEMENT
-## Partie 1 : (titre pertinent)
-## Partie 2 : (titre pertinent)
-## Partie 3 : (titre pertinent)
+LYCÉE — 2ème Cycle du Secondaire :
+- Niveaux : 2nde, 1ère, Terminale
+- SÉRIES DU BAC IVOIRIEN — à respecter impérativement :
+  * Série A1 : Lettres, Philosophie et Arts — matières phares : Français/Philosophie, Histoire-Géo, Langues vivantes, Latin
+  * Série A2 : Lettres et Langues Vivantes — matières phares : Français, Anglais, Espagnol, Histoire-Géo
+  * Série B  : Sciences Économiques et Sociales — matières phares : Économie générale, Économie d'entreprise, Comptabilité, Droit, Maths
+  * Série C  : Mathématiques et Sciences Physiques — matières phares : Maths, Physique-Chimie, SVT (coefficient réduit)
+  * Série D  : Sciences de la Nature et de la Vie — matières phares : SVT, Maths, Sciences Physiques, Histoire-Géo
+  * Série E  : Mathématiques et Technologie — matières phares : Maths, Technologie industrielle, Sciences Physiques
+  * Série F  : Sciences et Technologies Industrielles (plusieurs sous-séries : F1, F2, F3)
+  * Série G  : Sciences et Technologies de Gestion — matières phares : Comptabilité, Informatique de gestion, Économie, Droit
+  * Série H  : Informatique — matières phares : Informatique, Maths, Algorithmique, Réseaux
+- Examen de fin de cycle : BAC (Baccalauréat ivoirien) — fin de Terminale
+- Ton attendu : Analytique, argumenté, avec plan dialectique ou thématique selon la matière ; vocabulaire soutenu
+- Longueur : 3 à 6 pages selon le niveau et la série
 
-# CONCLUSION
-(Synthèse, ouverture)
+UNIVERSITÉ / ENSEIGNEMENT SUPÉRIEUR :
+- Système LMD : Licence (L1, L2, L3), Master (M1, M2), Doctorat
+- Principales institutions ivoiriennes : Université Félix Houphouët-Boigny (Cocody-Abidjan), Université Alassane Ouattara (Bouaké), Université Lorougnon Guédé (Daloa), Université Jean Lorougnon Guédé, INP-HB (Institut National Polytechnique Félix Houphouët-Boigny — Yamoussoukro), Grandes Écoles : ESCAE, HEC-CI, ESA, INPHB, CAFOP (pour les enseignants)
+- Filières : Droit, Sciences Économiques, Médecine, Pharmacie, Lettres et Civilisations, Sciences et Technologies, Informatique, Sciences Sociales, STAPS, etc.
+- Ton attendu : Académique, critique, avec références théoriques, auteurs cités, notes de bas de page si besoin
+- Longueur : 5 à 10 pages minimum
 
-# BIBLIOGRAPHIE
-(Sources et références)
+CONTEXTE CULTUREL & GÉOGRAPHIQUE IVOIRIEN À INTÉGRER DANS LES EXEMPLES :
+- Géographie : Abidjan (capitale économique), Yamoussoukro (capitale politique), Bouaké, Daloa, Korhogo, Man, San-Pédro | Fleuves : Comoé, Bandama, Sassandra, N'zi | Forêts : Banco, Taï | Lac Kossou | Golfe de Guinée
+- Histoire & personnalités : Félix Houphouët-Boigny (père fondateur), Laurent Gbagbo, Alassane Ouattara, Samory Touré, Behanzin, Shaka Zulu (Afrique) | Sur la scène panafricaine : Thomas Sankara, Kwame Nkrumah, Patrice Lumumba, Nelson Mandela, Julius Nyerere
+- Économie : cacao (1er producteur mondial), café, anacarde (noix de cajou), caoutchouc, palmier à huile | FCFA (franc CFA) | UEMOA, CEDEAO | Port autonome d'Abidjan | BVRM (Bourse Régionale des Valeurs Mobilières)
+- Culture & traditions : masques Baoulé, Dan (Yacouba), Gouro, Sénoufo | Fête du Dipri (Gomon), Fête des Ignames, Fête de la Paix (Abidjan) | Musique : coupé-décalé, zouglou, afrobeat ivoirien | Tenues : boubou, kita, pagne wax
 
-Rédige en français, sois détaillé et professionnel. Minimum 3 pages."""
+=== MISSION ===
 
-        elif "Examens" in service or "Sujets" in service:
-            prompt = f"""Tu es un professeur expérimenté. Crée un sujet d'examen COMPLET et DÉTAILLÉ basé sur cette demande :
+Rédige un exposé scolaire COMPLET, STRUCTURÉ et PROFESSIONNEL basé sur cette demande :
 
 {description}
 
 RÈGLES ABSOLUES :
-- Rédige le sujet COMPLET avec toutes les questions réelles et précises (PAS de pointillés, PAS de [À compléter])
+- Identifie précisément le niveau scolaire mentionné (CP1 à CM2 = Primaire | 6ème à 3ème = Collège | 2nde/1ère/Tle + série = Lycée | L1-Doctorat = Université)
+- Si le niveau n'est pas précisé, déduis-le depuis le sujet et adapte-toi intelligemment
+- Adapte le vocabulaire, la profondeur d'analyse et la longueur au niveau détecté
+- Intègre des exemples concrets tirés du contexte ivoirien et africain quand c'est pertinent
+- Respecte les programmes officiels ivoiriens pour les matières concernées
+- N'utilise JAMAIS de notation LaTeX ($, \\, \\frac, \\text) — écris toujours en texte clair
+- Rédige exclusivement en français, avec une orthographe irréprochable
+
+Structure OBLIGATOIRE :
+
+# PAGE DE GARDE
+Titre de l'exposé :
+Matière :
+Niveau scolaire / Série (si lycée) :
+Établissement :
+Présenté par :
+Date :
+Année scolaire :
+
+# INTRODUCTION
+(Accroche contextuelle liée à la réalité ivoirienne ou africaine si possible, problématique claire, annonce du plan)
+
+# DÉVELOPPEMENT
+
+## I. [Titre de la première grande partie]
+### 1.1 [Sous-partie]
+### 1.2 [Sous-partie]
+
+## II. [Titre de la deuxième grande partie]
+### 2.1 [Sous-partie]
+### 2.2 [Sous-partie]
+
+## III. [Titre de la troisième grande partie — si pertinent selon le niveau]
+### 3.1 [Sous-partie]
+### 3.2 [Sous-partie]
+
+# CONCLUSION
+(Synthèse des idées principales, réponse à la problématique, ouverture sur un enjeu actuel en lien avec l'Afrique ou la Côte d'Ivoire si possible)
+
+# BIBLIOGRAPHIE
+(Manuels scolaires ivoiriens si applicable, auteurs africains, sources pertinentes)
+
+Rédige en français. Minimum 3 pages complètes et détaillées."""
+
+        # ================================================================
+        # PROMPT — SUJETS & EXAMENS (Système scolaire ivoirien & africain)
+        # ================================================================
+        elif "Examens" in service or "Sujets" in service:
+            prompt = f"""Tu es un professeur expérimenté et un concepteur officiel de sujets d'examens pour le système scolaire ivoirien et africain francophone.
+Tu maîtrises parfaitement les formats d'épreuves du CEPE, BEPC et BAC ivoirien, ainsi que les évaluations universitaires.
+
+=== SYSTÈME SCOLAIRE ET FORMATS D'EXAMENS DE RÉFÉRENCE ===
+
+PRIMAIRE — CEPE :
+- Niveaux concernés : CM1, CM2
+- Matières et formats officiels CEPE :
+  * Dictée + Questions de grammaire/orthographe
+  * Rédaction (narration simple, description, lettre)
+  * Calcul (opérations, problèmes arithmétiques concrets)
+  * Sciences d'Éveil (questions sur le corps humain, l'environnement, l'hygiène)
+  * Histoire-Géographie (questions sur la Côte d'Ivoire et l'Afrique)
+- Barème : /20 par matière, QCM simple ou questions ouvertes courtes
+- Contexte des problèmes : marchés ivoiriens, villages, plantations de cacao/café, animaux africains
+
+COLLÈGE — BEPC :
+- Niveaux concernés : 6ème, 5ème, 4ème, 3ème (BEPC en fin de 3ème)
+- Formats officiels BEPC par matière :
+  * Français : Texte support (auteur africain de préférence) + questions de compréhension + vocabulaire + grammaire/conjugaison + production écrite (rédaction, lettre formelle, dialogue)
+  * Mathématiques : Exercices de calcul pur + problème contextualisé + géométrie (théorème de Thalès, Pythagore, constructions) + statistiques
+  * Sciences Physiques : Exercice Physique (mécanique, électricité, optique) + Exercice Chimie (atomes, molécules, réactions)
+  * SVT : Questions de cours + schéma légendé à compléter + étude de document (tableau, graphique)
+  * Histoire-Géo : Étude de document (texte ou carte) + paragraphe argumenté + croquis de carte
+  * Anglais : Texte + compréhension + vocabulaire + expression écrite
+  * EDHC : Questions sur la citoyenneté, les droits, les institutions ivoiriennes
+- Durée typique : 2h à 4h selon la matière
+- Barème : sur 20 points
+
+LYCÉE — BAC IVOIRIEN :
+- Niveaux : 2nde, 1ère, Terminale
+- Formats officiels par série et matière :
+
+  SÉRIE A1/A2 (Lettres) :
+  * Français/Philo : Dissertation littéraire ou philosophique (thèse, antithèse, synthèse) OU Commentaire composé OU Résumé + Discussion + Écriture d'invention
+  * Histoire-Géo : Composition (introduction + plan + conclusion) + Étude de document(s)
+  * Langues vivantes : Compréhension de texte + Expression écrite + Questions de grammaire
+
+  SÉRIE B (Économie) :
+  * Économie générale : Dissertation économique ou étude de cas avec documents
+  * Comptabilité : Exercices de journaux comptables, bilan, compte de résultat, états financiers
+  * Droit : Cas pratique juridique + questions de cours
+  * Maths Série B : Statistiques, probabilités, fonctions, suites numériques
+
+  SÉRIE C (Maths-Sciences Physiques) :
+  * Maths Série C : 3 exercices (Analyse : fonctions, dérivées, intégrales | Algèbre-Géométrie : vecteurs, complexes, probabilités | Statistiques/Suites)
+  * Sciences Physiques Série C : 2 exercices Physique (mécanique, électricité, ondes) + 1 exercice Chimie (chimie organique, équilibres)
+
+  SÉRIE D (Sciences Naturelles) :
+  * SVT Série D : Restitution de connaissances + Exploitation de documents + Résolution de problème scientifique
+  * Maths Série D : similaire C mais coefficients différents
+  * Sciences Physiques Série D : format similaire C
+
+  SÉRIE G (Gestion) :
+  * Comptabilité/Gestion : Analyse de situations d'entreprise, travaux comptables, tableaux de bord
+  * Informatique de gestion : Algorithmique simple, tableur, base de données
+
+  SÉRIE H (Informatique) :
+  * Algorithmique et programmation : Pseudo-code, organigramme, analyse de programme
+  * Réseaux : Questions sur TCP/IP, architecture réseau
+  * Bases de données : SQL, modèle entité-relation
+
+UNIVERSITÉ :
+- Formats : Partiel (1h-2h), Examen final (3h-4h), Contrôle continu
+- Types de questions : QCM, questions de cours ouvertes, études de cas, dissertations académiques, problèmes, exercices techniques
+- Structure : En-tête officiel de l'université + Consignes strictes + Questions numérotées + Barème détaillé
+
+CONTEXTE IVOIRIEN POUR LES PROBLÈMES ET CAS PRATIQUES :
+- Économie : prix du cacao, taux de change FCFA/Euro, budget d'un ménage ivoirien, entreprise abidjanaise, plantation d'anacarde
+- Géographie : distances entre villes ivoiriennes (Abidjan-Bouaké : 340 km), superficie de la Côte d'Ivoire (322 463 km²), population (~27 millions)
+- Histoire : colonisation française, indépendance 1960, Houphouët-Boigny, miracle ivoirien, crises politiques
+- Sciences : maladies tropicales (paludisme, choléra), culture du cacao, énergie solaire en Afrique, barrages (Kossou, Taabo, Soubré)
+- Maths : marchés, transport en commun (gbakas, woros-woros), surfaces agricoles, statistiques démographiques ivoiriennes
+
+=== MISSION ===
+
+Crée un sujet d'examen COMPLET et DÉTAILLÉ basé sur cette demande :
+
+{description}
+
+RÈGLES ABSOLUES :
+- Identifie le niveau (Primaire/Collège/Lycée/Université), la matière, la série (si lycée) et le type d'épreuve
+- Respecte EXACTEMENT le format officiel ivoirien de l'épreuve demandée
+- Rédige toutes les questions COMPLÈTES et PRÉCISES (PAS de pointillés, PAS de [À compléter], PAS de [Insérer question ici])
 - Pour le texte à trous : écris le texte COMPLET avec les mots manquants remplacés par ___________ (10 underscores)
-- Pour Vrai/Faux : écris chaque affirmation complète et précise
-- Pour les exercices complexes : donne tous les données numériques, schémas décrits en texte, questions détaillées
-- Termine TOUJOURS avec le CORRIGÉ COMPLET avec les bonnes réponses
+- Pour Vrai/Faux : présente OBLIGATOIREMENT dans un tableau markdown (jamais en liste)
+- Pour les exercices : donne TOUTES les données numériques, TOUTES les questions réelles et précises
+- Contextualise les problèmes dans la réalité ivoirienne et africaine quand c'est possible
+- Termine avec le CORRIGÉ COMPLET uniquement si la demande le mentionne
+- N'utilise JAMAIS de notation LaTeX ($, \\, \\frac, \\text{{}}) — écris les formules en texte clair
+- Formules en texte clair : "omega = 2 x pi x f", "XL = L x omega", "racine(R² + X²)", "1/2 x m x v²"
+- Symboles grecs en toutes lettres : omega, phi, delta, sigma, alpha, beta, gamma, pi, theta
+- Unités en clair : Ohm, Hz, rad/s, Watt, Volt, Ampère, VA, VAR, Newton, Joule, Pascal, mol/L, km/h, m/s²
 
 Structure OBLIGATOIRE :
 
 # EN-TÊTE OFFICIEL
-Établissement : [nom]
+Établissement : [nom de l'école/lycée/université]
+Année scolaire : [ex: 2025-2026]
 Matière : [matière]
-Niveau : [niveau]
+Série : [série si lycée, sinon niveau]
+Niveau : [niveau exact]
+Type d'épreuve : [Contrôle de connaissances / Devoir surveillé / BAC blanc / Examen final...]
 Durée : [durée]
+Coefficient : [coefficient si connu]
 Barème total : /20
 
 # CONSIGNES GÉNÉRALES
-[consignes précises]
+[Consignes précises et officielles adaptées au niveau]
 
-# EXERCICE 1 — [Titre] ([X] points)
-[Contenu complet de l'exercice avec toutes les questions réelles]
+# EXERCICE 1 — [Titre explicite] ([X] points)
+[Contenu complet avec toutes les questions réelles, données, schémas décrits en texte]
 
-# EXERCICE 2 — [Titre Vrai ou Faux] ([X] points)
-Consigne : Pour chacune des affirmations suivantes, indiquez V (Vrai) ou F (Faux) dans la colonne prévue.
-
-⚠️ IMPORTANT : Tu DOIS ABSOLUMENT présenter les affirmations dans un tableau markdown exactement comme ci-dessous. N'utilise JAMAIS une liste numérotée pour cet exercice.
+# EXERCICE 2 — [Titre : Vrai ou Faux si applicable] ([X] points)
+[Si Vrai/Faux : TOUJOURS en tableau markdown :]
 
 | N° | Affirmation | Réponse (V/F) |
 |----|-------------|---------------|
-| 1 | [affirmation complète et précise sur le sujet demandé] |  |
-| 2 | [affirmation complète et précise sur le sujet demandé] |  |
-| 3 | [affirmation complète et précise sur le sujet demandé] |  |
-| 4 | [affirmation complète et précise sur le sujet demandé] |  |
-| 5 | [affirmation complète et précise sur le sujet demandé] |  |
+| 1 | [affirmation complète] |  |
+| 2 | [affirmation complète] |  |
 
-RÈGLES pour la colonne "Réponse (V/F)" : laisser VIDE (juste un espace) — c'est l'étudiant qui remplira.
-
-# EXERCICE 3 — [Titre] ([X] points)
-[Contenu complet de l'exercice avec toutes les questions réelles]
+# EXERCICE 3 — [Titre explicite] ([X] points)
+[Contenu complet]
 
 ---
 
 # CORRIGÉ COMPLET
+(Inclure UNIQUEMENT si la demande mentionne "avec corrigé" ou "corrigé")
 
 ## Corrigé Exercice 1
-[Réponses complètes et détaillées]
+[Réponses complètes, justifiées, avec méthode détaillée]
 
 ## Corrigé Exercice 2
-[Réponses complètes et détaillées]
+[Réponses complètes avec justification de chaque V/F]
 
 ## Corrigé Exercice 3
-[Réponses complètes et détaillées]
+[Réponses complètes avec méthode détaillée]
 
-IMPORTANT :
-- Si la demande ne mentionne PAS de corrigé, génère UNIQUEMENT le sujet (PAS de corrigé)
-- Si la demande mentionne explicitement "avec corrigé" ou "corrigé", alors ajoute le corrigé
-- N'utilise JAMAIS de notation LaTeX ($, \\, \\text{{}}, \\frac{{}}) dans le document final
-- Écris les formules en texte simple : ex "omega = 2*pi*f", "XL = L*omega", "|Z| = sqrt(R² + X²)"
-- Écris les unités en clair : Ohm, Hz, rad/s, W, V, A, VA, VAR
-- Les symboles grecs s'écrivent en toutes lettres : omega, phi, delta, sigma
-
-Rédige en français, sois précis et technique, niveau adapté à la demande."""
+Rédige en français, sois rigoureux et adapté au niveau scolaire ivoirien concerné."""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -418,7 +544,6 @@ Rédige en français, sois très précis et technique."""
 
 Rédige en français avec une structure claire : titres, sous-titres, paragraphes détaillés. Sois exhaustif et professionnel."""
 
-        # Payload Gemini
         payload = json.dumps({
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
@@ -427,7 +552,6 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
             }
         }).encode("utf-8")
 
-        # Découverte automatique des modèles disponibles via ListModels
         modeles = get_modeles_disponibles(api_key)
         if not modeles:
             return "❌ Aucun modèle Gemini disponible pour generateContent avec cette clé API."
@@ -446,23 +570,20 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                     texte = result["candidates"][0]["content"]["parts"][0]["text"]
                     return texte
             except urllib.error.HTTPError as e:
-                # Lire le corps de la réponse pour voir la vraie erreur
                 try:
                     corps_erreur = e.read().decode("utf-8")
                     erreur_detail = json.loads(corps_erreur).get("error", {}).get("message", corps_erreur[:200])
                 except:
                     erreur_detail = str(e)
                 erreurs.append(f"{modele} → HTTP {e.code}: {erreur_detail}")
-                if e.code in [429, 503]:  # Quota / surcharge → essayer suivant
+                if e.code in [429, 503]:
                     time.sleep(2)
                     continue
-                # Autre erreur HTTP (403, 400...) → arrêter, afficher
                 return f"❌ Erreur Gemini ({modele}) HTTP {e.code} : {erreur_detail}"
             except Exception as e:
                 erreurs.append(f"{modele} → {type(e).__name__}: {e}")
                 continue
 
-        # Tous les modèles ont échoué → afficher les vraies erreurs
         detail = " | ".join(erreurs)
         return f"❌ Gemini indisponible. Détails : {detail}"
 
@@ -471,7 +592,6 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
 
 
 def creer_docx(contenu, service, client_nom):
-    """Génère un fichier .docx propre et professionnel à partir du contenu Gemini."""
     from docx import Document
     from docx.shared import Pt, RGBColor, Cm
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -481,19 +601,16 @@ def creer_docx(contenu, service, client_nom):
 
     doc = Document()
 
-    # Marges
     for section in doc.sections:
         section.top_margin    = Cm(2)
         section.bottom_margin = Cm(2)
         section.left_margin   = Cm(2.5)
         section.right_margin  = Cm(2.5)
 
-    # Style par défaut
     style = doc.styles["Normal"]
     style.font.name = "Arial"
     style.font.size = Pt(11)
 
-    # ─── Bandeau en-tête ────────────────────────────────────────────
     from docx.oxml import OxmlElement
     def set_cell_bg(cell, hex_color):
         tc = cell._tc
@@ -505,7 +622,6 @@ def creer_docx(contenu, service, client_nom):
         tcPr.append(shd)
 
     from docx.shared import RGBColor as RC
-    # Titre centré avec fond bleu
     p_titre = doc.add_paragraph()
     p_titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run_t = p_titre.add_run("⚡ NOVA AI  —  " + service.replace("📝","").replace("👔","").replace("📊","").replace("⚙️","").replace("🎨","").replace("📚","").replace("📄","").strip())
@@ -522,7 +638,6 @@ def creer_docx(contenu, service, client_nom):
     run_i.font.name = "Arial"
     run_i.italic = True
 
-    # Ligne séparatrice
     p_sep = doc.add_paragraph()
     pPr = p_sep._p.get_or_add_pPr()
     pBdr = OxmlElement("w:pBdr")
@@ -535,20 +650,16 @@ def creer_docx(contenu, service, client_nom):
     pPr.append(pBdr)
     doc.add_paragraph("")
 
-    # ─── Parsing Markdown → Word propre ─────────────────────────────
     def add_formatted_para(doc, text, style_name="Normal", bold=False, size=11, color=None, align=None):
-        """Ajoute un paragraphe en gérant le gras inline **texte**"""
         p = doc.add_paragraph(style=style_name)
         if align:
             p.alignment = align
-        # Découper sur **bold**
         parts = re.split(r"(\*\*[^*]+\*\*)", text)
         for part in parts:
             if part.startswith("**") and part.endswith("**"):
                 run = p.add_run(part[2:-2])
                 run.bold = True
             else:
-                # Nettoyer les * simples résiduels
                 clean = part.replace("*", "").replace("`", "")
                 run = p.add_run(clean)
                 run.bold = bold
@@ -558,10 +669,8 @@ def creer_docx(contenu, service, client_nom):
                 run.font.color.rgb = RC(*color)
         return p
 
-    # ─── Nettoyage LaTeX → texte lisible ───────────────────────────
     import re as _re
     def nettoyer_latex(texte):
-        # Supprimer environnements LaTeX $...$
         texte = _re.sub(r"\$([^$]+)\$", lambda m: nettoyer_formule(m.group(1)), texte)
         return texte
 
@@ -580,14 +689,12 @@ def creer_docx(contenu, service, client_nom):
         f = f.replace("\\\\", "")
         f = f.replace("{", "").replace("}", "")
         f = f.strip()
-        # Fermer les parenthèses ouvertes non fermées
         opens = f.count("(") - f.count(")")
         if opens > 0:
             f += ")" * opens
         return f
 
     contenu = nettoyer_latex(contenu)
-    # Nettoyer aussi les \ résiduels hors $
     contenu = contenu.replace("\\,", " ").replace("\\text{", "").replace("\\", "")
 
     lignes = contenu.split("\n")
@@ -595,13 +702,11 @@ def creer_docx(contenu, service, client_nom):
     while i < len(lignes):
         l = lignes[i].rstrip()
 
-        # Sauter les séparateurs markdown
         if l.strip() in ["---", "***", "___", "*"]:
             doc.add_paragraph("")
             i += 1
             continue
 
-        # Headings
         if l.startswith("#### "):
             p = doc.add_heading(l[5:].strip(), level=4)
             i += 1
@@ -619,13 +724,10 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
 
-        # ─── Tableau Markdown | col1 | col2 | ───────────────────────
         if l.startswith("|") and l.endswith("|"):
-            # Collecter toutes les lignes du tableau
             table_lines = []
             while i < len(lignes) and lignes[i].strip().startswith("|") and lignes[i].strip().endswith("|"):
                 row = lignes[i].strip()
-                # Ignorer les séparateurs |---|---|
                 if not re.match(r"^[\|\s\-:]+$", row):
                     cells = [c.strip() for c in row.strip("|").split("|")]
                     table_lines.append(cells)
@@ -636,11 +738,10 @@ def creer_docx(contenu, service, client_nom):
                 from docx.oxml.ns import qn
                 from docx.oxml import OxmlElement
 
-                # Largeurs colonnes adaptées
                 n_cols = max(len(r) for r in table_lines)
                 col_widths_map = {
                     2: [3.0, 6.0],
-                    3: [1.0, 7.5, 2.5],   # N° | Affirmation | Réponse
+                    3: [1.0, 7.5, 2.5],
                     4: [1.0, 5.0, 2.5, 2.5],
                 }
                 col_widths = col_widths_map.get(n_cols, [9.0/n_cols]*n_cols)
@@ -652,11 +753,9 @@ def creer_docx(contenu, service, client_nom):
                 for r_idx, row_data in enumerate(table_lines):
                     row_obj = table.add_row()
                     is_header = (r_idx == 0)
-                    # En-tête plus compact, lignes de données plus hautes pour aérer
                     row_obj.height = DocxCm(0.9 if is_header else 1.5)
                     from docx.oxml.ns import qn as _qn
                     from docx.oxml import OxmlElement as _OE
-                    # Fixer la hauteur exacte
                     trPr = row_obj._tr.get_or_add_trPr()
                     trHeight = _OE("w:trHeight")
                     trHeight.set(_qn("w:val"), str(int((0.9 if is_header else 1.5) * 567)))
@@ -667,7 +766,6 @@ def creer_docx(contenu, service, client_nom):
                         cell = row_obj.cells[c_idx]
                         if c_idx < len(col_widths):
                             cell.width = DocxCm(col_widths[c_idx])
-                        # Padding interne
                         tc = cell._tc
                         tcPr = tc.get_or_add_tcPr()
                         tcMar = _OE("w:tcMar")
@@ -677,7 +775,6 @@ def creer_docx(contenu, service, client_nom):
                             m.set(_qn("w:type"), "dxa")
                             tcMar.append(m)
                         tcPr.append(tcMar)
-                        # Fond bleu pour en-tête, gris alternant pour données
                         if is_header:
                             shd = _OE("w:shd")
                             shd.set(_qn("w:val"), "clear")
@@ -693,7 +790,6 @@ def creer_docx(contenu, service, client_nom):
 
                         para = cell.paragraphs[0]
                         para.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_idx in [0, n_cols-1] else WD_ALIGN_PARAGRAPH.LEFT
-                        # Espacement vertical dans la cellule
                         para.paragraph_format.space_before = Pt(2)
                         para.paragraph_format.space_after = Pt(2)
                         run = para.add_run(cell_text)
@@ -706,7 +802,6 @@ def creer_docx(contenu, service, client_nom):
                 doc.add_paragraph("")
             continue
 
-        # Listes numérotées  1. ou 1)
         m_num = re.match(r"^(\d+)[.)]\s+(.*)", l)
         if m_num:
             p = doc.add_paragraph(style="List Number")
@@ -721,7 +816,6 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
 
-        # Listes à puces  - ou *
         if re.match(r"^[\-\*\•]\s+", l):
             texte = re.sub(r"^[\-\*\•]\s+", "", l)
             p = doc.add_paragraph(style="List Bullet")
@@ -736,13 +830,11 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
 
-        # Ligne vide
         if not l.strip():
             doc.add_paragraph("")
             i += 1
             continue
 
-        # Ligne tout en gras (ex: **TITRE**)
         if l.strip().startswith("**") and l.strip().endswith("**") and l.strip().count("**") == 2:
             texte = l.strip()[2:-2]
             p = doc.add_paragraph()
@@ -754,7 +846,6 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
 
-        # Paragraphe normal avec gras inline possible
         add_formatted_para(doc, l.strip())
         i += 1
 
@@ -765,7 +856,6 @@ def creer_docx(contenu, service, client_nom):
 
 
 def creer_xlsx(description, client_nom):
-    """Génère un vrai fichier Excel .xlsx de suivi des dépenses."""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -785,7 +875,6 @@ def creer_xlsx(description, client_nom):
         s = Side(style="thin", color="CCCCCC")
         cell.border = Border(top=s, bottom=s, left=s, right=s)
 
-    # ─── Feuille 1 : Saisie Dépenses ───────────────────────────────
     ws1 = wb.active
     ws1.title = "Saisie Dépenses"
     ws1.sheet_view.showGridLines = False
@@ -839,7 +928,6 @@ def creer_xlsx(description, client_nom):
     tot.number_format='#,##0 "FCFA"'; hdr(tot); brd(tot)
     ws1.row_dimensions[tr].height=28
 
-    # ─── Feuille 2 : Catégories ─────────────────────────────────────
     ws2 = wb.create_sheet("Catégories")
     ws2.sheet_view.showGridLines = False
     ws2.merge_cells("A1:D1"); t2=ws2["A1"]; t2.value="CATÉGORIES DE DÉPENSES"; hdr(t2,size=13); ws2.row_dimensions[1].height=32
@@ -873,7 +961,6 @@ def creer_xlsx(description, client_nom):
         cell=ws2.cell(row=tr2,column=col,value=f"=SUM({get_column_letter(col)}3:{get_column_letter(col)}{tr2-1})")
         cell.number_format='#,##0 "FCFA"'; hdr(cell); brd(cell)
 
-    # ─── Feuille 3 : Tableau de Bord ────────────────────────────────
     ws3 = wb.create_sheet("Tableau de Bord")
     ws3.sheet_view.showGridLines = False
     ws3.merge_cells("A1:E1"); t3=ws3["A1"]; t3.value="TABLEAU DE BORD — JANVIER 2026"
@@ -931,7 +1018,6 @@ def creer_xlsx(description, client_nom):
     return buf
 
 
-# --- CONFIGURATION WHATSAPP ---
 WHATSAPP_NUMBER = "2250171542505"
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
 SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
@@ -940,40 +1026,27 @@ whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.repla
 
 if "db" not in st.session_state:
     st.session_state["db"] = load_db()
-
 if "current_user" not in st.session_state:
     st.session_state["current_user"] = None
-
 if "view" not in st.session_state:
     st.session_state["view"] = "home"
-
 if "is_glowing" not in st.session_state:
     st.session_state["is_glowing"] = False
-
 if "show_premium_modal" not in st.session_state:
     st.session_state["show_premium_modal"] = False
-
 if "show_service_warning" not in st.session_state:
     st.session_state["show_service_warning"] = False
-
 if "last_service_seen" not in st.session_state:
     st.session_state["last_service_seen"] = None
-
 if "warning_triggered" not in st.session_state:
     st.session_state["warning_triggered"] = False
-
 if "intro_played" not in st.session_state:
     st.session_state["intro_played"] = False
-
-# ← NOUVEAU : stockage des résultats Gemini
 if "gemini_results" not in st.session_state:
     st.session_state["gemini_results"] = {}
-
-# ← NOUVEAU : livrable Premium généré automatiquement
 if "premium_livrable" not in st.session_state:
     st.session_state["premium_livrable"] = None
 
-# Reconnaissance automatique via cookie navigateur (session persistante)
 if st.session_state["current_user"] is None:
     stored_user = st.query_params.get("user_id")
     if stored_user and stored_user in st.session_state["db"]["users"]:
@@ -998,17 +1071,11 @@ if st.session_state["current_user"]:
         </script>
     """, height=0)
 
-# ==========================================
-# DESIGN ET STYLE (CSS AVANCÉ)
-# ==========================================
-
 def inject_custom_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
-        
         * { font-family: 'Poppins', sans-serif; }
-
         .stApp {
             background: #0f0c29;
             background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
@@ -1016,13 +1083,11 @@ def inject_custom_css():
             color: #ffffff;
             transition: filter 0.5s ease;
         }
-        
         @keyframes glow-pulse {
             0% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0px transparent; }
             50% { filter: brightness(1.8) saturate(1.5); box-shadow: inset 0 0 100px rgba(0, 210, 255, 0.5); }
             100% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0px transparent; }
         }
-
         .main-title {
             background: linear-gradient(90deg, #00d2ff, #3a7bd5);
             -webkit-background-clip: text;
@@ -1033,7 +1098,6 @@ def inject_custom_css():
             margin-bottom: 20px;
             text-shadow: 0px 0px 20px rgba(0, 210, 255, 0.3);
         }
-
         .stTabs [data-baseweb="tab-list"] {
             gap: 20px;
             background-color: rgba(255, 255, 255, 0.05);
@@ -1041,7 +1105,6 @@ def inject_custom_css():
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
         .stTabs [data-baseweb="tab"] {
             height: 60px;
             white-space: pre-wrap;
@@ -1054,24 +1117,20 @@ def inject_custom_css():
             border: 1px solid transparent;
             padding: 0 25px;
         }
-
         .stTabs [data-baseweb="tab"]:nth-child(2) {
             border: 1px solid #2ecc71 !important;
             box-shadow: 0 0 15px rgba(46, 204, 113, 0.2);
             background-color: rgba(46, 204, 113, 0.1);
         }
-
         .stTabs [data-baseweb="tab"]:hover {
             background-color: rgba(0, 210, 255, 0.3);
             transform: translateY(-2px);
         }
-
         .stTabs [aria-selected="true"] {
             background-color: rgba(0, 210, 255, 0.6) !important;
             border: 1px solid #00d2ff !important;
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
-
         @keyframes border-rainbow {
             0% { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
             25% { border-color: #3a7bd5; box-shadow: 0 0 10px rgba(58, 123, 213, 0.3); }
@@ -1079,21 +1138,18 @@ def inject_custom_css():
             75% { border-color: #2ecc71; box-shadow: 0 0 10px rgba(46, 204, 113, 0.3); }
             100% { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
         }
-
         .stTextInput label, .stSelectbox label, .stTextArea label {
             color: #00d2ff !important;
             font-weight: 600 !important;
             font-size: 1.1rem !important;
             margin-bottom: 5px;
         }
-        
         div[data-baseweb="input"], div[data-baseweb="select"] > div {
             border: 1px solid rgba(0, 210, 255, 0.3) !important;
             background-color: rgba(0, 0, 0, 0.5) !important;
             color: white !important;
             border-radius: 10px !important;
         }
-
         .stTextArea textarea {
             background-color: rgba(0, 0, 0, 0.6) !important;
             color: white !important;
@@ -1102,12 +1158,10 @@ def inject_custom_css():
             animation: border-rainbow 4s linear infinite;
             transition: transform 0.3s;
         }
-        
         .stTextArea textarea:focus {
             transform: scale(1.01);
             animation: border-rainbow 1.5s linear infinite;
         }
-
         .logo-container {
             display: flex;
             justify-content: center;
@@ -1128,7 +1182,6 @@ def inject_custom_css():
             filter: grayscale(0) opacity(1);
             transform: translateY(-5px) scale(1.1);
         }
-
         .premium-card {
             background: rgba(20, 20, 30, 0.8);
             border: 2px solid #FFD700;
@@ -1140,14 +1193,12 @@ def inject_custom_css():
             position: relative;
             overflow: hidden;
         }
-        
         .premium-card::before {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 5px;
             background: linear-gradient(90deg, #FFD700, #FF8C00, #FFD700);
         }
-
         .premium-title {
             color: #FFD700 !important;
             font-size: 1.5rem;
@@ -1156,14 +1207,12 @@ def inject_custom_css():
             margin-bottom: 10px;
             letter-spacing: 1px;
         }
-
         .premium-desc {
             color: #ffffff !important;
             font-size: 1rem;
             margin-bottom: 20px;
             line-height: 1.5;
         }
-
         .btn-gold {
             background: linear-gradient(45deg, #FFD700, #FF8C00);
             color: #000 !important;
@@ -1182,7 +1231,6 @@ def inject_custom_css():
             transform: scale(1.05);
             box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
         }
-
         .stButton>button {
             border-radius: 12px;
             padding: 0.8rem 2rem;
@@ -1200,7 +1248,6 @@ def inject_custom_css():
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
-
         .info-card {
             background: rgba(0, 0, 0, 0.4) !important;
             border-left: 4px solid #00d2ff;
@@ -1217,7 +1264,6 @@ def inject_custom_css():
             margin-bottom: 8px;
             text-transform: uppercase;
         }
-
         .file-card {
             background: rgba(255, 255, 255, 0.08);
             border: 2px solid rgba(46, 204, 113, 0.5);
@@ -1227,12 +1273,10 @@ def inject_custom_css():
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.5s ease;
         }
-        
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .support-btn {
             display: block;
             text-decoration: none;
@@ -1250,12 +1294,9 @@ def inject_custom_css():
             background: #25D366;
             color: white !important;
         }
-
         .stProgress > div > div > div > div {
             background-image: linear-gradient(to right, #00d2ff , #3a7bd5);
         }
-
-        /* GEMINI CARD */
         .gemini-card {
             background: linear-gradient(135deg, rgba(0,210,255,0.08), rgba(58,123,213,0.12));
             border: 2px solid rgba(0,210,255,0.4);
@@ -1273,8 +1314,6 @@ def inject_custom_css():
             color: rgba(255,255,255,0.5);
             font-size: 0.75rem;
         }
-
-        /* BADGE PREMIUM */
         .badge-premium {
             display: inline-flex; align-items: center; gap: 6px;
             background: linear-gradient(135deg, #FFD700, #FF8C00);
@@ -1288,8 +1327,6 @@ def inject_custom_css():
             font-size: 0.75rem; padding: 4px 12px; border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.2);
         }
-
-        /* ADMIN PREMIUM */
         .admin-premium-row {
             background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.25);
             border-radius: 14px; padding: 16px 20px; margin-bottom: 12px;
@@ -1300,8 +1337,6 @@ def inject_custom_css():
             background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.12));
             border: 2px solid rgba(255,215,0,0.4); border-radius: 14px; padding: 16px 20px; margin: 12px 0;
         }
-
-        /* PROCESSING PREMIUM */
         @keyframes nova-pulse {
             0%,100% { box-shadow: 0 0 20px rgba(255,215,0,0.4); }
             50%      { box-shadow: 0 0 60px rgba(255,215,0,0.9); }
@@ -1314,8 +1349,6 @@ def inject_custom_css():
         }
         .nova-processing-title { color: #FFD700; font-size: 1.6rem; font-weight: 800; }
         .nova-processing-sub   { color: rgba(255,255,255,0.7); font-size: 1rem; margin-top: 8px; }
-
-        /* LIVRABLE AUTO */
         .livrable-auto {
             background: linear-gradient(135deg, rgba(46,204,113,0.12), rgba(0,210,255,0.08));
             border: 2px solid #2ecc71; border-radius: 20px; padding: 28px; margin: 20px 0;
@@ -1328,12 +1361,8 @@ def inject_custom_css():
     if st.session_state["is_glowing"]:
         st.markdown('<style>.stApp { animation: glow-pulse 1.5s ease-in-out infinite; }</style>', unsafe_allow_html=True)
 
-# ==========================================
-# PAGE AUTH
-# ==========================================
 
 def show_auth_page():
-
     st.markdown("""
     <style>
     @keyframes shimmer {
@@ -1368,7 +1397,6 @@ def show_auth_page():
         0%, 100% { opacity: 1; transform: scale(1); }
         50%       { opacity: 0.4; transform: scale(0.6); }
     }
-
     .auth-hero {
         text-align: center;
         padding: 40px 20px 10px 20px;
@@ -1393,7 +1421,6 @@ def show_auth_page():
         border: 2px dashed rgba(255,215,0,0.4);
         animation: particle-drift 6s linear infinite;
     }
-
     .auth-title-wrap { display: flex; justify-content: center; gap: 2px; flex-wrap: wrap; margin-bottom: 6px; }
     .auth-letter {
         font-size: 3rem;
@@ -1420,7 +1447,6 @@ def show_auth_page():
         letter-spacing: 1.5px;
         animation: float-up 1s ease 0.8s both;
     }
-
     .auth-divider {
         display: flex; align-items: center; gap: 14px;
         margin: 28px auto 32px auto; max-width: 420px;
@@ -1431,7 +1457,6 @@ def show_auth_page():
         width: 6px; height: 6px; border-radius: 50%; background: #FFD700;
         animation: pulse-dot 1.8s ease-in-out infinite;
     }
-
     .auth-card {
         background: linear-gradient(145deg, rgba(20,15,5,0.95), rgba(35,25,5,0.9));
         border: 1px solid rgba(255,215,0,0.35);
@@ -1467,7 +1492,6 @@ def show_auth_page():
         animation: scanline 4s linear infinite;
         pointer-events: none;
     }
-
     .auth-card-header {
         display: flex; align-items: center; gap: 12px;
         margin-bottom: 22px;
@@ -1494,7 +1518,6 @@ def show_auth_page():
         margin-top: 2px;
         letter-spacing: 0.5px;
     }
-
     .auth-page .stTextInput label {
         color: rgba(255,215,0,0.8) !important;
         font-size: 0.82rem !important;
@@ -1512,7 +1535,6 @@ def show_auth_page():
         border-color: rgba(255,215,0,0.7) !important;
         box-shadow: 0 0 0 3px rgba(255,215,0,0.12) !important;
     }
-
     @keyframes btn-shimmer {
         0%   { background-position: -300% center; }
         100% { background-position:  300% center; }
@@ -1525,12 +1547,8 @@ def show_auth_page():
         0%, 100% { box-shadow: 0 6px 25px rgba(255,215,0,0.45), 0 0  0px rgba(255,215,0,0);   }
         50%       { box-shadow: 0 6px 25px rgba(255,215,0,0.45), 0 0 22px rgba(255,215,0,0.35); }
     }
-
     .auth-page .stButton > button {
-        background: linear-gradient(
-            90deg,
-            #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500
-        ) !important;
+        background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500) !important;
         background-size: 300% auto !important;
         color: #0a0800 !important;
         font-weight: 800 !important;
@@ -1546,30 +1564,6 @@ def show_auth_page():
         animation: btn-shimmer 3s linear infinite, btn-float 3.5s ease-in-out infinite !important;
         cursor: pointer !important;
     }
-    .auth-page .stButton > button::before {
-        content: '' !important;
-        position: absolute !important;
-        top: 0 !important; left: -75% !important;
-        width: 50% !important; height: 100% !important;
-        background: linear-gradient(
-            120deg,
-            transparent 30%,
-            rgba(255,255,255,0.35) 50%,
-            transparent 70%
-        ) !important;
-        animation: btn-shimmer 3s linear infinite !important;
-        pointer-events: none !important;
-    }
-    .auth-page .stButton > button::after {
-        content: '' !important;
-        position: absolute !important;
-        inset: 0 !important;
-        border-radius: 50px !important;
-        box-shadow: 0 0 0 2px rgba(255,215,0,0.5) !important;
-        animation: btn-glow-ring 2s ease-in-out infinite !important;
-        pointer-events: none !important;
-    }
-
     .auth-secure-badge {
         display: flex; align-items: center; justify-content: center;
         gap: 8px; margin-top: 28px;
@@ -1701,15 +1695,11 @@ def show_auth_page():
             </script>
         """, height=0)
 
-# ==========================================
-# DASHBOARD PRINCIPAL
-# ==========================================
 
 def main_dashboard():
     user = st.session_state["current_user"]
     db = st.session_state["db"]
 
-    # ── Vérification expiration premium ─────────────────────────────
     if user and user in db["users"]:
         ud = db["users"][user]
         if ud.get("premium") and not is_premium_actif(ud):
@@ -1725,7 +1715,6 @@ def main_dashboard():
         st.markdown(f"### 👤 {user if user else 'Visiteur'}")
         if user:
             st.markdown(f"📱 **{db['users'][user]['whatsapp']}**")
-            # Badge Premium dans sidebar
             if premium_actif and premium_info:
                 st.markdown(f"""
                 <div style="margin:10px 0;">
@@ -1787,14 +1776,10 @@ def main_dashboard():
                 </script>
             """, height=0)
 
-    # ==========================================
-    # PREMIUM CARD
-    # ==========================================
     wa_jour = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%20Journalier%20%C3%A0%20600%20FC."
     wa_10j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2010%20Jours%20%C3%A0%201000%20FC."
     wa_30j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2030%20Jours%20%C3%A0%202500%20FC."
 
-    # Afficher bannière Premium actif ou card d'upgrade
     if premium_actif and premium_info:
         st.markdown(f"""
         <div style="background:linear-gradient(135deg,rgba(255,215,0,.12),rgba(255,140,0,.08));
@@ -1896,7 +1881,6 @@ def main_dashboard():
 
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
 
-    # Services éligibles à la génération Gemini automatique
     SERVICES_GEMINI = [
         "📝 Exposé scolaire complet IA",
         "📝 Création de Sujets & Examens",
@@ -1906,8 +1890,6 @@ def main_dashboard():
     ]
 
     with tab1:
-
-        # ── Afficher livrable auto Premium si vient d'être généré ───
         if st.session_state["premium_livrable"]:
             lv = st.session_state["premium_livrable"]
             st.markdown(f"""
@@ -2118,7 +2100,6 @@ def main_dashboard():
 
             if st.session_state["show_service_warning"]:
                 info = SERVICE_PREREQUIS[service]
-
                 st.info(f"""
 **{info["icone"]} {info["titre"]} — Informations requises**
 
@@ -2181,7 +2162,6 @@ def main_dashboard():
             </div>
             """, unsafe_allow_html=True)
 
-        # Badge IA auto si Premium + service compatible
         if premium_actif and service in SERVICES_GEMINI:
             st.markdown("""
             <div style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,140,0,.06));
@@ -2198,9 +2178,6 @@ def main_dashboard():
                 st.session_state["view"] = "auth"
                 st.rerun()
 
-            # ══════════════════════════════════════════════════════
-            # FLUX PREMIUM : génération automatique immédiate
-            # ══════════════════════════════════════════════════════
             elif premium_actif and service in SERVICES_GEMINI and not champs_manquants:
                 import threading
 
@@ -2258,7 +2235,6 @@ def main_dashboard():
                 if "erreur" in result_holder:
                     st.error(result_holder["erreur"])
                     st.info("💡 Votre demande a été transmise à l'équipe Nova pour traitement manuel.")
-                    # Fallback : enregistrer comme demande normale
                     new_req = {
                         "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
                         "user": user, "service": service,
@@ -2280,9 +2256,6 @@ def main_dashboard():
                     st.session_state["db"] = load_db()
                     st.rerun()
 
-            # ══════════════════════════════════════════════════════
-            # FLUX STANDARD (non Premium ou service non Gemini)
-            # ══════════════════════════════════════════════════════
             else:
                 st.session_state["is_glowing"] = True
                 st.rerun()
@@ -2368,7 +2341,6 @@ def main_dashboard():
                 </div>
             """, unsafe_allow_html=True)
 
-            # Livrable premium en mémoire (généré dans cette session)
             if st.session_state["premium_livrable"]:
                 lv = st.session_state["premium_livrable"]
                 st.markdown(f"""
@@ -2442,17 +2414,12 @@ def main_dashboard():
             with col_sup:
                 st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">🙋 Agent Nova</a>', unsafe_allow_html=True)
 
-    # ==========================================
-    # CONSOLE ADMIN
-    # ==========================================
     with st.expander("🛠 Console Admin Nova"):
         if st.text_input("Master Key", type="password") == ADMIN_CODE:
 
             current_db = st.session_state["db"]
-
             admin_tab1, admin_tab2 = st.tabs(["📋 MISSIONS", "👑 GESTION PREMIUM"])
 
-            # ── ONGLET MISSIONS ──────────────────────────────────────
             with admin_tab1:
                 st.markdown("### 🛡️ Panneau de contrôle Nova")
 
@@ -2520,9 +2487,6 @@ def main_dashboard():
                     with col_succes:
                         st.markdown(f'<a href="{wa_url(client_wa, msg_succes)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; font-weight:700; text-decoration:none;">✅ Succès</a>', unsafe_allow_html=True)
 
-                    # ==========================================
-                    # BOUTON GEMINI (services éligibles)
-                    # ==========================================
                     if service in SERVICES_GEMINI:
                         st.markdown("<br>", unsafe_allow_html=True)
                         st.markdown(f"""
@@ -2532,7 +2496,6 @@ def main_dashboard():
                         </div>
                         """, unsafe_allow_html=True)
 
-                        # Bouton diagnostic
                         if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
                             with st.spinner("Interrogation de l'API Gemini..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
@@ -2564,7 +2527,6 @@ def main_dashboard():
                                 st.success("✅ Document généré avec succès !")
                                 st.rerun()
 
-                        # Afficher résultat si déjà généré
                         if req_id in st.session_state["gemini_results"]:
                             result = st.session_state["gemini_results"][req_id]
 
@@ -2601,7 +2563,6 @@ def main_dashboard():
 
                             st.info("💡 Télécharge → upload sur Google Drive → colle le lien ci-dessous pour livrer au client.")
 
-                    # Livraison
                     st.markdown("<br>", unsafe_allow_html=True)
                     url_dl = st.text_input("🔗 Lien de livraison (Google Drive...)", key=f"url_{i}", placeholder="https://drive.google.com/...")
                     if st.button("📦 LIVRER LA MISSION AU CLIENT", key=f"btn_{i}", use_container_width=True):
@@ -2614,7 +2575,6 @@ def main_dashboard():
                             st.success(f"✅ Mission livrée à {client_nom} !")
                             st.rerun()
 
-            # ── ONGLET GESTION PREMIUM ───────────────────────────────
             with admin_tab2:
                 st.markdown("### 👑 Gestion des membres Premium")
                 total  = len(current_db["users"])
@@ -2691,9 +2651,6 @@ def main_dashboard():
                                 st.success(f"✅ Premium activé pour {uid_m} !")
                                 st.rerun()
 
-# ==========================================
-# RUNTIME
-# ==========================================
 
 inject_custom_css()
 
