@@ -1072,6 +1072,13 @@ if st.session_state["current_user"]:
     """, height=0)
 
 def inject_custom_css():
+    # ── Détection Premium ─────────────────────────────────────────
+    _user = st.session_state.get("current_user")
+    _db   = st.session_state.get("db", {})
+    _ud   = _db.get("users", {}).get(_user, {}) if _user else {}
+    _premium = is_premium_actif(_ud)
+
+    # ── CSS commun (base) ─────────────────────────────────────────
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
@@ -1357,7 +1364,351 @@ def inject_custom_css():
         .livrable-auto-title { color: #2ecc71; font-size: 1.4rem; font-weight: 800; }
         </style>
     """, unsafe_allow_html=True)
-    
+
+    # ── THÈME OR PREMIUM ──────────────────────────────────────────
+    if _premium:
+        st.markdown("""
+        <style>
+        @keyframes gold-shimmer {
+            0%   { background-position: -300% center; }
+            100% { background-position:  300% center; }
+        }
+        @keyframes gold-glow-pulse {
+            0%,100% { box-shadow: inset 0 0 0px transparent; filter: brightness(1); }
+            50%      { box-shadow: inset 0 0 120px rgba(255,215,0,0.18); filter: brightness(1.08); }
+        }
+        @keyframes gold-border-anim {
+            0%   { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
+            50%  { border-color: #FF8C00; box-shadow: 0 0 20px rgba(255,140,0,0.5); }
+            100% { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        }
+
+        /* ── Fond général ── */
+        .stApp {
+            background: linear-gradient(135deg, #0a0800 0%, #1c1400 35%, #0d0a00 65%, #1a1000 100%) !important;
+            animation: gold-glow-pulse 5s ease-in-out infinite !important;
+        }
+
+        /* ── Titre principal NOVA AI PLATFORM ── */
+        .main-title {
+            background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500) !important;
+            background-size: 300% auto !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            animation: gold-shimmer 3s linear infinite !important;
+            text-shadow: none !important;
+            font-size: 3.8rem !important;
+            letter-spacing: 2px !important;
+        }
+
+        /* ── Tabs ── */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: rgba(255,215,0,0.06) !important;
+            border: 1px solid rgba(255,215,0,0.25) !important;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background-color: rgba(255,215,0,0.08) !important;
+            border: 1px solid rgba(255,215,0,0.15) !important;
+            color: #FFD700 !important;
+        }
+        .stTabs [data-baseweb="tab"]:nth-child(2) {
+            border: 1px solid rgba(255,215,0,0.5) !important;
+            box-shadow: 0 0 15px rgba(255,215,0,0.2) !important;
+            background-color: rgba(255,215,0,0.1) !important;
+        }
+        .stTabs [data-baseweb="tab"]:hover {
+            background-color: rgba(255,215,0,0.2) !important;
+        }
+        .stTabs [aria-selected="true"] {
+            background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(255,140,0,0.25)) !important;
+            border: 1px solid #FFD700 !important;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4) !important;
+        }
+
+        /* ── Labels formulaires ── */
+        .stTextInput label, .stSelectbox label, .stTextArea label {
+            color: #FFD700 !important;
+        }
+
+        /* ── Inputs / Selects ── */
+        div[data-baseweb="input"], div[data-baseweb="select"] > div {
+            border: 1px solid rgba(255,215,0,0.4) !important;
+            background-color: rgba(20,12,0,0.7) !important;
+        }
+        .stTextArea textarea {
+            background-color: rgba(20,12,0,0.8) !important;
+            border: 2px solid #FFD700 !important;
+            animation: gold-border-anim 3s ease-in-out infinite !important;
+        }
+
+        /* ── Boutons principaux ── */
+        .stButton > button {
+            background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #b8860b, #7a5500) !important;
+            background-size: 200% auto !important;
+            color: #0a0800 !important;
+            animation: gold-shimmer 3s linear infinite !important;
+            box-shadow: 0 4px 18px rgba(255,215,0,0.35) !important;
+            border: none !important;
+        }
+        .stButton > button:hover {
+            box-shadow: 0 6px 28px rgba(255,215,0,0.6) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* ── Info cards sidebar ── */
+        .info-card {
+            border-left: 4px solid #FFD700 !important;
+            background: rgba(20,12,0,0.6) !important;
+        }
+        .info-title { color: #FFD700 !important; }
+
+        /* ── Support btn ── */
+        .support-btn {
+            border: 2px solid #FFD700 !important;
+            color: #FFD700 !important;
+        }
+        .support-btn:hover {
+            background: #FFD700 !important;
+            color: #000 !important;
+        }
+
+        /* ── Barre de progression ── */
+        .stProgress > div > div > div > div {
+            background-image: linear-gradient(to right, #b8860b, #FFD700) !important;
+        }
+
+        /* ── Gemini card ── */
+        .gemini-card {
+            background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.06)) !important;
+            border: 2px solid rgba(255,215,0,0.5) !important;
+        }
+        .gemini-title { color: #FFD700 !important; }
+
+        /* ── File cards ── */
+        .file-card {
+            border: 2px solid rgba(255,215,0,0.5) !important;
+            background: rgba(20,12,0,0.5) !important;
+        }
+
+        /* ── Livrable auto ── */
+        .livrable-auto {
+            background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,140,0,0.08)) !important;
+            border: 2px solid #FFD700 !important;
+            box-shadow: 0 0 35px rgba(255,215,0,0.25) !important;
+        }
+        .livrable-auto-title { color: #FFD700 !important; }
+
+        /* ── Sidebar ── */
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #0d0900, #1a1200) !important;
+            border-right: 1px solid rgba(255,215,0,0.2) !important;
+        }
+
+        /* ── Divider ── */
+        hr { border-color: rgba(255,215,0,0.2) !important; }
+
+        /* ── Métriques admin ── */
+        [data-testid="stMetric"] {
+            background: rgba(255,215,0,0.06) !important;
+            border: 1px solid rgba(255,215,0,0.2) !important;
+            border-radius: 12px !important;
+            padding: 10px !important;
+        }
+
+        /* ── Logo container ── */
+        .logo-container {
+            background: rgba(255,215,0,0.04) !important;
+            border: 1px solid rgba(255,215,0,0.12) !important;
+        }
+
+        /* ── Glow global sur le body ── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(255,215,0,0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # ── THÈME OR EXCLUSIF PREMIUM ──────────────────────────────────
+    user_now = st.session_state.get("current_user")
+    db_now   = st.session_state.get("db", {})
+    ud_now   = db_now.get("users", {}).get(user_now, {}) if user_now else {}
+    if is_premium_actif(ud_now):
+        st.markdown("""
+        <style>
+        /* ===== FOND OR PREMIUM ===== */
+        .stApp {
+            background: #0a0800 !important;
+            background: -webkit-linear-gradient(135deg, #0a0800 0%, #1a1200 30%, #0d0900 60%, #1a1000 100%) !important;
+            background: linear-gradient(135deg, #0a0800 0%, #1a1200 30%, #0d0900 60%, #1a1000 100%) !important;
+            color: #fff8e1 !important;
+        }
+
+        /* Particules dorées en arrière-plan */
+        .stApp::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 10% 20%, rgba(255,215,0,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(255,140,0,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(184,134,11,0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== TITRE PRINCIPAL OR ===== */
+        .main-title {
+            background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b) !important;
+            background-size: 200% auto !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            animation: shimmer-gold 3s linear infinite !important;
+            text-shadow: none !important;
+            filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));
+        }
+        @keyframes shimmer-gold {
+            0%   { background-position: -200% center; }
+            100% { background-position:  200% center; }
+        }
+
+        /* ===== TABS OR ===== */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: rgba(255,215,0,0.05) !important;
+            border: 1px solid rgba(255,215,0,0.2) !important;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background-color: rgba(255,215,0,0.07) !important;
+            border: 1px solid rgba(255,215,0,0.15) !important;
+            color: #FFD700 !important;
+        }
+        .stTabs [data-baseweb="tab"]:nth-child(2) {
+            border: 1px solid rgba(255,215,0,0.5) !important;
+            box-shadow: 0 0 15px rgba(255,215,0,0.15) !important;
+            background-color: rgba(255,215,0,0.1) !important;
+        }
+        .stTabs [data-baseweb="tab"]:hover {
+            background-color: rgba(255,215,0,0.2) !important;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: rgba(255,215,0,0.3) !important;
+            border: 1px solid #FFD700 !important;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4) !important;
+        }
+
+        /* ===== INPUTS OR ===== */
+        .stTextInput label, .stSelectbox label, .stTextArea label {
+            color: #FFD700 !important;
+        }
+        div[data-baseweb="input"], div[data-baseweb="select"] > div {
+            border: 1px solid rgba(255,215,0,0.35) !important;
+            background-color: rgba(10,8,0,0.7) !important;
+            color: #fff8e1 !important;
+        }
+        .stTextArea textarea {
+            background-color: rgba(10,8,0,0.8) !important;
+            color: #fff8e1 !important;
+            border: 2px solid #FFD700 !important;
+            animation: border-gold 4s linear infinite !important;
+        }
+        @keyframes border-gold {
+            0%   { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+            33%  { border-color: #FF8C00; box-shadow: 0 0 15px rgba(255,140,0,0.3); }
+            66%  { border-color: #b8860b; box-shadow: 0 0 10px rgba(184,134,11,0.3); }
+            100% { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        }
+
+        /* ===== BOUTONS OR ===== */
+        .stButton>button {
+            background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #b8860b, #7a5500) !important;
+            background-size: 200% auto !important;
+            color: #0a0800 !important;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.4) !important;
+            animation: shimmer-gold 3s linear infinite !important;
+        }
+        .stButton>button:hover {
+            box-shadow: 0 6px 25px rgba(255,215,0,0.6) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* ===== SIDEBAR OR ===== */
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #0d0900 0%, #1a1000 100%) !important;
+            border-right: 1px solid rgba(255,215,0,0.2) !important;
+        }
+
+        /* ===== INFO-CARD OR ===== */
+        .info-card {
+            border-left: 4px solid #FFD700 !important;
+            background: rgba(255,215,0,0.05) !important;
+        }
+        .info-title { color: #FFD700 !important; }
+
+        /* ===== FILE-CARD OR ===== */
+        .file-card {
+            border: 2px solid rgba(255,215,0,0.4) !important;
+            background: rgba(255,215,0,0.04) !important;
+        }
+
+        /* ===== PROGRESS BAR OR ===== */
+        .stProgress > div > div > div > div {
+            background-image: linear-gradient(to right, #b8860b, #FFD700, #FF8C00) !important;
+        }
+
+        /* ===== EXPANDER OR ===== */
+        .streamlit-expanderHeader {
+            color: #FFD700 !important;
+            border: 1px solid rgba(255,215,0,0.2) !important;
+            background: rgba(255,215,0,0.05) !important;
+        }
+
+        /* ===== DIVIDER OR ===== */
+        hr { border-color: rgba(255,215,0,0.2) !important; }
+
+        /* ===== METRIC OR ===== */
+        [data-testid="stMetric"] {
+            background: rgba(255,215,0,0.06) !important;
+            border: 1px solid rgba(255,215,0,0.2) !important;
+            border-radius: 12px !important;
+            padding: 10px !important;
+        }
+        [data-testid="stMetricValue"] { color: #FFD700 !important; }
+
+        /* ===== SUCCESS / INFO / WARNING OR ===== */
+        .stSuccess {
+            background: rgba(255,215,0,0.08) !important;
+            border: 1px solid rgba(255,215,0,0.3) !important;
+            color: #FFD700 !important;
+        }
+        .stInfo {
+            background: rgba(255,215,0,0.05) !important;
+            border: 1px solid rgba(255,215,0,0.2) !important;
+        }
+
+        /* ===== SUPPORT BTN OR ===== */
+        .support-btn {
+            border: 2px solid #FFD700 !important;
+            color: #FFD700 !important;
+        }
+        .support-btn:hover {
+            background: #FFD700 !important;
+            color: #0a0800 !important;
+        }
+
+        /* ===== SCROLLBAR OR ===== */
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(#FFD700, #b8860b) !important;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0800 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
     if st.session_state["is_glowing"]:
         st.markdown('<style>.stApp { animation: glow-pulse 1.5s ease-in-out infinite; }</style>', unsafe_allow_html=True)
 
@@ -1748,7 +2099,32 @@ def main_dashboard():
         """, unsafe_allow_html=True)
         st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">💬 Support Nova</a>', unsafe_allow_html=True)
 
-    st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
+    if premium_actif:
+        st.markdown("""
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="font-size:2.2rem; margin-bottom:-10px; filter:drop-shadow(0 0 15px rgba(255,215,0,0.8));">👑</div>
+            <h1 class='main-title' style="
+                background: linear-gradient(90deg, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b);
+                background-size: 200% auto;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                animation: shimmer-gold 3s linear infinite;
+                filter: drop-shadow(0 0 25px rgba(255,215,0,0.6));
+                font-size: 3.5rem !important;
+                font-weight: 800 !important;
+                margin-top: 0;
+            ">NOVA AI PLATFORM</h1>
+            <div style="
+                color: rgba(255,215,0,0.6);
+                font-size: 0.75rem;
+                letter-spacing: 5px;
+                text-transform: uppercase;
+                margin-top: -10px;
+            ">✦ Membre Premium Actif ✦</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
 
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
