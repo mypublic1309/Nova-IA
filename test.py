@@ -232,54 +232,57 @@ def generer_avec_gemini(service, description, client_nom):
         # PROMPT — EXPOSÉ SCOLAIRE (Système scolaire ivoirien & africain)
         # ================================================================
         if "Exposé" in service:
-            prompt = f"""Tu es un expert académique spécialisé dans le système scolaire ivoirien et africain francophone.
-Tu connais parfaitement les programmes officiels de Côte d'Ivoire et des pays d'Afrique francophone (Sénégal, Mali, Burkina Faso, Bénin, Togo, Cameroun, Guinée, Congo, Gabon, etc.).
+            prompt = f"""Tu es un expert académique et rédacteur professionnel de documents scolaires pour le système éducatif ivoirien et africain francophone.
+Tu maîtrises parfaitement la mise en page, la structure et le contenu des exposés scolaires professionnels.
+
+=== RÈGLE ABSOLUE DE MISE EN PAGE ===
+
+Tu dois produire un exposé avec la structure EXACTE suivante, dans CET ORDRE PRÉCIS :
+
+1. PAGE DE GARDE (toujours en premier, toujours seule sur sa page)
+2. SOMMAIRE / TABLE DES MATIÈRES (toujours sur une nouvelle page, juste après la page de garde)
+3. INTRODUCTION (toujours sur une nouvelle page)
+4. DÉVELOPPEMENT (chaque grande partie commence sur une nouvelle page)
+5. CONCLUSION (toujours sur une nouvelle page)
+6. BIBLIOGRAPHIE (toujours sur une nouvelle page)
+
+Pour signaler un SAUT DE PAGE obligatoire entre chaque section, utilise EXACTEMENT cette ligne seule :
+---SAUT_DE_PAGE---
 
 === SYSTÈME SCOLAIRE DE RÉFÉRENCE ===
 
 PRIMAIRE (Côte d'Ivoire) :
 - Niveaux : CP1, CP2, CE1, CE2, CM1, CM2
 - Matières : Lecture, Écriture, Calcul, Sciences d'Éveil, Histoire-Géographie, Éducation Civique et Morale, EPS
-- Examen de fin de cycle : CEPE (Certificat d'Études Primaires Élémentaires) — fin CM2
-- Ton attendu : Simple, concret, illustré d'exemples locaux africains (animaux, fleuves, villages, personnages historiques africains)
-- Longueur : 1 à 2 pages, vocabulaire accessible, phrases courtes
+- Examen de fin de cycle : CEPE — fin CM2
+- Ton : Simple, concret, exemples locaux africains, phrases courtes
+- Longueur : 1 à 2 pages
 
-COLLÈGE — 1er Cycle du Secondaire :
+COLLÈGE — 1er Cycle :
 - Niveaux : 6ème, 5ème, 4ème, 3ème
-- Matières : Français, Mathématiques, Sciences Physiques et Chimie, SVT (Sciences de la Vie et de la Terre), Histoire-Géographie, Anglais (LV1), Espagnol (LV2 optionnel), EPS, EDHC (Éducation aux Droits de l'Homme et à la Citoyenneté)
-- Examen de fin de cycle : BEPC (Brevet d'Études du Premier Cycle) — fin 3ème
-- Auteurs ivoiriens & africains fréquemment étudiés : Bernard Dadié ("Climbié", "Un Nègre à Paris"), Ahmadou Kourouma ("Allah n'est pas obligé"), Camara Laye ("L'Enfant Noir"), Mongo Beti, Ferdinand Oyono, Cheikh Hamidou Kane
-- Ton attendu : Structuré et progressif, exemples tirés du quotidien africain et ivoirien
-- Longueur : 2 à 4 pages selon le niveau
+- Matières : Français, Mathématiques, Sciences Physiques, SVT, Histoire-Géo, Anglais, EDHC
+- Auteurs africains : Bernard Dadié, Ahmadou Kourouma, Camara Laye, Mongo Beti, Ferdinand Oyono
+- Examen : BEPC — fin 3ème
+- Longueur : 2 à 4 pages
 
-LYCÉE — 2ème Cycle du Secondaire :
+LYCÉE — 2ème Cycle :
 - Niveaux : 2nde, 1ère, Terminale
-- SÉRIES DU BAC IVOIRIEN — à respecter impérativement :
-  * Série A1 : Lettres, Philosophie et Arts — matières phares : Français/Philosophie, Histoire-Géo, Langues vivantes, Latin
-  * Série A2 : Lettres et Langues Vivantes — matières phares : Français, Anglais, Espagnol, Histoire-Géo
-  * Série B  : Sciences Économiques et Sociales — matières phares : Économie générale, Économie d'entreprise, Comptabilité, Droit, Maths
-  * Série C  : Mathématiques et Sciences Physiques — matières phares : Maths, Physique-Chimie, SVT (coefficient réduit)
-  * Série D  : Sciences de la Nature et de la Vie — matières phares : SVT, Maths, Sciences Physiques, Histoire-Géo
-  * Série E  : Mathématiques et Technologie — matières phares : Maths, Technologie industrielle, Sciences Physiques
-  * Série F  : Sciences et Technologies Industrielles (plusieurs sous-séries : F1, F2, F3)
-  * Série G  : Sciences et Technologies de Gestion — matières phares : Comptabilité, Informatique de gestion, Économie, Droit
-  * Série H  : Informatique — matières phares : Informatique, Maths, Algorithmique, Réseaux
-- Examen de fin de cycle : BAC (Baccalauréat ivoirien) — fin de Terminale
-- Ton attendu : Analytique, argumenté, avec plan dialectique ou thématique selon la matière ; vocabulaire soutenu
-- Longueur : 3 à 6 pages selon le niveau et la série
+- Séries : A1, A2, B, C, D, E, F, G, H
+- Examen : BAC ivoirien
+- Ton : Analytique, argumenté, vocabulaire soutenu
+- Longueur : 3 à 6 pages
 
-UNIVERSITÉ / ENSEIGNEMENT SUPÉRIEUR :
-- Système LMD : Licence (L1, L2, L3), Master (M1, M2), Doctorat
-- Principales institutions ivoiriennes : Université Félix Houphouët-Boigny (Cocody-Abidjan), Université Alassane Ouattara (Bouaké), Université Lorougnon Guédé (Daloa), Université Jean Lorougnon Guédé, INP-HB (Institut National Polytechnique Félix Houphouët-Boigny — Yamoussoukro), Grandes Écoles : ESCAE, HEC-CI, ESA, INPHB, CAFOP (pour les enseignants)
-- Filières : Droit, Sciences Économiques, Médecine, Pharmacie, Lettres et Civilisations, Sciences et Technologies, Informatique, Sciences Sociales, STAPS, etc.
-- Ton attendu : Académique, critique, avec références théoriques, auteurs cités, notes de bas de page si besoin
+UNIVERSITÉ :
+- Système LMD : L1, L2, L3, M1, M2, Doctorat
+- Institutions : Université Félix Houphouët-Boigny (Cocody), Université Alassane Ouattara (Bouaké), INP-HB (Yamoussoukro)
+- Ton : Académique, critique, références théoriques
 - Longueur : 5 à 10 pages minimum
 
-CONTEXTE CULTUREL & GÉOGRAPHIQUE IVOIRIEN À INTÉGRER DANS LES EXEMPLES :
-- Géographie : Abidjan (capitale économique), Yamoussoukro (capitale politique), Bouaké, Daloa, Korhogo, Man, San-Pédro | Fleuves : Comoé, Bandama, Sassandra, N'zi | Forêts : Banco, Taï | Lac Kossou | Golfe de Guinée
-- Histoire & personnalités : Félix Houphouët-Boigny (père fondateur), Laurent Gbagbo, Alassane Ouattara, Samory Touré, Behanzin, Shaka Zulu (Afrique) | Sur la scène panafricaine : Thomas Sankara, Kwame Nkrumah, Patrice Lumumba, Nelson Mandela, Julius Nyerere
-- Économie : cacao (1er producteur mondial), café, anacarde (noix de cajou), caoutchouc, palmier à huile | FCFA (franc CFA) | UEMOA, CEDEAO | Port autonome d'Abidjan | BVRM (Bourse Régionale des Valeurs Mobilières)
-- Culture & traditions : masques Baoulé, Dan (Yacouba), Gouro, Sénoufo | Fête du Dipri (Gomon), Fête des Ignames, Fête de la Paix (Abidjan) | Musique : coupé-décalé, zouglou, afrobeat ivoirien | Tenues : boubou, kita, pagne wax
+=== CONTEXTE IVOIRIEN À INTÉGRER ===
+- Géographie : Abidjan, Yamoussoukro, Bouaké, Daloa, Korhogo | Fleuves : Comoé, Bandama, Sassandra | Forêt de Taï, Lac Kossou
+- Histoire : Félix Houphouët-Boigny, Samory Touré, indépendance 1960, miracle ivoirien
+- Économie : cacao (1er mondial), café, anacarde, FCFA, UEMOA, Port d'Abidjan
+- Culture : masques Baoulé, Dan, Sénoufo | coupé-décalé, zouglou | boubou, pagne wax
 
 === MISSION ===
 
@@ -287,194 +290,640 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ et PROFESSIONNEL basé sur cette
 
 {description}
 
-RÈGLES ABSOLUES :
-- Identifie précisément le niveau scolaire mentionné (CP1 à CM2 = Primaire | 6ème à 3ème = Collège | 2nde/1ère/Tle + série = Lycée | L1-Doctorat = Université)
-- Si le niveau n'est pas précisé, déduis-le depuis le sujet et adapte-toi intelligemment
-- Adapte le vocabulaire, la profondeur d'analyse et la longueur au niveau détecté
-- Intègre des exemples concrets tirés du contexte ivoirien et africain quand c'est pertinent
-- Respecte les programmes officiels ivoiriens pour les matières concernées
-- N'utilise JAMAIS de notation LaTeX ($, \\, \\frac, \\text) — écris toujours en texte clair
-- Rédige exclusivement en français, avec une orthographe irréprochable
+=== STRUCTURE OBLIGATOIRE EXACTE À RESPECTER ===
 
-Structure OBLIGATOIRE :
+# ════════════════════════════════════════════════════════
+#                      PAGE DE GARDE
+# ════════════════════════════════════════════════════════
 
-# PAGE DE GARDE
-Titre de l'exposé :
-Matière :
-Niveau scolaire / Série (si lycée) :
-Établissement :
-Présenté par :
-Date :
-Année scolaire :
+[NOM DE L'ÉTABLISSEMENT EN MAJUSCULES]
+[Ville, Pays]
+Année scolaire : [ex: 2025 - 2026]
 
-# INTRODUCTION
-(Accroche contextuelle liée à la réalité ivoirienne ou africaine si possible, problématique claire, annonce du plan)
+────────────────────────────────────────────────────────
 
-# DÉVELOPPEMENT
+                    EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
 
-## I. [Titre de la première grande partie]
-### 1.1 [Sous-partie]
-### 1.2 [Sous-partie]
+         [TITRE COMPLET DE L'EXPOSÉ EN MAJUSCULES ET CENTRÉ]
 
-## II. [Titre de la deuxième grande partie]
-### 2.1 [Sous-partie]
-### 2.2 [Sous-partie]
+────────────────────────────────────────────────────────
 
-## III. [Titre de la troisième grande partie — si pertinent selon le niveau]
-### 3.1 [Sous-partie]
-### 3.2 [Sous-partie]
+**Matière :**          [Matière]
+**Niveau / Série :**   [Niveau exact]
+**Présenté par :**     [Nom du/des élève(s)]
+**Sous la direction de :** [Nom du professeur]
+**Date de présentation :** [Date]
+**Année scolaire :**   [Année scolaire]
 
-# CONCLUSION
-(Synthèse des idées principales, réponse à la problématique, ouverture sur un enjeu actuel en lien avec l'Afrique ou la Côte d'Ivoire si possible)
+────────────────────────────────────────────────────────
 
-# BIBLIOGRAPHIE
-(Manuels scolaires ivoiriens si applicable, auteurs africains, sources pertinentes)
+---SAUT_DE_PAGE---
 
-Rédige en français. Minimum 3 pages complètes et détaillées."""
+# ════════════════════════════════════════════════════════
+#                SOMMAIRE / TABLE DES MATIÈRES
+# ════════════════════════════════════════════════════════
+
+**SOMMAIRE**
+
+────────────────────────────────────────────────────────
+
+Introduction ............................................................. 3
+
+I. [Titre de la première grande partie] .................................. 4
+   1.1 [Titre sous-partie] ............................................... 4
+   1.2 [Titre sous-partie] ............................................... 5
+
+II. [Titre de la deuxième grande partie] ................................. 6
+   2.1 [Titre sous-partie] ............................................... 6
+   2.2 [Titre sous-partie] ............................................... 7
+
+III. [Titre de la troisième grande partie si pertinent] .................. 8
+   3.1 [Titre sous-partie] ............................................... 8
+   3.2 [Titre sous-partie] ............................................... 9
+
+Conclusion ............................................................... 10
+
+Bibliographie ............................................................ 11
+
+────────────────────────────────────────────────────────
+
+---SAUT_DE_PAGE---
+
+# ════════════════════════════════════════════════════════
+#                      INTRODUCTION
+# ════════════════════════════════════════════════════════
+
+## INTRODUCTION
+
+────────────────────────────────────────────────────────
+
+[Paragraphe d'accroche : commencer par un fait marquant, une citation, une statistique ou une réalité concrète liée au contexte ivoirien ou africain. Minimum 5 lignes.]
+
+[Paragraphe de contextualisation : situer le sujet dans son contexte historique, géographique, scientifique ou social. Minimum 4 lignes.]
+
+[Problématique clairement formulée sous forme de question ou d'enjeu central : "Ainsi, nous pouvons nous demander..."]
+
+[Annonce du plan : "Pour répondre à cette question, nous étudierons dans un premier temps... puis dans un deuxième temps... et enfin..."]
+
+────────────────────────────────────────────────────────
+
+---SAUT_DE_PAGE---
+
+# ════════════════════════════════════════════════════════
+#                      DÉVELOPPEMENT
+# ════════════════════════════════════════════════════════
+
+## I. [TITRE DE LA PREMIÈRE GRANDE PARTIE EN MAJUSCULES]
+
+════════════════════════════════════════════════════════
+
+### 1.1 [Titre de la première sous-partie]
+
+────────────────────────────────────────────────────────
+
+[Contenu complet et détaillé de la sous-partie. Minimum 8 lignes. Intégrer des exemples concrets tirés du contexte ivoirien et africain. Utiliser des données précises, des faits vérifiables, des illustrations pédagogiques adaptées au niveau scolaire.]
+
+────────────────────────────────────────────────────────
+
+### 1.2 [Titre de la deuxième sous-partie]
+
+────────────────────────────────────────────────────────
+
+[Contenu complet et détaillé. Minimum 8 lignes. Poursuivre avec des exemples concrets, des schémas décrits en texte si nécessaire, des définitions claires des termes techniques.]
+
+════════════════════════════════════════════════════════
+
+---SAUT_DE_PAGE---
+
+## II. [TITRE DE LA DEUXIÈME GRANDE PARTIE EN MAJUSCULES]
+
+════════════════════════════════════════════════════════
+
+### 2.1 [Titre de la première sous-partie]
+
+────────────────────────────────────────────────────────
+
+[Contenu complet et détaillé. Minimum 8 lignes.]
+
+────────────────────────────────────────────────────────
+
+### 2.2 [Titre de la deuxième sous-partie]
+
+────────────────────────────────────────────────────────
+
+[Contenu complet et détaillé. Minimum 8 lignes.]
+
+════════════════════════════════════════════════════════
+
+---SAUT_DE_PAGE---
+
+## III. [TITRE DE LA TROISIÈME GRANDE PARTIE EN MAJUSCULES — si pertinent selon le niveau]
+
+════════════════════════════════════════════════════════
+
+### 3.1 [Titre sous-partie]
+
+────────────────────────────────────────────────────────
+
+[Contenu complet et détaillé. Minimum 8 lignes.]
+
+────────────────────────────────────────────────────────
+
+### 3.2 [Titre sous-partie]
+
+────────────────────────────────────────────────────────
+
+[Contenu complet et détaillé. Minimum 8 lignes.]
+
+════════════════════════════════════════════════════════
+
+---SAUT_DE_PAGE---
+
+# ════════════════════════════════════════════════════════
+#                       CONCLUSION
+# ════════════════════════════════════════════════════════
+
+## CONCLUSION
+
+────────────────────────────────────────────────────────
+
+[Paragraphe de synthèse : résumer les idées principales développées dans chaque grande partie. Minimum 5 lignes.]
+
+[Paragraphe de réponse à la problématique : répondre clairement à la question posée en introduction. Minimum 3 lignes.]
+
+[Paragraphe d'ouverture : proposer une réflexion plus large, un enjeu futur, un lien avec l'actualité ivoirienne ou africaine, ou une question nouvelle. Minimum 3 lignes.]
+
+────────────────────────────────────────────────────────
+
+---SAUT_DE_PAGE---
+
+# ════════════════════════════════════════════════════════
+#                      BIBLIOGRAPHIE
+# ════════════════════════════════════════════════════════
+
+## BIBLIOGRAPHIE
+
+────────────────────────────────────────────────────────
+
+**Manuels scolaires :**
+- [Auteur], [Titre du manuel], [Éditeur], [Année]
+- [Auteur], [Titre du manuel], [Éditeur], [Année]
+
+**Ouvrages de référence :**
+- [Auteur], [Titre], [Éditeur], [Année]
+
+**Auteurs africains cités :**
+- [Auteur africain], [Titre de l'œuvre], [Maison d'édition], [Année]
+
+**Sites web consultés :**
+- [Nom du site], [URL], consulté le [date]
+
+────────────────────────────────────────────────────────
+
+=== RÈGLES ABSOLUES DE RÉDACTION ===
+
+- Identifie le niveau scolaire depuis la demande et adapte vocabulaire + profondeur d'analyse
+- Si niveau non précisé, déduis-le intelligemment depuis le sujet
+- Intègre TOUJOURS des exemples concrets ivoiriens et africains quand pertinent
+- Respecte les programmes officiels ivoiriens
+- N'utilise JAMAIS de notation LaTeX ($, \\, \\frac, \\text)
+- Écris TOUJOURS les formules en texte clair : "omega = 2 x pi x f"
+- Rédige exclusivement en français avec orthographe irréprochable
+- Chaque section doit être COMPLÈTE et DÉTAILLÉE — jamais de "[à compléter]" ou "[...]"
+- Minimum 4 pages de contenu réel (hors page de garde et sommaire)
+- Les lignes ════ et ──── sont des séparateurs visuels à conserver tels quels
+- La ligne ---SAUT_DE_PAGE--- doit apparaître SEULE sur sa ligne entre chaque grande section
+
+Rédige maintenant l'exposé complet en français."""
 
         # ================================================================
         # PROMPT — SUJETS & EXAMENS (Système scolaire ivoirien & africain)
         # ================================================================
         elif "Examens" in service or "Sujets" in service:
-            prompt = f"""Tu es un professeur expérimenté et un concepteur officiel de sujets d'examens pour le système scolaire ivoirien et africain francophone.
-Tu maîtrises parfaitement les formats d'épreuves du CEPE, BEPC et BAC ivoirien, ainsi que les évaluations universitaires.
+            prompt = f"""Tu es un professeur expert et concepteur officiel de sujets d'examens pour le système scolaire ivoirien et africain francophone.
+Tu maîtrises parfaitement la mise en page professionnelle des épreuves scolaires et tous les formats d'examens du CEPE, BEPC et BAC ivoirien.
 
-=== SYSTÈME SCOLAIRE ET FORMATS D'EXAMENS DE RÉFÉRENCE ===
+=== RÈGLE ABSOLUE DE MISE EN PAGE ===
 
-PRIMAIRE — CEPE :
-- Niveaux concernés : CM1, CM2
-- Matières et formats officiels CEPE :
-  * Dictée + Questions de grammaire/orthographe
-  * Rédaction (narration simple, description, lettre)
-  * Calcul (opérations, problèmes arithmétiques concrets)
-  * Sciences d'Éveil (questions sur le corps humain, l'environnement, l'hygiène)
-  * Histoire-Géographie (questions sur la Côte d'Ivoire et l'Afrique)
-- Barème : /20 par matière, QCM simple ou questions ouvertes courtes
-- Contexte des problèmes : marchés ivoiriens, villages, plantations de cacao/café, animaux africains
+Tu dois produire un sujet d'examen avec la structure EXACTE suivante, dans CET ORDRE PRÉCIS :
 
-COLLÈGE — BEPC :
-- Niveaux concernés : 6ème, 5ème, 4ème, 3ème (BEPC en fin de 3ème)
-- Formats officiels BEPC par matière :
-  * Français : Texte support (auteur africain de préférence) + questions de compréhension + vocabulaire + grammaire/conjugaison + production écrite (rédaction, lettre formelle, dialogue)
-  * Mathématiques : Exercices de calcul pur + problème contextualisé + géométrie (théorème de Thalès, Pythagore, constructions) + statistiques
-  * Sciences Physiques : Exercice Physique (mécanique, électricité, optique) + Exercice Chimie (atomes, molécules, réactions)
-  * SVT : Questions de cours + schéma légendé à compléter + étude de document (tableau, graphique)
-  * Histoire-Géo : Étude de document (texte ou carte) + paragraphe argumenté + croquis de carte
-  * Anglais : Texte + compréhension + vocabulaire + expression écrite
-  * EDHC : Questions sur la citoyenneté, les droits, les institutions ivoiriennes
-- Durée typique : 2h à 4h selon la matière
-- Barème : sur 20 points
+1. PAGE DE GARDE / EN-TÊTE OFFICIEL (toujours en premier, seule sur sa page)
+2. CONSIGNES GÉNÉRALES (sur la même page ou nouvelle page selon longueur)
+3. LES EXERCICES (chaque exercice clairement séparé)
+4. CORRIGÉ COMPLET (sur nouvelle page, UNIQUEMENT si demandé)
 
-LYCÉE — BAC IVOIRIEN :
-- Niveaux : 2nde, 1ère, Terminale
-- Formats officiels par série et matière :
+Pour signaler un SAUT DE PAGE obligatoire, utilise EXACTEMENT cette ligne seule :
+---SAUT_DE_PAGE---
 
-  SÉRIE A1/A2 (Lettres) :
-  * Français/Philo : Dissertation littéraire ou philosophique (thèse, antithèse, synthèse) OU Commentaire composé OU Résumé + Discussion + Écriture d'invention
-  * Histoire-Géo : Composition (introduction + plan + conclusion) + Étude de document(s)
-  * Langues vivantes : Compréhension de texte + Expression écrite + Questions de grammaire
+=== FORMATS D'EXERCICES QUE TU DOIS MAÎTRISER PARFAITEMENT ===
 
-  SÉRIE B (Économie) :
-  * Économie générale : Dissertation économique ou étude de cas avec documents
-  * Comptabilité : Exercices de journaux comptables, bilan, compte de résultat, états financiers
-  * Droit : Cas pratique juridique + questions de cours
-  * Maths Série B : Statistiques, probabilités, fonctions, suites numériques
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 1 — QCM (Questions à Choix Multiples)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  SÉRIE C (Maths-Sciences Physiques) :
-  * Maths Série C : 3 exercices (Analyse : fonctions, dérivées, intégrales | Algèbre-Géométrie : vecteurs, complexes, probabilités | Statistiques/Suites)
-  * Sciences Physiques Série C : 2 exercices Physique (mécanique, électricité, ondes) + 1 exercice Chimie (chimie organique, équilibres)
+PRÉSENTATION OBLIGATOIRE DU QCM :
 
-  SÉRIE D (Sciences Naturelles) :
-  * SVT Série D : Restitution de connaissances + Exploitation de documents + Résolution de problème scientifique
-  * Maths Série D : similaire C mais coefficients différents
-  * Sciences Physiques Série D : format similaire C
+## EXERCICE [N°] — QUESTIONS À CHOIX MULTIPLES ([X] points)
 
-  SÉRIE G (Gestion) :
-  * Comptabilité/Gestion : Analyse de situations d'entreprise, travaux comptables, tableaux de bord
-  * Informatique de gestion : Algorithmique simple, tableur, base de données
+────────────────────────────────────────────────────────
+**Consigne :** Cochez la lettre correspondant à la bonne réponse. Une seule réponse est correcte par question.
+────────────────────────────────────────────────────────
 
-  SÉRIE H (Informatique) :
-  * Algorithmique et programmation : Pseudo-code, organigramme, analyse de programme
-  * Réseaux : Questions sur TCP/IP, architecture réseau
-  * Bases de données : SQL, modèle entité-relation
+**Question 1** (... point(s))
+[Énoncé complet et précis de la question ?]
 
-UNIVERSITÉ :
-- Formats : Partiel (1h-2h), Examen final (3h-4h), Contrôle continu
-- Types de questions : QCM, questions de cours ouvertes, études de cas, dissertations académiques, problèmes, exercices techniques
-- Structure : En-tête officiel de l'université + Consignes strictes + Questions numérotées + Barème détaillé
+□ **A)** [Réponse fausse mais plausible]
+□ **B)** [Réponse fausse mais plausible]
+□ **C)** [Bonne réponse]
+□ **D)** [Réponse fausse mais plausible]
 
-CONTEXTE IVOIRIEN POUR LES PROBLÈMES ET CAS PRATIQUES :
-- Économie : prix du cacao, taux de change FCFA/Euro, budget d'un ménage ivoirien, entreprise abidjanaise, plantation d'anacarde
-- Géographie : distances entre villes ivoiriennes (Abidjan-Bouaké : 340 km), superficie de la Côte d'Ivoire (322 463 km²), population (~27 millions)
-- Histoire : colonisation française, indépendance 1960, Houphouët-Boigny, miracle ivoirien, crises politiques
-- Sciences : maladies tropicales (paludisme, choléra), culture du cacao, énergie solaire en Afrique, barrages (Kossou, Taabo, Soubré)
-- Maths : marchés, transport en commun (gbakas, woros-woros), surfaces agricoles, statistiques démographiques ivoiriennes
+────────────────────────────────────────────────────────
+
+**Question 2** (... point(s))
+[Énoncé complet et précis de la question ?]
+
+□ **A)** [Réponse]
+□ **B)** [Réponse]
+□ **C)** [Réponse]
+□ **D)** [Réponse]
+
+────────────────────────────────────────────────────────
+
+[Continuer pour toutes les questions...]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 2 — VRAI OU FAUX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE EN TABLEAU MARKDOWN :
+
+## EXERCICE [N°] — VRAI OU FAUX ([X] points)
+
+────────────────────────────────────────────────────────
+**Consigne :** Indiquez si chaque affirmation est Vraie (V) ou Fausse (F) en cochant la case correspondante. Justifiez les affirmations fausses.
+────────────────────────────────────────────────────────
+
+| N° | Affirmations | V | F |
+|----|-------------|---|---|
+| 1 | [Affirmation complète et précise, jamais tronquée] | ☐ | ☐ |
+| 2 | [Affirmation complète et précise] | ☐ | ☐ |
+| 3 | [Affirmation complète et précise] | ☐ | ☐ |
+| 4 | [Affirmation complète et précise] | ☐ | ☐ |
+| 5 | [Affirmation complète et précise] | ☐ | ☐ |
+
+────────────────────────────────────────────────────────
+**Justification des affirmations fausses :**
+
+N°___ : ................................................................
+N°___ : ................................................................
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 3 — TEXTE LACUNAIRE (Texte à trous)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE :
+
+## EXERCICE [N°] — COMPLÉTEZ LE TEXTE ([X] points)
+
+────────────────────────────────────────────────────────
+**Consigne :** Complétez le texte suivant à l'aide des mots proposés dans la liste ci-dessous. Chaque mot ne peut être utilisé qu'une seule fois.
+────────────────────────────────────────────────────────
+
+**Liste de mots :** [ mot1 — mot2 — mot3 — mot4 — mot5 — mot6 ]
+
+────────────────────────────────────────────────────────
+
+[Texte complet rédigé, avec les mots manquants remplacés par des tirets longs] :
+
+La _______________ est un phénomène qui se produit lorsque _______________ entre en contact avec _______________. Ce processus, appelé _______________, permet de libérer de l'énergie sous forme de _______________. En Côte d'Ivoire, ce principe est utilisé dans la production de _______________ au barrage de Kossou.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 4 — QUESTIONS DE COURS OUVERTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE :
+
+## EXERCICE [N°] — QUESTIONS DE COURS ([X] points)
+
+────────────────────────────────────────────────────────
+**Consigne :** Répondez aux questions suivantes de manière claire et précise.
+────────────────────────────────────────────────────────
+
+**1.** Définissez le/la [concept] et donnez deux caractéristiques principales. *(1 point)*
+
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+
+**2.** Expliquez pourquoi [phénomène/concept]. *(2 points)*
+
+....................................................................................
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+
+**3.** Citez et expliquez brièvement [trois/quatre éléments de...]. *(3 points)*
+
+- ....................................................................................
+- ....................................................................................
+- ....................................................................................
+
+────────────────────────────────────────────────────────
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 5 — ÉTUDE DE TEXTE / DOCUMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE :
+
+## EXERCICE [N°] — ÉTUDE DE DOCUMENT ([X] points)
+
+════════════════════════════════════════════════════════
+**DOCUMENT :** [Titre complet du texte]
+**Source :** [Auteur ou Institution], [Année]
+════════════════════════════════════════════════════════
+
+*[Texte complet du document, rédigé intégralement, minimum 10 lignes, avec un contenu riche et informatif adapté au niveau scolaire. Le texte doit être authentique et pédagogique, jamais générique.]*
+
+════════════════════════════════════════════════════════
+
+**QUESTIONS :**
+
+────────────────────────────────────────────────────────
+**1.** [Question précise sur la compréhension du texte ?] *(X point(s))*
+
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+**2.** [Question sur le vocabulaire ou une notion du texte ?] *(X point(s))*
+
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+**3.** [Question d'analyse ou d'interprétation ?] *(X point(s))*
+
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+**4.** [Question de production écrite liée au thème du texte ?] *(X point(s))*
+
+....................................................................................
+....................................................................................
+....................................................................................
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 6 — EXERCICE DE CALCUL / PROBLÈME MATHÉMATIQUE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE :
+
+## EXERCICE [N°] — PROBLÈME ([X] points)
+
+════════════════════════════════════════════════════════
+**SITUATION :** [Description concrète et contextualisée du problème, ancrée dans la réalité ivoirienne. Ex: Un commerçant du marché d'Adjamé... / Une plantation d'anacarde à Korhogo... / Le barrage de Soubré...]
+════════════════════════════════════════════════════════
+
+**DONNÉES :**
+- [Variable 1] : [valeur numérique réelle] [unité]
+- [Variable 2] : [valeur numérique réelle] [unité]
+- [Variable 3] : [valeur numérique réelle] [unité]
+
+────────────────────────────────────────────────────────
+**TRAVAIL DEMANDÉ :**
+
+**1.** [Question précise avec instruction claire] *(X point(s))*
+
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+**2.** [Question précise, s'appuyant sur le résultat précédent] *(X point(s))*
+
+....................................................................................
+....................................................................................
+
+────────────────────────────────────────────────────────
+**3.** [Question de conclusion ou d'interprétation du résultat] *(X point(s))*
+
+....................................................................................
+....................................................................................
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 7 — DISSERTATION / RÉDACTION / PRODUCTION ÉCRITE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE :
+
+## EXERCICE [N°] — PRODUCTION ÉCRITE ([X] points)
+
+────────────────────────────────────────────────────────
+**Sujet :** [Sujet complet et clairement formulé]
+────────────────────────────────────────────────────────
+
+**Consignes :**
+- Longueur : [X] lignes minimum / [X] à [X] pages
+- Respectez la structure : introduction, développement, conclusion
+- Soignez l'orthographe, la grammaire et la ponctuation
+- [Consigne spécifique selon le type : dissertation, lettre, conte, article, compte-rendu...]
+
+**Critères d'évaluation :**
+| Critère | Points |
+|---------|--------|
+| Respect du sujet et des consignes | /[X] |
+| Structure et organisation du texte | /[X] |
+| Richesse du contenu et des arguments | /[X] |
+| Qualité de la langue (orthographe, grammaire) | /[X] |
+| **TOTAL** | **/[X]** |
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT 8 — EXERCICE DE SCIENCES (SVT / PHYSIQUE-CHIMIE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÉSENTATION OBLIGATOIRE :
+
+## EXERCICE [N°] — [TITRE DE L'EXERCICE] ([X] points)
+
+════════════════════════════════════════════════════════
+**Partie A — Restitution de connaissances** ([X] points)
+════════════════════════════════════════════════════════
+
+**1.** Définissez : [terme scientifique 1], [terme scientifique 2]. *(X pts)*
+**2.** Complétez le schéma suivant en indiquant les légendes manquantes : [description du schéma]. *(X pts)*
+**3.** [Question de cours directe]. *(X pts)*
+
+════════════════════════════════════════════════════════
+**Partie B — Exploitation de documents** ([X] points)
+════════════════════════════════════════════════════════
+
+**Document :** [Description précise du document : tableau de données, graphique, résultats d'expérience — avec TOUTES les valeurs numériques réelles écrites]
+
+| [Colonne 1] | [Colonne 2] | [Colonne 3] |
+|-------------|-------------|-------------|
+| [valeur]    | [valeur]    | [valeur]    |
+| [valeur]    | [valeur]    | [valeur]    |
+
+**Questions :**
+**4.** [Question d'analyse du document]. *(X pts)*
+**5.** [Question d'interprétation]. *(X pts)*
+**6.** [Conclusion scientifique à formuler]. *(X pts)*
+
+════════════════════════════════════════════════════════
+**Partie C — Résolution de problème** ([X] points)
+════════════════════════════════════════════════════════
+
+**7.** [Calcul ou raisonnement scientifique à mener]. *(X pts)*
+
+=== STRUCTURE OBLIGATOIRE EXACTE DU SUJET À PRODUIRE ===
+
+# ════════════════════════════════════════════════════════
+#             EN-TÊTE OFFICIEL / PAGE DE GARDE
+# ════════════════════════════════════════════════════════
+
+**RÉPUBLIQUE DE CÔTE D'IVOIRE**
+Union — Discipline — Travail
+
+────────────────────────────────────────────────────────
+
+**Établissement :** [Nom complet de l'école / lycée / université]
+**Année scolaire :** [ex: 2025 — 2026]
+**Matière :** [Matière complète]
+**Série / Niveau :** [Série exacte si lycée + Niveau : ex: Terminale D]
+**Type d'épreuve :** [Devoir Surveillé n°X / Examen Blanc / Brevet Blanc / BAC Blanc / Examen Final...]
+**Durée :** [ex: 3 heures]
+**Coefficient :** [ex: 5]
+**Barème total :** /20
+
+────────────────────────────────────────────────────────
+
+**Nom et Prénoms :** .............................................
+**Numéro de table :** ............... **Salle :** .................
+**Signature du surveillant :** ....................................
+
+────────────────────────────────────────────────────────
+
+**CONSIGNES GÉNÉRALES :**
+- Lisez attentivement l'intégralité du sujet avant de commencer
+- Répondez sur la copie dans l'ordre des questions ou en indiquant clairement le numéro
+- Les réponses doivent être rédigées en français correct
+- Les téléphones portables et documents sont strictement interdits
+- Toute tentative de fraude entraîne l'exclusion immédiate
+- La présentation, la propreté et la lisibilité seront prises en compte
+
+────────────────────────────────────────────────────────
+
+**BARÈME DE NOTATION :**
+| Exercice | Intitulé | Points |
+|----------|----------|--------|
+| Exercice 1 | [Intitulé] | /[X] |
+| Exercice 2 | [Intitulé] | /[X] |
+| Exercice 3 | [Intitulé] | /[X] |
+| **TOTAL** | | **/20** |
+
+────────────────────────────────────────────────────────
+
+---SAUT_DE_PAGE---
+
+[EXERCICES ICI — utilise les formats décrits ci-dessus selon ce qui est demandé]
+
+[Sépare chaque exercice avec ════════════════════════════════════════════════════════]
+
+[Utilise ---SAUT_DE_PAGE--- si le sujet est long et nécessite une nouvelle page]
+
+---SAUT_DE_PAGE---  ← (uniquement si corrigé demandé)
+
+# ════════════════════════════════════════════════════════
+#                   CORRIGÉ COMPLET
+#           (UNIQUEMENT SI DEMANDÉ EXPLICITEMENT)
+# ════════════════════════════════════════════════════════
+
+## ÉLÉMENTS DE CORRECTION — [Matière] — [Niveau/Série]
+
+────────────────────────────────────────────────────────
+**NB :** Ce corrigé est réservé à l'usage exclusif du professeur.
+────────────────────────────────────────────────────────
+
+### Corrigé Exercice 1 — [Titre]
+
+────────────────────────────────────────────────────────
+
+**Question 1 :** [Réponse complète avec justification détaillée] → **[X/X]**
+
+**Question 2 :** [Réponse complète avec justification détaillée] → **[X/X]**
+
+[etc. pour toutes les questions]
+
+════════════════════════════════════════════════════════
+
+### Corrigé Exercice 2 — [Titre]
+
+────────────────────────────────────────────────────────
+
+[Pour le QCM : indiquer la bonne réponse + explication pourquoi les autres sont fausses]
+**Q1 → C)** [Explication]
+**Q2 → A)** [Explication]
+
+[Pour Vrai/Faux : indiquer V ou F + justification complète de chaque affirmation]
+| N° | V/F | Justification complète |
+|----|-----|------------------------|
+| 1 | V | [Justification] |
+| 2 | F | [Correction : la bonne réponse est...] |
+
+[Pour texte lacunaire : écrire le texte complet reconstitué]
+
+[Pour les calculs : montrer toutes les étapes de résolution avec formules en clair]
+
+════════════════════════════════════════════════════════
+
+=== RÈGLES ABSOLUES DE RÉDACTION ===
+
+RÈGLE 1 — COMPLÉTUDE TOTALE :
+- JAMAIS de "[À compléter]", "[insérer question]", "[...]" ou zones vides
+- Toutes les questions doivent être ENTIÈREMENT rédigées et précises
+- Tous les choix du QCM doivent être COMPLETS et plausibles
+- Toutes les affirmations Vrai/Faux doivent être COMPLÈTES
+- Tous les textes lacunaires doivent être ENTIÈREMENT rédigés avec les vrais tirets
+
+RÈGLE 2 — CONTEXTUALISATION IVOIRIENNE :
+- Problèmes de maths : marchés d'Abidjan, plantations d'anacarde à Korhogo, gbakas, woros-woros
+- Sciences : paludisme, cacao, barrage de Kossou/Soubré/Taabo, énergie solaire en Afrique
+- Français : auteurs africains (Bernard Dadié, Camara Laye, Ahmadou Kourouma...)
+- Histoire-Géo : Côte d'Ivoire, UEMOA, CEDEAO, Abidjan (capital économique), Yamoussoukro
+
+RÈGLE 3 — FORMULES MATHÉMATIQUES ET SCIENTIFIQUES :
+- JAMAIS de LaTeX ($, \\, \\frac, \\text{{}})
+- TOUJOURS en texte clair : "F = m x a", "V = d/t", "racine(a² + b²)"
+- Symboles grecs en lettres : omega, phi, delta, sigma, alpha, beta, gamma, pi, theta
+- Unités en clair : Ohm, Hz, rad/s, Watt, Volt, Ampère, Newton, Joule, Pascal, mol/L
+
+RÈGLE 4 — MISE EN PAGE :
+- Les lignes ════ servent de séparateurs majeurs entre sections importantes
+- Les lignes ──── servent de séparateurs mineurs entre questions
+- La ligne ---SAUT_DE_PAGE--- doit apparaître SEULE entre la page de garde et les exercices, et avant le corrigé
+- Le tableau du barème doit toujours être présent en en-tête
+- Les cases à cocher sont représentées par □ ou ☐
+
+RÈGLE 5 — NIVEAU ET PROGRAMME :
+- Identifie précisément : Primaire (CEPE) / Collège (BEPC) / Lycée BAC série... / Université
+- Adapte strictement le vocabulaire, la difficulté et la longueur au niveau
+- Respecte les programmes officiels ivoiriens pour chaque matière et niveau
+
+RÈGLE 6 — CORRIGÉ :
+- N'inclure le corrigé QUE si la demande mentionne "avec corrigé", "corrigé", "correction" ou "éléments de réponse"
+- Le corrigé doit être EXHAUSTIF : chaque point justifié, chaque calcul montré étape par étape
 
 === MISSION ===
 
-Crée un sujet d'examen COMPLET et DÉTAILLÉ basé sur cette demande :
+Crée maintenant un sujet d'examen COMPLET et PARFAITEMENT STRUCTURÉ basé sur cette demande :
 
 {description}
 
-RÈGLES ABSOLUES :
-- Identifie le niveau (Primaire/Collège/Lycée/Université), la matière, la série (si lycée) et le type d'épreuve
-- Respecte EXACTEMENT le format officiel ivoirien de l'épreuve demandée
-- Rédige toutes les questions COMPLÈTES et PRÉCISES (PAS de pointillés, PAS de [À compléter], PAS de [Insérer question ici])
-- Pour le texte à trous : écris le texte COMPLET avec les mots manquants remplacés par ___________ (10 underscores)
-- Pour Vrai/Faux : présente OBLIGATOIREMENT dans un tableau markdown (jamais en liste)
-- Pour les exercices : donne TOUTES les données numériques, TOUTES les questions réelles et précises
-- Contextualise les problèmes dans la réalité ivoirienne et africaine quand c'est possible
-- Termine avec le CORRIGÉ COMPLET uniquement si la demande le mentionne
-- N'utilise JAMAIS de notation LaTeX ($, \\, \\frac, \\text{{}}) — écris les formules en texte clair
-- Formules en texte clair : "omega = 2 x pi x f", "XL = L x omega", "racine(R² + X²)", "1/2 x m x v²"
-- Symboles grecs en toutes lettres : omega, phi, delta, sigma, alpha, beta, gamma, pi, theta
-- Unités en clair : Ohm, Hz, rad/s, Watt, Volt, Ampère, VA, VAR, Newton, Joule, Pascal, mol/L, km/h, m/s²
-
-Structure OBLIGATOIRE :
-
-# EN-TÊTE OFFICIEL
-Établissement : [nom de l'école/lycée/université]
-Année scolaire : [ex: 2025-2026]
-Matière : [matière]
-Série : [série si lycée, sinon niveau]
-Niveau : [niveau exact]
-Type d'épreuve : [Contrôle de connaissances / Devoir surveillé / BAC blanc / Examen final...]
-Durée : [durée]
-Coefficient : [coefficient si connu]
-Barème total : /20
-
-# CONSIGNES GÉNÉRALES
-[Consignes précises et officielles adaptées au niveau]
-
-# EXERCICE 1 — [Titre explicite] ([X] points)
-[Contenu complet avec toutes les questions réelles, données, schémas décrits en texte]
-
-# EXERCICE 2 — [Titre : Vrai ou Faux si applicable] ([X] points)
-[Si Vrai/Faux : TOUJOURS en tableau markdown :]
-
-| N° | Affirmation | Réponse (V/F) |
-|----|-------------|---------------|
-| 1 | [affirmation complète] |  |
-| 2 | [affirmation complète] |  |
-
-# EXERCICE 3 — [Titre explicite] ([X] points)
-[Contenu complet]
-
----
-
-# CORRIGÉ COMPLET
-(Inclure UNIQUEMENT si la demande mentionne "avec corrigé" ou "corrigé")
-
-## Corrigé Exercice 1
-[Réponses complètes, justifiées, avec méthode détaillée]
-
-## Corrigé Exercice 2
-[Réponses complètes avec justification de chaque V/F]
-
-## Corrigé Exercice 3
-[Réponses complètes avec méthode détaillée]
-
-Rédige en français, sois rigoureux et adapté au niveau scolaire ivoirien concerné."""
+Rédige en français. Sois rigoureux, professionnel et adapté au niveau scolaire ivoirien concerné.
+Utilise intelligemment les formats d'exercices décrits ci-dessus selon ce qui est demandé ou ce qui convient le mieux au niveau et à la matière."""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -702,6 +1151,47 @@ def creer_docx(contenu, service, client_nom):
     while i < len(lignes):
         l = lignes[i].rstrip()
 
+        # ── SAUT DE PAGE NOVA ──────────────────────────────────────
+        if l.strip() == "---SAUT_DE_PAGE---":
+            from docx.oxml import OxmlElement as _OE
+            from docx.oxml.ns import qn as _qn
+            p_break = doc.add_paragraph()
+            run_break = p_break.add_run()
+            br = _OE("w:br")
+            br.set(_qn("w:type"), "page")
+            run_break._r.append(br)
+            i += 1
+            continue
+
+        # ── LIGNES DE SÉPARATION ════ ET ──── ─────────────────────
+        if l.strip().startswith("════") or l.strip().startswith("━━━━"):
+            p_line = doc.add_paragraph()
+            pPr2 = p_line._p.get_or_add_pPr()
+            pBdr2 = OxmlElement("w:pBdr")
+            bot2 = OxmlElement("w:bottom")
+            bot2.set(qn("w:val"), "single")
+            bot2.set(qn("w:sz"), "12")
+            bot2.set(qn("w:space"), "1")
+            bot2.set(qn("w:color"), "1F4E79")
+            pBdr2.append(bot2)
+            pPr2.append(pBdr2)
+            i += 1
+            continue
+
+        if l.strip().startswith("────") or l.strip().startswith("----"):
+            p_line = doc.add_paragraph()
+            pPr2 = p_line._p.get_or_add_pPr()
+            pBdr2 = OxmlElement("w:pBdr")
+            bot2 = OxmlElement("w:bottom")
+            bot2.set(qn("w:val"), "single")
+            bot2.set(qn("w:sz"), "4")
+            bot2.set(qn("w:space"), "1")
+            bot2.set(qn("w:color"), "AAAAAA")
+            pBdr2.append(bot2)
+            pPr2.append(pBdr2)
+            i += 1
+            continue
+
         if l.strip() in ["---", "***", "___", "*"]:
             doc.add_paragraph("")
             i += 1
@@ -720,6 +1210,10 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
         if l.startswith("# "):
+            # Ignorer les lignes de commentaires de structure Nova
+            if l.startswith("# ═") or l.startswith("# #") or l.startswith("# ─"):
+                i += 1
+                continue
             p = doc.add_heading(l[2:].strip(), level=1)
             i += 1
             continue
@@ -743,6 +1237,7 @@ def creer_docx(contenu, service, client_nom):
                     2: [3.0, 6.0],
                     3: [1.0, 7.5, 2.5],
                     4: [1.0, 5.0, 2.5, 2.5],
+                    5: [0.8, 5.0, 1.5, 1.5, 1.2],
                 }
                 col_widths = col_widths_map.get(n_cols, [9.0/n_cols]*n_cols)
 
