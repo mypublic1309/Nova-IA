@@ -617,7 +617,7 @@ RÈGLE 2 — LONGUEUR SUBSTANTIELLE : Minimum 4 pages réelles (hors garde + som
 RÈGLE 3 — QUALITÉ LINGUISTIQUE : Orthographe et grammaire irréprochables, ponctuation soignée, style académique soutenu
 RÈGLE 4 — CONTEXTUALISATION OBLIGATOIRE : Min 3 exemples ivoiriens/africains concrets ET chiffrés par grande partie
 RÈGLE 5 — ZÉRO LaTeX : Toutes formules en texte clair élégant (voir Section 2) — jamais de $, \\, \frac
-RÈGLE 6 — STRUCTURE STRICTE : Séparateurs ════ et ──── et ---SAUT_DE_PAGE--- exactement comme dans le template
+RÈGLE 6 — STRUCTURE STRICTE : Séparateurs ════ et ──── et ---SAUT_DE_PAGE--- uniquement dans le corps du document (jamais dans la page de garde ni le sommaire)
 RÈGLE 7 — ADAPTATION NIVEAU : Vocabulaire + profondeur + longueur strictement adaptés au niveau détecté
 RÈGLE 8 — PROSE DANS LE DÉVELOPPEMENT : Corps du document = paragraphes continus — jamais de listes à puces
 RÈGLE 9 — DONNÉES PRÉCISES ET SOURCÉES : Chiffres réels, dates précises, institutions réelles — jamais de vague
@@ -631,23 +631,18 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQU
 
 === STRUCTURE OBLIGATOIRE DU DOCUMENT — RESPECTER CET ORDRE EXACT ===
 
-⚠️ RÈGLE MISE EN PAGE CRITIQUE :
-- La PAGE DE GARDE doit tenir sur UNE SEULE PAGE : max 1 ligne vide entre chaque bloc, aucun titre # inutile
-- Le SOMMAIRE doit tenir sur UNE SEULE PAGE : entrées compactes, pas de ligne vide entre chaque entrée
+⚠️ RÈGLES MISE EN PAGE ABSOLUES — NE JAMAIS VIOLER :
+- La PAGE DE GARDE = EXACTEMENT 1 PAGE : max 1 ligne vide entre chaque bloc, aucun titre # inutile
+- Le SOMMAIRE = EXACTEMENT 1 PAGE : entrées compactes, aucune ligne vide entre chaque entrée
 - JAMAIS de titre de section (# PAGE DE GARDE, # SOMMAIRE...) — commence directement avec le contenu
 - JAMAIS de lignes vides consécutives dans ces deux sections
-
-────────────────────────────────────────────────────────
+- INTERDIT ABSOLU dans PAGE DE GARDE et SOMMAIRE : ne JAMAIS utiliser des separateurs comme ────, ════, ---, ━━━ — ils créent des traits qui dégradent le rendu
 
 **[NOM COMPLET DE L'ÉTABLISSEMENT EN MAJUSCULES]**
 [Ville], Côte d'Ivoire — Année scolaire : 2025 - 2026
 
-────────────────────────────────────────────────────────
-
 EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
 **[TITRE COMPLET ET ACCROCHEUR DE L'EXPOSÉ EN MAJUSCULES]**
-
-────────────────────────────────────────────────────────
 
 **Matière :** [Matière complète]
 **Niveau / Série :** [Niveau — ex: Terminale D]
@@ -656,13 +651,9 @@ EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
 **Date de présentation :** [Date complète]
 **Année scolaire :** 2025 - 2026
 
-────────────────────────────────────────────────────────
-
 ---SAUT_DE_PAGE---
 
 **SOMMAIRE**
-
-────────────────────────────────────────────────────────
 
 Introduction ............................................................. p. 3
 **I. [Titre 1re grande partie]** ........................................ p. 4
@@ -677,8 +668,6 @@ Introduction ............................................................. p. 3
 Conclusion ............................................................... p. 10
 Bibliographie ............................................................ p. 11
 
-────────────────────────────────────────────────────────
-
 ---SAUT_DE_PAGE---
 
 # ════════════════════════════════════════════════════════
@@ -687,7 +676,6 @@ Bibliographie ............................................................ p. 11
 
 ## INTRODUCTION
 
-────────────────────────────────────────────────────────
 
 [ACCROCHE PERCUTANTE — Min 5 lignes — CHOISIR : données choc sourcées / paradoxe saisissant / citation d'auteur africain avec référence complète / anecdote historique. Ex: "Selon la FAO (2023), la Côte d'Ivoire produit **45%** du cacao mondial avec **2,2 millions de tonnes**. Pourtant, les 5 millions de paysans concernés perçoivent moins de 6% de la valeur finale d'une tablette de chocolat en Europe (Oxfam, 2022)..."]
 
@@ -699,7 +687,6 @@ Bibliographie ............................................................ p. 11
 
 [ANNONCE DU PLAN DÉTAILLÉE — 2-3 lignes : "Pour répondre à cette interrogation, nous analyserons dans une première partie [intitulé complet Partie I reformulé en 1 ligne], avant d'examiner dans une deuxième partie [Partie II], et d'envisager enfin [Partie III — lycée/université uniquement]."]
 
-────────────────────────────────────────────────────────
 
 ---SAUT_DE_PAGE---
 
@@ -713,7 +700,6 @@ Bibliographie ............................................................ p. 11
 
 ### 1.1 [Titre descriptif, précis et original de la 1re sous-partie]
 
-────────────────────────────────────────────────────────
 
 [PARAGRAPHE 1 — 8 à 10 lignes — MODÈLE PEEL :
 → POINT (1-2 lignes) : affirmation directe et claire du sous-argument
@@ -733,11 +719,9 @@ Bibliographie ............................................................ p. 11
 
 [PARAGRAPHE 3 — Synthèse 1.1 + transition vers 1.2 : 3 à 4 lignes de résumé + phrase d'annonce 1.2]
 
-────────────────────────────────────────────────────────
 
 ### 1.2 [Titre descriptif, précis et original de la 2e sous-partie]
 
-────────────────────────────────────────────────────────
 
 [3 paragraphes de 8 à 10 lignes chacun. Angle différent de 1.1. Exemples ivoiriens + données chiffrées.]
 
@@ -753,15 +737,12 @@ Bibliographie ............................................................ p. 11
 
 ### 2.1 [Titre précis de la 1re sous-partie]
 
-────────────────────────────────────────────────────────
 
 [3 paragraphes de 8 à 10 lignes. L'analyse progresse logiquement depuis Partie I. Nouveaux arguments, exemples et données jamais mentionnés auparavant.]
 
-────────────────────────────────────────────────────────
 
 ### 2.2 [Titre précis de la 2e sous-partie]
 
-────────────────────────────────────────────────────────
 
 [3 paragraphes de 8 à 10 lignes. Dernier paragraphe inclut TRANSITION VERS PARTIE III — "Au regard des éléments développés dans cette deuxième partie, force est de constater que [bilan]. Ces constats nous invitent dès lors à dépasser le simple constat pour envisager [dimension prospective/solutions], fil directeur de notre troisième partie."]
 
@@ -775,15 +756,12 @@ Bibliographie ............................................................ p. 11
 
 ### 3.1 [Titre précis sous-partie]
 
-────────────────────────────────────────────────────────
 
 [3 paragraphes de 8 à 10 lignes. Dimension la plus originale et prospective — enjeux futurs, solutions, perspectives pour CI et Afrique.]
 
-────────────────────────────────────────────────────────
 
 ### 3.2 [Titre précis sous-partie]
 
-────────────────────────────────────────────────────────
 
 [3 paragraphes de 8 à 10 lignes. Dernier paragraphe : phrase conclusive forte qui ouvre naturellement sur la Conclusion.]
 
@@ -797,7 +775,6 @@ Bibliographie ............................................................ p. 11
 
 ## CONCLUSION
 
-────────────────────────────────────────────────────────
 
 [TEMPS 1 — BILAN HIÉRARCHISÉ — Min 7 lignes : résume chaque grande partie en 2 phrases fortes REFORMULÉES (jamais mot pour mot). "En premier lieu, nous avons mis en évidence que [synthèse Partie I]. Dans un second temps, notre analyse a démontré que [synthèse Partie II]. Enfin, nous avons établi que [synthèse Partie III]."]
 
@@ -805,7 +782,6 @@ Bibliographie ............................................................ p. 11
 
 [TEMPS 3 — OUVERTURE PROSPECTIVE — Min 4 lignes : enjeu futur logiquement relié au sujet traité pour CI/Afrique. PISTES : transition numérique | intégration africaine (ZLECAF) | développement durable (ODD 2030) | changement climatique et agriculture | valorisation des langues nationales. "Cette réflexion sur [sujet] nous invite finalement à nous interroger sur [question d'ouverture plus large], enjeu fondamental pour [la Côte d'Ivoire / la jeunesse africaine / le continent]."]
 
-────────────────────────────────────────────────────────
 
 ---SAUT_DE_PAGE---
 
@@ -815,7 +791,6 @@ Bibliographie ............................................................ p. 11
 
 ## BIBLIOGRAPHIE
 
-────────────────────────────────────────────────────────
 
 **Manuels scolaires et ouvrages pédagogiques :**
 - MINISTÈRE ÉDUCATION NATIONALE CI, *[Titre manuel officiel de la matière]*, CEDA/NEI, Abidjan, 2022
@@ -837,7 +812,6 @@ Bibliographie ............................................................ p. 11
 **Ressources numériques :**
 - [Organisation], *[Titre page]*, [En ligne], URL : www.[site-réel].org, consulté le [date]
 
-────────────────────────────────────────────────────────
 
 Rédige maintenant l'exposé COMPLET en français avec la plus grande rigueur académique.
 
@@ -918,9 +892,7 @@ FORMAT 1 — QCM (QUESTIONS À CHOIX MULTIPLES) :
 
 ## EXERCICE 1 — QUESTIONS À CHOIX MULTIPLES (5 points)
 
-────────────────────────────────────────────────────────
 **Consigne :** Cochez la lettre correspondant à la SEULE bonne réponse par question.
-────────────────────────────────────────────────────────
 
 **Question 1** (1 point)
 Quelle est la capitale politique de la Côte d'Ivoire ?
@@ -930,7 +902,6 @@ Quelle est la capitale politique de la Côte d'Ivoire ?
 □ **C)** Yamoussoukro
 □ **D)** San-Pédro
 
-────────────────────────────────────────────────────────
 
 **Question 2** (1 point)
 [Énoncé complet et sans ambiguïté de la question ?]
@@ -951,9 +922,7 @@ FORMAT 2 — VRAI OU FAUX :
 
 ## EXERCICE 2 — VRAI OU FAUX (4 points)
 
-────────────────────────────────────────────────────────
 **Consigne :** Indiquez si chaque affirmation est Vraie (V) ou Fausse (F). Justifiez OBLIGATOIREMENT les affirmations fausses en une phrase complète.
-────────────────────────────────────────────────────────
 
 | N° | Affirmations | V | F |
 |----|-------------|---|---|
@@ -962,7 +931,6 @@ FORMAT 2 — VRAI OU FAUX :
 | 3 | [Affirmation complète, précise, non ambiguë] | ☐ | ☐ |
 | 4 | [Affirmation complète, précise, non ambiguë] | ☐ | ☐ |
 
-────────────────────────────────────────────────────────
 **Justification des affirmations fausses :**
 
 N° ___ : .............................................................................
@@ -979,13 +947,10 @@ FORMAT 3 — TEXTE LACUNAIRE :
 
 ## EXERCICE 3 — COMPLÉTEZ LE TEXTE (3 points)
 
-────────────────────────────────────────────────────────
 **Consigne :** Complétez le texte suivant avec les mots de la liste. Chaque mot est utilisé UNE SEULE FOIS.
-────────────────────────────────────────────────────────
 
 **Liste de mots :** [ photosynthèse — chlorophylle — glucose — oxygène — dioxyde de carbone — énergie lumineuse ]
 
-────────────────────────────────────────────────────────
 
 La _______________ est le processus biochimique par lequel les végétaux utilisent la _______________ pour transformer le _______________ et l'eau en _______________. Ce processus, rendu possible grâce à la _______________ contenue dans les feuilles, libère de l'_______________ dans l'atmosphère.
 
@@ -1000,9 +965,7 @@ FORMAT 4 — QUESTIONS DE COURS OUVERTES :
 
 ## EXERCICE 4 — QUESTIONS DE COURS (6 points)
 
-────────────────────────────────────────────────────────
 **Consigne :** Répondez aux questions suivantes de manière claire, précise et développée.
-────────────────────────────────────────────────────────
 
 **1.** Définissez la notion de **photosynthèse** et précisez dans quelle partie de la cellule végétale elle se déroule. *(2 points)*
 
@@ -1010,7 +973,6 @@ FORMAT 4 — QUESTIONS DE COURS OUVERTES :
 .......................................................................................
 .......................................................................................
 
-────────────────────────────────────────────────────────
 
 **2.** Expliquez pourquoi la déforestation en Côte d'Ivoire constitue une menace pour l'équilibre climatique régional. *(2 points)*
 
@@ -1018,7 +980,6 @@ FORMAT 4 — QUESTIONS DE COURS OUVERTES :
 .......................................................................................
 .......................................................................................
 
-────────────────────────────────────────────────────────
 
 **3.** Citez et expliquez brièvement TROIS caractéristiques du climat équatorial de la Côte d'Ivoire. *(2 points)*
 
@@ -1048,23 +1009,19 @@ FORMAT 5 — ÉTUDE DE TEXTE / DOCUMENT :
 
 **QUESTIONS :**
 
-────────────────────────────────────────────────────────
 **1.** [Question de compréhension du texte — information explicite] *(1 point)*
 
 .......................................................................................
 
-────────────────────────────────────────────────────────
 **2.** [Question sur le vocabulaire ou une notion du texte] *(1 point)*
 
 .......................................................................................
 
-────────────────────────────────────────────────────────
 **3.** [Question d'analyse ou d'interprétation — information implicite] *(2 points)*
 
 .......................................................................................
 .......................................................................................
 
-────────────────────────────────────────────────────────
 **4.** [Question de production écrite liée au thème — "En vous appuyant sur le texte et vos connaissances..."] *(2 points)*
 
 .......................................................................................
@@ -1085,24 +1042,20 @@ FORMAT 6 — PROBLÈME MATHÉMATIQUE CONTEXTUALISÉ :
 - Prix d'achat : 350 FCFA par kg
 - Prix de vente : 520 FCFA par kg
 
-────────────────────────────────────────────────────────
 **TRAVAIL DEMANDÉ :**
 
 **1.** Calculez le prix d'achat total de l'anacarde. *(1 point)*
 
 .......................................................................................
 
-────────────────────────────────────────────────────────
 **2.** Calculez le prix de vente total. *(1 point)*
 
 .......................................................................................
 
-────────────────────────────────────────────────────────
 **3.** Calculez le bénéfice réalisé par le commerçant. *(1 point)*
 
 .......................................................................................
 
-────────────────────────────────────────────────────────
 **4.** Calculez le taux de bénéfice en %. *(2 points)*
 
 .......................................................................................
@@ -1161,9 +1114,7 @@ FORMAT 8 — PRODUCTION ÉCRITE / DISSERTATION :
 
 ## EXERCICE 8 — PRODUCTION ÉCRITE (8 points)
 
-────────────────────────────────────────────────────────
 **SUJET :** [Sujet complet et clairement formulé — jamais un sujet vague]
-────────────────────────────────────────────────────────
 
 **Consignes :**
 - Longueur : [X] à [Y] lignes / [X] à [Y] pages
@@ -1319,7 +1270,6 @@ IMPÉRATIFS ABSOLUS :
 **RÉPUBLIQUE DE CÔTE D'IVOIRE**
 Union — Discipline — Travail
 
-────────────────────────────────────────────────────────
 
 **Établissement :** [Nom complet de l'établissement]
 **Année scolaire :** 2025 — 2026
@@ -1330,13 +1280,11 @@ Union — Discipline — Travail
 **Coefficient :** [ex: 5]
 **Barème total :** /20
 
-────────────────────────────────────────────────────────
 
 **Nom et Prénoms :** ..............................................
 **Numéro de table :** .............. **Salle :** .................
 **Signature du surveillant :** ...................................
 
-────────────────────────────────────────────────────────
 
 **CONSIGNES GÉNÉRALES :**
 - Lisez attentivement l'intégralité du sujet avant de commencer
@@ -1346,7 +1294,6 @@ Union — Discipline — Travail
 - Toute tentative de fraude entraîne l'exclusion immédiate de l'épreuve
 - La présentation, la propreté et la lisibilité sont prises en compte dans la notation
 
-────────────────────────────────────────────────────────
 
 **BARÈME DE NOTATION :**
 | Exercice | Intitulé complet | Points |
@@ -1357,11 +1304,9 @@ Union — Discipline — Travail
 | Exercice 4 | [Type d'exercice — ex: Questions de synthèse] | /[X] |
 | **TOTAL** | | **/20** |
 
-────────────────────────────────────────────────────────
 
 **Rappel :** Les points de chaque question sont indiqués entre parenthèses. La présentation soignée est valorisée.
 
-────────────────────────────────────────────────────────
 
 ---SAUT_DE_PAGE---
 
@@ -1375,9 +1320,7 @@ Union — Discipline — Travail
 
 ## ÉLÉMENTS DE CORRECTION — [Matière] — [Niveau/Série]
 
-────────────────────────────────────────────────────────
 **NB :** Ce corrigé est réservé à l'usage EXCLUSIF du professeur. Ne pas distribuer aux élèves.
-────────────────────────────────────────────────────────
 
 ### Corrigé Exercice 1 — [Titre]
 
