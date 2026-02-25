@@ -1416,23 +1416,20 @@ def creer_docx(contenu, service, client_nom):
     while i < len(lignes):
         l = lignes[i].rstrip()
 
-        # ── SAUT DE PAGE NOVA ──────────────────────────────────────
+        # ── SAUT DE PAGE NOVA — VRAI SAUT DE PAGE WORD ────────────
         if l.strip() == "---SAUT_DE_PAGE---":
-            # Séparateur visuel sans saut de page physique
-            p_sep2 = doc.add_paragraph()
-            pPr_sep = p_sep2._p.get_or_add_pPr()
-            pBdr_sep = OxmlElement("w:pBdr")
-            bot_sep = OxmlElement("w:bottom")
-            bot_sep.set(qn("w:val"), "single")
-            bot_sep.set(qn("w:sz"), "8")
-            bot_sep.set(qn("w:space"), "1")
-            bot_sep.set(qn("w:color"), "1F4E79")
-            pBdr_sep.append(bot_sep)
-            p_sep2._p.get_or_add_pPr().append(pBdr_sep)
-            doc.add_paragraph("")
+            from docx.oxml.ns import qn as _qn
+            from docx.oxml import OxmlElement as _OE
+            # Paragraphe vide portant le saut de page réel
+            p_break = doc.add_paragraph()
+            p_break.paragraph_format.space_before = Pt(0)
+            p_break.paragraph_format.space_after  = Pt(0)
+            run_break = p_break.add_run()
+            br = _OE("w:br")
+            br.set(_qn("w:type"), "page")
+            run_break._r.append(br)
             i += 1
             continue
-
         # ── LIGNES DE SÉPARATION ════ ET ──── ─────────────────────
         if l.strip().startswith("════") or l.strip().startswith("━━━━"):
             p_line = doc.add_paragraph()
@@ -3821,3 +3818,4 @@ if st.session_state["view"] == "auth" and st.session_state["current_user"] is No
     show_auth_page()
 else:
     main_dashboard()
+
