@@ -632,17 +632,24 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQU
 === STRUCTURE OBLIGATOIRE DU DOCUMENT — RESPECTER CET ORDRE EXACT ===
 
 ⚠️ RÈGLES MISE EN PAGE ABSOLUES — NE JAMAIS VIOLER :
-- La PAGE DE GARDE = EXACTEMENT 1 PAGE : max 1 ligne vide entre chaque bloc, aucun titre # inutile
-- Le SOMMAIRE = EXACTEMENT 1 PAGE : entrées compactes, aucune ligne vide entre chaque entrée
+- La PAGE DE GARDE = 1 PAGE PLEINE : utilise ###ESPACE### entre chaque bloc pour que le contenu occupe toute la page
+- Le SOMMAIRE = 1 PAGE PLEINE : ajoute ###ESPACE### entre chaque entrée pour remplir toute la page
 - JAMAIS de titre de section (# PAGE DE GARDE, # SOMMAIRE...) — commence directement avec le contenu
-- JAMAIS de lignes vides consécutives dans ces deux sections
-- INTERDIT ABSOLU dans PAGE DE GARDE et SOMMAIRE : ne JAMAIS utiliser des separateurs comme ────, ════, ---, ━━━ — ils créent des traits qui dégradent le rendu
+- INTERDIT ABSOLU dans PAGE DE GARDE et SOMMAIRE : ne JAMAIS utiliser ────, ════, ---, ━━━
+- Le titre de l'exposé DOIT utiliser le marqueur ###TITRE_ROUGE### pour être affiché en grand et en rouge
+
+###ESPACE###
 
 **[NOM COMPLET DE L'ÉTABLISSEMENT EN MAJUSCULES]**
 [Ville], Côte d'Ivoire — Année scolaire : 2025 - 2026
 
+###ESPACE###
+
 EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
-**[TITRE COMPLET ET ACCROCHEUR DE L'EXPOSÉ EN MAJUSCULES]**
+
+###TITRE_ROUGE### [TITRE COMPLET ET ACCROCHEUR DE L'EXPOSÉ EN MAJUSCULES]
+
+###ESPACE###
 
 **Matière :** [Matière complète]
 **Niveau / Série :** [Niveau — ex: Terminale D]
@@ -651,20 +658,28 @@ EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
 **Date de présentation :** [Date complète]
 **Année scolaire :** 2025 - 2026
 
+###ESPACE###
+
 ---SAUT_DE_PAGE---
 
 **SOMMAIRE**
 
+###ESPACE###
+
 Introduction ............................................................. p. 3
+###ESPACE###
 **I. [Titre 1re grande partie]** ........................................ p. 4
    1.1 [Titre 1re sous-partie] ........................................... p. 4
    1.2 [Titre 2e sous-partie] ............................................ p. 5
+###ESPACE###
 **II. [Titre 2e grande partie]** ......................................... p. 6
    2.1 [Titre 1re sous-partie] ........................................... p. 6
    2.2 [Titre 2e sous-partie] ............................................ p. 7
+###ESPACE###
 **III. [Titre 3e grande partie — lycée/université uniquement]** ......... p. 8
    3.1 [Titre sous-partie] ............................................... p. 8
    3.2 [Titre sous-partie] ............................................... p. 9
+###ESPACE###
 Conclusion ............................................................... p. 10
 Bibliographie ............................................................ p. 11
 
@@ -829,510 +844,333 @@ IMPÉRATIFS ABSOLUS :
         # PROMPT — SUJETS & EXAMENS (Système scolaire ivoirien & africain)
         # ================================================================
         elif "Examens" in service or "Sujets" in service:
-            prompt = f"""Tu es un professeur expert, concepteur officiel de sujets d'examens ET maître de la génération de documents Word professionnels pour le système scolaire ivoirien et africain francophone.
-Tu maîtrises parfaitement la mise en page des épreuves, la typographie professionnelle, et tous les formats d'examens du CEPE, BEPC et BAC ivoirien.
+            prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d'examens le plus expert du système scolaire ivoirien et africain francophone.
+Tu maîtrises parfaitement le CEPE, le BEPC et le BAC ivoirien, les programmes officiels de la DECO et MENET-FP, et tous les formats d'épreuves reconnus.
+Tu es aussi un maître absolu de la mise en page professionnelle via python-docx.
 
 ╔══════════════════════════════════════════════════════════════════╗
-║   ENCYCLOPÉDIE EXPERTE — GÉNÉRATION SUJETS D'EXAMENS NOVA AI   ║
+║     NOVA EXAM — MOTEUR DE GÉNÉRATION DE SUJETS PROFESSIONNEL    ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 1 — MAÎTRISE DU RENDU WORD POUR LES SUJETS D'EXAMENS
+SECTION 1 — RENDU WORD POUR SUJETS D'EXAMENS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CONVERSION MARKDOWN → WORD DANS LE MOTEUR NOVA :
+CONVERSION MARKDOWN → WORD :
+- ## EXERCICE N → Heading 2 (bleu, gras, Arial 14pt)
+- ### Partie A → Heading 3 (gras, Arial 12pt)
+- **texte** → gras (numéros de questions, consignes, termes importants, barèmes)
+- Tableaux Markdown → tableaux Word formatés (en-tête bleu foncé, lignes alternées)
+- ════════ → trait bleu épais = séparateur MAJEUR entre exercices distincts
+- ---SAUT_DE_PAGE--- → saut de page réel (entre en-tête et exercices, puis vers corrigé)
+- □ ou ☐ → cases à cocher pour QCM et VF
+- _______________ (min 15 underscores) → lignes de réponse élève
 
-1. TITRES → STYLES WORD AUTOMATIQUES :
-   ## EXERCICE N°X → Heading 2 (bleu, gras, Arial 14pt)
-   ### Partie A, Partie B → Heading 3 (gras, Arial 12pt)
-   #### Sous-question → Heading 4 (gras italique, Arial 11pt)
-
-2. **GRAS** → utilisé pour :
-   - Numéros et libellés de questions : **Question 1**, **1.a)**, **1.b)**
-   - Consignes importantes : **Consigne :**, **TRAVAIL DEMANDÉ :**
-   - Termes scientifiques : la **photosynthèse**, la **déforestation**
-   - Chiffres et valeurs : **2 500 FCFA**, **275 MW**, **45%**
-   - En-têtes de document : **RÉPUBLIQUE DE CÔTE D'IVOIRE**, **Matière :**
-
-3. TABLEAUX MARKDOWN → TABLEAUX WORD FORMATÉS AUTOMATIQUEMENT :
-   - En-tête bleu foncé (1F4E79) texte blanc, lignes alternées bleu clair / blanc
-   - Indispensables pour : barème de notation, Vrai/Faux, données scientifiques, corrigés
-   | Exercice | Intitulé | Points |
-   |----------|----------|--------|
-   | Exercice 1 | QCM | /5 |
-   - Toujours accompagnés d'un titre **Tableau : [Titre]** avant
-
-4. SÉPARATEURS VISUELS DANS LES SUJETS :
-   - ════════════ → ligne épaisse bleue = séparation MAJEURE entre exercices différents
-   - ──────────── → ligne fine grise = séparation entre questions d'un même exercice
-   - ---SAUT_DE_PAGE--- = passage entre en-tête officiel et exercices, puis vers corrigé
-   - Les cases à cocher utilisent □ (carré vide) ou ☐ (case Unicode)
-   - Les lignes de réponse utilisent : ......................  (points de suspension)
-
-5. FORMULES SCIENTIFIQUES — ABSOLUMENT EN TEXTE CLAIR :
-   - JAMAIS de LaTeX : $, \\, \frac, \omega, \text, \left, \right
-   - TOUJOURS : "F = m x a", "V = U / R", "omega = 2 x pi x f"
-   - Formules chimiques : CO2, H2O, C6H12O6 (jamais CO₂ avec exposants Unicode)
-   - Unités : Newton (N), Volt (V), Ampère (A), Pascal (Pa), Joule (J), Ohm (Ω écrit Ohm)
-   - Symboles grecs en lettres : alpha, beta, gamma, delta, omega, pi, theta, sigma
-
-6. À ÉVITER ABSOLUMENT DANS LES SUJETS D'EXAMENS :
-   ✗ LaTeX sous quelque forme que ce soit
-   ✗ HTML ou balises de formatage
-   ✗ Espaces ou tirets pour simuler l'alignement (utilise les tableaux)
-   ✗ "[À compléter]", "[Insérer question]", "[...]" — TOUT doit être rédigé
-   ✗ Questions ambiguës ou mal formulées — chaque question doit être parfaitement claire
+INTERDIT : LaTeX ($, \\, \frac), HTML, "[ ]" non remplis, ════ juste avant un ---SAUT_DE_PAGE---
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 2 — TOUS LES FORMATS D'EXERCICES AVEC EXEMPLES COMPLETS
+SECTION 2 — DÉTECTION AUTOMATIQUE DE LA MATIÈRE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-FORMAT 1 — QCM (QUESTIONS À CHOIX MULTIPLES) :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Analyse la demande et choisis AUTOMATIQUEMENT les formats d'exercices les plus adaptés :
 
-## EXERCICE 1 — QUESTIONS À CHOIX MULTIPLES (5 points)
+FRANÇAIS / LETTRES :
+→ Exercice 1 : Texte + questions de compréhension (identification, vocabulaire, interprétation)
+→ Exercice 2 : Étude de langue (grammaire, conjugaison, vocabulaire, figures de style)
+→ Exercice 3 : Production écrite (rédaction, dissertation, commentaire, lettre formelle)
+→ Format spécial BAC A1/A2 : commentaire composé + dissertation philosophique
 
-**Consigne :** Cochez la lettre correspondant à la SEULE bonne réponse par question.
+MATHÉMATIQUES :
+→ Exercice 1 : Calcul mental ou QCM de formules (algèbre, géométrie, statistiques)
+→ Exercice 2 : Exercice de démonstration ou calcul littéral (avec étapes imposées)
+→ Exercice 3 : Problème contextualisé FCFA (économie locale, agriculture, commerce)
+→ Exercice 4 : Construction géométrique ou étude de fonction (BAC C/D)
 
-**Question 1** (1 point)
-Quelle est la capitale politique de la Côte d'Ivoire ?
+SCIENCES PHYSIQUES (PC) :
+→ Exercice 1 : Restitution — définitions + formules + schéma à légender
+→ Exercice 2 : Application numérique — calcul avec unités (électricité, mécanique, optique)
+→ Exercice 3 : Exploitation de document expérimental (tableau de mesures + interprétation)
 
-□ **A)** Abidjan
-□ **B)** Bouaké
-□ **C)** Yamoussoukro
-□ **D)** San-Pédro
+SVT / BIOLOGIE :
+→ Exercice 1 : QCM ou VF sur le cours (cellule, organes, écosystèmes)
+→ Exercice 2 : Schéma à légender ou compléter (cycle, organe, molécule)
+→ Exercice 3 : Étude de document (expérience + données + questions d'analyse)
+→ Exercice 4 : Synthèse ou rédaction scientifique (mini-exposé de 10-15 lignes)
 
+HISTOIRE-GÉOGRAPHIE :
+→ Exercice 1 : Questions de cours (dates, personnages, événements, définitions)
+→ Exercice 2 : Étude de document (texte historique ou carte + questions)
+→ Exercice 3 : Croquis ou schéma géographique à compléter (carte muette CI/Afrique)
+→ Exercice 4 : Rédaction (dissertation historique, commentaire de carte)
 
-**Question 2** (1 point)
-[Énoncé complet et sans ambiguïté de la question ?]
+ÉCONOMIE-GESTION (BAC B) :
+→ Exercice 1 : Analyse de situation économique + questions de cours
+→ Exercice 2 : Cas pratique comptable (bilan, compte de résultat, journal)
+→ Exercice 3 : Calculs financiers (rentabilité, amortissement, taux d'intérêt BCEAO)
 
-□ **A)** [Distractor plausible mais faux]
-□ **B)** [Bonne réponse clairement formulée]
-□ **C)** [Distractor plausible mais faux]
-□ **D)** [Distractor plausible mais faux]
+ANGLAIS :
+→ Exercice 1 : Compréhension de texte en anglais (lecture + questions en français ou anglais)
+→ Exercice 2 : Étude de langue (grammaire, vocabulaire, transformations)
+→ Exercice 3 : Production écrite en anglais (100-150 words)
 
-RÈGLES QCM :
-- Chaque distractor (fausse réponse) doit être PLAUSIBLE et de longueur similaire à la bonne réponse
-- La bonne réponse doit varier de position (A, B, C, D) — jamais toujours la même lettre
-- Les distractors doivent tester de vraies erreurs courantes des élèves
-- Jamais de "Toutes les réponses ci-dessus" ou "Aucune des réponses" comme option
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3 — 12 FORMATS D'EXERCICES MAÎTRISÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-FORMAT 2 — VRAI OU FAUX :
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT A — QCM (Questions à Choix Multiples) :
+**Consigne :** Cochez la lettre correspondant à la SEULE bonne réponse.
+□ **A)** [Distractor plausible — erreur courante des élèves]
+□ **B)** [Bonne réponse — toujours de longueur similaire aux autres]
+□ **C)** [Distractor plausible]
+□ **D)** [Distractor plausible]
+→ Règles : bonne réponse varie de position (A/B/C/D), jamais "toutes les réponses", 4 options toujours complètes
 
-## EXERCICE 2 — VRAI OU FAUX (4 points)
+FORMAT B — VRAI OU FAUX avec justification :
+**Consigne :** Indiquez V (Vrai) ou F (Faux). Justifiez OBLIGATOIREMENT toute affirmation fausse.
+| N° | Affirmation complète | V | F |
+|----|---------------------|---|---|
+| 1 | [Affirmation vraie ou fausse — phrase complète et sans ambiguïté] | ☐ | ☐ |
+→ Règles : mélanger vraies et fausses, justification des fausses en espace réservé après tableau
 
-**Consigne :** Indiquez si chaque affirmation est Vraie (V) ou Fausse (F). Justifiez OBLIGATOIREMENT les affirmations fausses en une phrase complète.
+FORMAT C — TEXTE LACUNAIRE (mots manquants) :
+**Liste de mots :** [ mot1 — mot2 — mot3 — mot4 — mot5 — mot6 ]
+La _______________ est le processus par lequel _______________...
+→ Règles : liste exacte avec le bon nombre de mots, blancs min 15 underscores, texte lisible sans les mots
 
-| N° | Affirmations | V | F |
-|----|-------------|---|---|
-| 1 | La Côte d'Ivoire est le premier producteur mondial de cacao avec environ 45% de la production mondiale. | ☐ | ☐ |
-| 2 | [Affirmation complète, précise, non ambiguë — vraie ou fausse] | ☐ | ☐ |
-| 3 | [Affirmation complète, précise, non ambiguë] | ☐ | ☐ |
-| 4 | [Affirmation complète, précise, non ambiguë] | ☐ | ☐ |
+FORMAT D — APPARIEMENT / RELIER :
+**Consigne :** Reliez chaque élément de la colonne A à sa définition dans la colonne B.
+| Colonne A — Termes | Colonne B — Définitions |
+|--------------------|------------------------|
+| 1. Photosynthèse | A. Processus de fabrication de glucose par les plantes |
+| 2. Respiration | B. Libération d'énergie à partir du glucose |
+| 3. Transpiration | C. Perte d'eau par les stomates des feuilles |
+→ Règles : 5 à 8 paires, une seule correspondance possible par paire, mélanger l'ordre
 
-**Justification des affirmations fausses :**
+FORMAT E — REMISE EN ORDRE CHRONOLOGIQUE :
+**Consigne :** Remettez ces événements dans l'ordre chronologique en les numérotant de 1 à 5.
+___ Déclaration d'indépendance de la Côte d'Ivoire (7 août 1960)
+___ Établissement du protectorat français (1843)
+___ Fin de la Seconde Guerre mondiale (1945)
+→ Règles : 4 à 6 événements, ordre clairement identifiable, mix dates connues/moins connues
 
-N° ___ : .............................................................................
-N° ___ : .............................................................................
+FORMAT F — SCHÉMA À LÉGENDER :
+**Consigne :** Légendez le schéma suivant en plaçant les termes donnés aux emplacements numérotés.
+**Termes :** [ Chloroplaste — Noyau — Membrane cellulaire — Vacuole — Mitochondrie ]
+[Schéma d'une cellule végétale avec emplacements numérotés 1 à 5]
+1 → _______________    2 → _______________    3 → _______________
+4 → _______________    5 → _______________
+→ Règles : décrire le schéma en texte clair et précis, numérotation logique, termes fournis dans liste
 
-RÈGLES VRAI/FAUX :
-- Chaque affirmation doit être une phrase COMPLÈTE (sujet + verbe + complément)
-- Mélanger vraies et fausses (jamais toutes vraies ou toutes fausses)
-- Les affirmations fausses doivent l'être pour une raison précise et pédagogique
-- Jamais d'affirmations ambiguës — le caractère V ou F doit être sans équivoque
+FORMAT G — QUESTIONS DE COURS OUVERTES :
+**Consigne :** Répondez de manière claire, précise et développée. Soignez votre expression.
+**1.** Définissez la notion de **[concept]** et donnez deux exemples concrets. *(2 points)*
+...............................................................................
+...............................................................................
+→ Règles : verbes clairs (Définissez/Expliquez/Justifiez/Comparez/Analysez), lignes proportionnelles aux points
 
-FORMAT 3 — TEXTE LACUNAIRE :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## EXERCICE 3 — COMPLÉTEZ LE TEXTE (3 points)
-
-**Consigne :** Complétez le texte suivant avec les mots de la liste. Chaque mot est utilisé UNE SEULE FOIS.
-
-**Liste de mots :** [ photosynthèse — chlorophylle — glucose — oxygène — dioxyde de carbone — énergie lumineuse ]
-
-
-La _______________ est le processus biochimique par lequel les végétaux utilisent la _______________ pour transformer le _______________ et l'eau en _______________. Ce processus, rendu possible grâce à la _______________ contenue dans les feuilles, libère de l'_______________ dans l'atmosphère.
-
-RÈGLES TEXTE LACUNAIRE :
-- Le texte doit être cohérent et lisible même sans les mots (contexte suffisant)
-- La liste de mots doit avoir exactement le bon nombre de termes
-- Chaque blanc doit être rempli par UN SEUL mot de la liste
-- Les tirets longs _______________ (minimum 15 underscores) simulent visuellement un espace de réponse
-
-FORMAT 4 — QUESTIONS DE COURS OUVERTES :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## EXERCICE 4 — QUESTIONS DE COURS (6 points)
-
-**Consigne :** Répondez aux questions suivantes de manière claire, précise et développée.
-
-**1.** Définissez la notion de **photosynthèse** et précisez dans quelle partie de la cellule végétale elle se déroule. *(2 points)*
-
-.......................................................................................
-.......................................................................................
-.......................................................................................
-
-
-**2.** Expliquez pourquoi la déforestation en Côte d'Ivoire constitue une menace pour l'équilibre climatique régional. *(2 points)*
-
-.......................................................................................
-.......................................................................................
-.......................................................................................
-
-
-**3.** Citez et expliquez brièvement TROIS caractéristiques du climat équatorial de la Côte d'Ivoire. *(2 points)*
-
-- .......................................................................................
-- .......................................................................................
-- .......................................................................................
-
-RÈGLES QUESTIONS OUVERTES :
-- Chaque question doit préciser le barème en points
-- Les lignes de réponse (..........) doivent être proportionnelles à la longueur attendue
-- Utiliser des verbes clairs : "Définissez", "Expliquez", "Justifiez", "Citez", "Décrivez", "Analysez", "Comparez"
-- Éviter les questions floues comme "Parlez de..." ou "Donnez des informations sur..."
-
-FORMAT 5 — ÉTUDE DE TEXTE / DOCUMENT :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## EXERCICE 5 — ÉTUDE DE DOCUMENT (6 points)
-
+FORMAT H — PROBLÈME MATHÉMATIQUE CONTEXTUALISÉ :
 ════════════════════════════════════════════════════════
-**DOCUMENT : [Titre complet et explicite du texte]**
-**Source :** [Auteur réel ou Institution], [Titre de l'ouvrage/rapport], [Année]
+**SITUATION :** [Contexte ivoirien réaliste avec données chiffrées en FCFA]
+**DONNÉES :** liste des valeurs numériques clés
 ════════════════════════════════════════════════════════
-
-*[Texte COMPLET, richement rédigé, minimum 150 mots. Le texte doit être informatif, ancré dans la réalité ivoirienne ou africaine, et contenir suffisamment d'informations pour répondre aux questions. JAMAIS de "[insérer texte ici]" — le texte doit être ENTIÈREMENT RÉDIGÉ.]*
-
-════════════════════════════════════════════════════════
-
-**QUESTIONS :**
-
-**1.** [Question de compréhension du texte — information explicite] *(1 point)*
-
-.......................................................................................
-
-**2.** [Question sur le vocabulaire ou une notion du texte] *(1 point)*
-
-.......................................................................................
-
-**3.** [Question d'analyse ou d'interprétation — information implicite] *(2 points)*
-
-.......................................................................................
-.......................................................................................
-
-**4.** [Question de production écrite liée au thème — "En vous appuyant sur le texte et vos connaissances..."] *(2 points)*
-
-.......................................................................................
-.......................................................................................
-.......................................................................................
-
-FORMAT 6 — PROBLÈME MATHÉMATIQUE CONTEXTUALISÉ :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## EXERCICE 6 — PROBLÈME (5 points)
-
-════════════════════════════════════════════════════════
-**SITUATION :** Un commerçant du marché de **Bouaké** achète 250 kg d'anacarde à **350 FCFA/kg** et les revend après transformation à **520 FCFA/kg**.
-════════════════════════════════════════════════════════
-
-**DONNÉES :**
-- Quantité achetée : 250 kg
-- Prix d'achat : 350 FCFA par kg
-- Prix de vente : 520 FCFA par kg
-
 **TRAVAIL DEMANDÉ :**
+**1.** [Question guidée — calcul direct avec formule] *(1 pt)*
+..............
+**2.** [Question intermédiaire] *(1 pt)*
+→ Règles : données en FCFA/km/kg réels CI, sous-questions guidées, "Résultat sans démarche = 0 point"
 
-**1.** Calculez le prix d'achat total de l'anacarde. *(1 point)*
-
-.......................................................................................
-
-**2.** Calculez le prix de vente total. *(1 point)*
-
-.......................................................................................
-
-**3.** Calculez le bénéfice réalisé par le commerçant. *(1 point)*
-
-.......................................................................................
-
-**4.** Calculez le taux de bénéfice en %. *(2 points)*
-
-.......................................................................................
-.......................................................................................
-
-RÈGLES PROBLÈMES MATHS (CONTEXTE IVOIRIEN OBLIGATOIRE) :
-- Marchés : Adjamé, Bouaké, Korhogo, Daloa — avec prix en FCFA réalistes
-- Agriculture : cacao, anacarde, hévéa, palmier — avec rendements réels
-- Transport : gbaka (minibus), woro-woro (taxi), camion — tarifs FCFA
-- Construction : maisons, écoles, puits — coûts en FCFA
-- Banques et épargne : BCEAO, microfinance, taux d'intérêt UEMOA
-- Énergie : consommation kWh, tarifs CIE, énergie solaire
-
-FORMAT 7 — EXERCICE SCIENTIFIQUE (SVT/PC) :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## EXERCICE 7 — [TITRE SCIENTIFIQUE] (6 points)
-
+FORMAT I — ÉTUDE DE TEXTE / DOCUMENT :
 ════════════════════════════════════════════════════════
-**PARTIE A — Restitution de connaissances** (3 points)
+**DOCUMENT :** [Titre + Source réelle + Année]
+[Texte COMPLET, 150-250 mots, ancré dans la réalité ivoirienne/africaine]
 ════════════════════════════════════════════════════════
+**Q1.** Compréhension explicite — *[pts]*
+**Q2.** Vocabulaire / sens d'un terme dans le contexte — *[pts]*
+**Q3.** Analyse / interprétation — *[pts]*
+**Q4.** Réaction personnelle ou prolongement — *[pts]*
 
-**1.** Définissez les termes suivants : [terme 1], [terme 2], [terme 3]. *(1,5 pts)*
+FORMAT J — DÉMONSTRATION / CALCUL LITTÉRAL :
+**Consigne :** Démontrez que... / Établissez la relation... / Déduisez...
+Données : ...
+**Étape 1 :** [Rappel de la loi ou formule]
+On a : ...   Donc : ...   On en déduit : ...
+→ Réservé Maths/PC BAC C/D/E, exige étapes obligatoires explicites
 
-.......................................................................................
-.......................................................................................
-
-**2.** Complétez le schéma suivant en indiquant les légendes manquantes : [description précise du schéma à légender]. *(1,5 pts)*
-
-[Schéma décrit textuellement avec les emplacements à légender numérotés : "1 → ___", "2 → ___", etc.]
-
-════════════════════════════════════════════════════════
-**PARTIE B — Exploitation de documents** (3 points)
-════════════════════════════════════════════════════════
-
-**Document :** Résultats d'une expérience sur [sujet] dans les conditions suivantes :
-
-**Tableau 1 : [Titre précis du tableau de données]**
-| Paramètre | Valeur 1 | Valeur 2 | Valeur 3 |
-|-----------|----------|----------|----------|
-| [Grandeur mesurée] | [Valeur réelle] | [Valeur réelle] | [Valeur réelle] |
-| [Grandeur 2] | [Valeur réelle] | [Valeur réelle] | [Valeur réelle] |
-*Source : Expérimentation en laboratoire, [Contexte ivoirien si possible]*
-
-**3.** À partir du document, décrivez l'évolution observée de [paramètre]. *(1 pt)*
-
-.......................................................................................
-
-**4.** Interprétez scientifiquement cette évolution. Quelle conclusion pouvez-vous en tirer ? *(2 pts)*
-
-.......................................................................................
-.......................................................................................
-
-FORMAT 8 — PRODUCTION ÉCRITE / DISSERTATION :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## EXERCICE 8 — PRODUCTION ÉCRITE (8 points)
-
-**SUJET :** [Sujet complet et clairement formulé — jamais un sujet vague]
-
+FORMAT K — PRODUCTION ÉCRITE GUIDÉE :
+**SUJET :** [Sujet précis — jamais vague]
 **Consignes :**
-- Longueur : [X] à [Y] lignes / [X] à [Y] pages
-- Respectez la structure : introduction avec problématique / développement avec arguments / conclusion
-- Soignez l'orthographe, la grammaire et la ponctuation — elles sont prises en compte dans la notation
-- [Consigne spécifique selon le type : "Rédigez une lettre formelle", "Composez un texte argumentatif", "Rédigez un conte", "Analysez le texte proposé"...]
+- Longueur : [X] à [Y] lignes
+- [Consignes spécifiques : registre, structure imposée, éléments obligatoires]
+**Grille d'évaluation :**
+| Critère | Points |
+|---------|--------|
+| Respect du sujet | /[x] |
+| Structure (intro/dév/ccl) | /[x] |
+| Richesse du contenu | /[x] |
+| Qualité de la langue | /[x] |
+| **TOTAL** | **/[n]** |
 
-**Tableau 1 : Grille d'évaluation**
-| Critère d'évaluation | Barème |
-|-----------------------|--------|
-| Respect du sujet et des consignes | /2 |
-| Structure et organisation (intro/dév/ccl) | /2 |
-| Richesse et pertinence du contenu | /2 |
-| Qualité de la langue (orthographe, grammaire) | /2 |
-| **TOTAL** | **/8** |
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 3 — SYSTÈMES D'EXAMENS IVOIRIENS — PROGRAMMES OFFICIELS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CEPE (Certificat d'Études Primaires Élémentaires) — Fin CM2 :
-- Matières : Français (dictée, rédaction, questions), Mathématiques, Sciences d'Éveil
-- Niveau de langue : simple, phrases courtes, exemples concrets de vie quotidienne CI
-- Format : 3 à 4 exercices par matière, 2h d'épreuve, /20
-- Thèmes CI : vie au village, marché, famille, école, animaux, plantes locales
-
-BEPC (Brevet d'Études du Premier Cycle) — Fin 3ème :
-- Français : commentaire de texte, rédaction (lettre, récit, dialogue), questions de grammaire
-- Mathématiques : algèbre, géométrie, statistiques, problèmes contextualisés
-- PC (Physique-Chimie) : lois physiques, expériences, calculs, sécurité chimique
-- SVT : cellule, nutrition, reproduction, écosystèmes, santé tropicale
-- Histoire-Géo : Afrique coloniale, indépendances, géographie CI et Afrique
-- Anglais : compréhension écrite, production écrite, grammaire
-- Durée : 2h à 4h selon matière, /20
-
-BAC IVOIRIEN — Terminale (séries A1, A2, B, C, D, E, F, G, H) :
-Série A1 (Lettres-Philo) : Français (dissertation, commentaire composé), Philo, Histoire-Géo, Anglais
-Série A2 (Lettres-SH) : + Sciences sociales, EDHC, approche socioéconomique
-Série B (Économie-Gestion) : Économie, Comptabilité, Maths financières, Gestion d'entreprise
-Série C (Maths-PC) : Maths (4h), PC (4h), Philo, Anglais — rigueur maximale
-Série D (Maths-SVT) : Maths, SVT (biologie, géologie), PC, médecine tropicale
-Durée : 3h à 4h par épreuve principale, /20, coefficients selon série
+FORMAT L — CALCUL MENTAL / RÉPONSE DIRECTE (CEPE/BEPC) :
+**Consigne :** Répondez directement sans montrer les calculs.
+**1.** 125 x 8 = ............    **2.** PGCD(24, 36) = ............
+→ Réservé calcul rapide, espace réponse court, 10-15 questions rapides, /5
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 4 — BASE DE CONNAISSANCES IVOIRIENNE POUR LA CONTEXTUALISATION
+SECTION 4 — TYPES D'ÉPREUVES ET LEURS PARTICULARITÉS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-MATHS CONTEXTUALISÉS — Données réelles CI :
-- Cacao : 350 FCFA/kg achat, 1 200 FCFA/kg export, 2,2 millions tonnes/an
-- Anacarde : 250-400 FCFA/kg selon qualité, 800 000 t/an, principale région : Korhogo/Odienné
-- Transport gbaka Abidjan : 200 FCFA, taxi woro-woro : 150 FCFA la course, bus SOTRA : 100 FCFA
-- Électricité CIE : tarif social ~50 FCFA/kWh, tarif normal ~80 FCFA/kWh
-- 1 USD ≈ 600 FCFA, 1 EUR ≈ 655,957 FCFA (taux fixe FCFA/EUR depuis 1999)
-- Population Abidjan : ~5,5 millions (2023), dont quartiers : Plateau, Cocody, Marcory, Yopougon
-- Prix riz local : 400 FCFA/kg, attiéké : 200 FCFA la portion, garba : 300-500 FCFA
+DEVOIR SURVEILLÉ (DS) — 2h, milieu/fin de séquence :
+- 3 à 4 exercices, progression facile→difficile, 100% sur le programme récent
+- Exercice 1 : restitution cours (QCM/VF/lacunaire) — 30% des points
+- Exercice 2 : application (calcul/questions guidées) — 40% des points
+- Exercice 3 : synthèse/problème — 30% des points
 
-SCIENCES CONTEXTUALISÉS — Données CI :
-- Barrage Soubré : 275 MW, inauguré 2017, fleuve Sassandra
-- Barrage Kossou : 174 MW, inauguré 1972, fleuve Bandama, lac 1700 km²
-- Barrage Taabo : 210 MW, inauguré 1979, fleuve Bandama
-- Température moyenne Abidjan : 26°C, précipitations : 1800 mm/an, 2 saisons des pluies
-- Température Korhogo (Nord) : 28-35°C, 900 mm/an, 1 saison des pluies
-- Paludisme CI : ~3 millions cas/an, Plasmodium falciparum dominant, traitement : Coartem
-- Forêt de Taï : 536 000 ha, classée UNESCO, chimpanzés de Taï étudiés par primatologues
-- Production hydroélectrique CI : ~1500 MW installés (objectif 4000 MW en 2030)
+DEVOIR DE MAISON (DM) — sans limite de temps :
+- Problèmes plus longs et complexes, documents riches, recherche attendue
+- Tolérer les tableaux complexes, les schémas détaillés, les rédactions longues
+- Mentionner : "Travail personnel exigé — copier le travail d'autrui = note 0"
 
-HISTOIRE-GÉO CONTEXTUALISÉS :
-- Côte d'Ivoire : 322 463 km², 26 régions, 14 districts depuis 2011
-- Districts autonomes : Abidjan et Yamoussoukro
-- Frontières : Liberia (Ouest), Guinée (Nord-Ouest), Mali (Nord), Burkina Faso (Nord-Est), Ghana (Est)
-- Dates clés : 1843 (protectorat français), 1893 (colonie), 1960 (indépendance), 1990 (multipartisme)
-- UEMOA : 8 pays (CI, Sénégal, Mali, Burkina, Guinée-Bissau, Niger, Togo, Bénin)
-- CEDEAO : 15 pays d'Afrique de l'Ouest, création 1975, siège Lagos puis Abuja
+EXAMEN BLANC / BREVET BLANC / BAC BLANC :
+- Format identique à l'examen officiel du niveau concerné
+- En-tête avec "NE PAS DIFFUSER — Usage interne à l'établissement"
+- 4 à 6 exercices, barème total /20, durée réaliste (BEPC : 3h, BAC : 4h)
+- Thèmes représentatifs du programme de l'année entière
+
+CONCOURS D'ENTRÉE (ENSET, ENS, Grandes Écoles, Concours Administratifs) :
+- Niveau plus élevé que le BAC, culture générale + spécialité
+- Ajouter : "Le candidat traitera les deux parties dans l'ordre de son choix"
+- Questions de culture ivoirienne/africaine et d'actualité
+- Rédaction : "Dissertation de 3 à 5 pages sur..."
+
+INTERROGATION ÉCRITE (IE) / CONTRÔLE COURT :
+- 30min à 1h, 1 à 2 exercices seulement, /10 ou /20
+- Focus sur le chapitre en cours, sans ouverture interdisciplinaire
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 5 — RÈGLES ABSOLUES DE CONCEPTION DES SUJETS
+SECTION 5 — BASE DE DONNÉES CONTEXTUELLES IVOIRIENNES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RÈGLE 1 — COMPLÉTUDE TOTALE ABSOLUE :
-JAMAIS "[À compléter]", "[insérer question]", "[...]", "[Réponse ici]" → TOUT intégralement rédigé avec de vrais contenus. Si une question n'est pas complète, le document est un ÉCHEC.
+MATHS / ÉCONOMIE — Chiffres réels CI :
+- Cacao : 350 FCFA/kg achat paysan, 1 200 FCFA/kg export, 2,2 millions t/an
+- Anacarde : 275-400 FCFA/kg, 800 000 t/an, région Korhogo/Odienné/Bondoukou
+- Transport : gbaka 200 FCFA, woro-woro 150 FCFA/course, bus SOTRA 100 FCFA
+- Électricité CIE : tarif social 50 FCFA/kWh, tarif normal 80 FCFA/kWh
+- Riz local : 400 FCFA/kg, attiéké 200 FCFA, garba 300-500 FCFA
+- Salaires : SMIG CI ≈ 60 000 FCFA/mois, enseignant débutant ≈ 180 000 FCFA/mois
+- Microfinance UEMOA : taux d'intérêt 12-24%/an, tontine village 5 000 FCFA/semaine
+- 1 EUR = 655,957 FCFA (fixe), 1 USD ≈ 600 FCFA
 
-RÈGLE 2 — TOUTES LES QUESTIONS SONT DES VRAIES QUESTIONS :
-- QCM : 4 choix tous rédigés, distractors plausibles et de longueur similaire
-- VF : affirmations complètes et non ambiguës
-- Texte lacunaire : texte entier rédigé avec tous les blancs _______________ (min 15 underscores)
-- Questions ouvertes : libellé précis, nombre de lignes de réponse adapté aux points alloués
+SCIENCES — Données CI :
+- Barrages : Soubré 275 MW (2017), Kossou 174 MW (1972), Taabo 210 MW (1979), Fayé 282 MW (prévu)
+- Température : Abidjan 26°C moy, 2 saisons des pluies (avr-juil + oct-nov), 1800 mm/an
+- Korhogo/Nord : 28-35°C, 1 saison des pluies (juin-sept), 900 mm/an
+- Paludisme : ~3 millions cas/an CI, Plasmodium falciparum dominant, traitement Coartem 3 jours
+- Forêt de Taï : 536 000 ha, UNESCO 1982, chimpanzés de Taï (recherche primatologie)
+- Déforestation : 16 M ha en 1900 → 3,4 M ha aujourd'hui, taux 26 000 ha/an perdus
+- Cacao et biodiversité : 45% production mondiale, zone humide Sud CI (San-Pédro, Aboisso)
 
-RÈGLE 3 — CONTEXTUALISATION IVOIRIENNE OBLIGATOIRE PARTOUT :
-- Maths : problèmes en FCFA avec prix réels (cacao 350F/kg, gbaka 200F, riz 400F/kg)
-- Sciences : données CI réelles (barrages Soubré 275MW, Kossou 174MW, température Abidjan 26°C)
-- Histoire-Géo : événements, dates et lieux ivoiriens (indépendance 7/8/1960, superficie 322 463 km²)
-- Français : auteurs africains francophones réels (Dadié, Kourouma, Laye, Oyono, Beti)
-- Chaque exercice doit avoir AU MOINS UN élément de contexte ivoirien ou africain
+HISTOIRE-GÉO — Données CI :
+- Superficie : 322 463 km², 14 districts, 31 régions depuis 2012
+- Population : ~28 millions hab (2023), croissance 2,5%/an, 58% urbains
+- Villes : Abidjan ~5,5M, Bouaké ~1M, Korhogo ~500 000, Daloa ~450 000
+- Frontières : Liberia, Guinée, Mali, Burkina Faso, Ghana
+- Dates clés : 1843 (1er traité France), 1893 (colonie officielle), 7 août 1960 (indépendance)
+- UEMOA (8 pays, monnaie FCFA), CEDEAO (15 pays, fondée 1975, siège Lagos)
+- PIB CI : ~70 milliards USD (2023), 1er économie UEMOA, 2e Afrique subsaharienne francophone
+- Présidents : Houphouët-Boigny (1960-1993), Bédié (1993-1999), Gbagbo (2000-2011), Ouattara (2011-)
 
-RÈGLE 4 — ZÉRO LaTeX : Formules en texte clair — "F = m x a" JAMAIS "$F = ma$"
-Formules chimiques sans exposants Unicode — "CO2" JAMAIS "CO₂"
+FRANÇAIS / LITTÉRATURE — Auteurs africains francophones réels :
+- Bernard Dadié (CI) : Climbié (1956), Le Pagne Noir (1955), Un Nègre à Paris (1959)
+- Ahmadou Kourouma (CI) : Les Soleils des Indépendances (1968), En attendant le vote des bêtes sauvages (1998)
+- Véronique Tadjo (CI) : Reine Pokou (2004), L'Ombre d'Imana (2000)
+- Camara Laye (Guinée) : L'Enfant Noir (1953), Le Regard du roi (1954)
+- Cheikh Hamidou Kane (Sénégal) : L'Aventure ambiguë (1961)
+- Mongo Beti (Cameroun) : Ville cruelle (1954), Le Pauvre Christ de Bomba (1956)
+- Ferdinand Oyono (Cameroun) : Une vie de boy (1956), Le Vieux Nègre et la médaille (1956)
+- Mariama Bâ (Sénégal) : Une si longue lettre (1979)
 
-RÈGLE 5 — BARÈME COHÉRENT ET PÉDAGOGIQUE :
-- Total TOUJOURS = 20 points (jamais 18, 19 ou 21)
-- Répartition logique : questions simples ≤ 1pt, questions de synthèse 3-5pts
-- Indiquer les points sur CHAQUE question individuelle (pas seulement par exercice)
-- Format : **Question 1** (1 point), **Question 2** (1,5 points), **Sous-total Exercice 1 : /5**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6 — 12 RÈGLES ABSOLUES DE QUALITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RÈGLE 6 — ADAPTATION STRICTE AU NIVEAU :
-- CEPE (CM1-CM2) : phrases max 15 mots, vocabulaire CP/CE, calculs < 100, 1-2 pages, /20
-- BEPC (3ème) : vocabulaire courant + termes disciplinaires définis, 3-4 exercices, 2-4 pages, /20
-- BAC (Terminale) : rigueur maximale, terminologie disciplinaire maîtrisée, 4-5 exercices, 4-6 pages, /20
-- Adapter STRICTEMENT la longueur, la difficulté et le vocabulaire au niveau indiqué
-
-RÈGLE 7 — GRADATION DE DIFFICULTÉ PROGRESSIVE DANS LE SUJET :
-- Exercice 1 = questions de connaissance/mémorisation (rappel de cours, définitions, QCM)
-- Exercice 2 = questions de compréhension/application (calculs simples, textes, Vrai/Faux)
-- Exercice 3 = questions d'analyse/synthèse (problèmes contextualisés, rédaction, commentaire)
-- Exercice 4+ = production élaborée si demandé (mini-essai, résolution de problème complexe)
-Cette progression permet aux élèves de débuter en confiance et d'aller progressivement vers le difficile.
-
-RÈGLE 8 — CONSIGNES CLAIRES ET SANS AMBIGUÏTÉ :
-Chaque exercice commence par une **Consigne :** en gras, formulée en 1-2 phrases maximales.
-La consigne indique : QUOI faire + COMMENT faire + COMBIEN (nombre de réponses attendues).
-✓ "**Consigne :** Cochez la lettre correspondant à la SEULE bonne réponse pour chacune des 5 questions."
-✓ "**Consigne :** Résolvez le problème en montrant TOUTES les étapes de calcul. Résultat sans démarche = 0 point."
-✗ À éviter : "Répondez aux questions." (trop vague)
-
-RÈGLE 9 — CORRIGÉ UNIQUEMENT SI DEMANDÉ :
-N'inclure le corrigé que si "corrigé", "correction", "éléments de réponse", "barème détaillé" est mentionné dans la description.
-
-RÈGLE 10 — CORRIGÉ EXHAUSTIF QUAND DEMANDÉ :
-- QCM : indiquer la lettre + justification en 1-2 phrases précises pourquoi les autres options sont fausses
-- VF : indiquer V ou F + justification complète pour CHAQUE affirmation
-- Calculs : montrer TOUTES les étapes numériques avec les formules et les unités
-- Texte lacunaire : réécrire le texte COMPLET avec les mots correctement placés soulignés en **gras**
-- Questions ouvertes : éléments de réponse attendus + indication des points partiels possibles
+RÈGLE 1 — COMPLÉTUDE ZÉRO DÉFAUT : JAMAIS "[à compléter]", "[insérer]", "[...]" → TOUT est rédigé
+RÈGLE 2 — TOTAL = /20 TOUJOURS : répartition logique (pas de 18, 19 ou 21 pts)
+RÈGLE 3 — POINTS SUR CHAQUE QUESTION : "(1 point)", "(1,5 point)", "(2 points)" après chaque question
+RÈGLE 4 — ZÉRO LaTeX : "F = m x a" jamais "$F=ma$", "CO2" jamais "CO₂"
+RÈGLE 5 — CONTEXTE IVOIRIEN DANS CHAQUE EXERCICE : FCFA, villes CI, auteurs CI, données réelles
+RÈGLE 6 — GRADATION : Exercice 1 (restitution/mémorisation) → Exercice 2 (application) → Exercice 3+ (analyse/synthèse)
+RÈGLE 7 — CONSIGNES CLAIRES : "**Consigne :**" gras + QUOI faire + COMMENT + COMBIEN attendu
+RÈGLE 8 — DISTRACTORS PLAUSIBLES QCM : fausses réponses = erreurs courantes réelles d'élèves
+RÈGLE 9 — ADAPTÉ AU NIVEAU EXACT :
+  - CEPE : phrases ≤15 mots, calculs <100, 1-2 pages, /20
+  - BEPC : terminologie définie, 3-4 exercices, 3-4 pages, /20
+  - BAC : rigueur maximale, 4-5 exercices, 4-6 pages, /20
+RÈGLE 10 — VARIÉTÉ DES FORMATS : ne jamais répéter le même format d'exercice dans un même sujet
+RÈGLE 11 — CORRIGÉ SEULEMENT SI DEMANDÉ : inclure corrigé uniquement si "corrigé/correction/corrigé détaillé" dans la demande
+RÈGLE 12 — CORRIGÉ EXHAUSTIF si demandé :
+  - QCM : lettre correcte + pourquoi les distractors sont faux
+  - VF : V/F + justification complète de chaque affirmation
+  - Calculs : TOUTES les étapes + formules + unités + résultat encadré
+  - Lacunaire : texte complet réécrit avec les mots en **gras**
+  - Ouvertes : éléments de réponse attendus par point partiel
 
 === MISSION ===
 
-Crée maintenant un sujet d'examen COMPLET, PARFAITEMENT STRUCTURÉ et TOTALEMENT RÉDIGÉ basé sur :
+Crée maintenant un sujet d'examen COMPLET, PROFESSIONNEL et TOTALEMENT RÉDIGÉ basé sur :
 
-{description}
-
-IMPÉRATIFS ABSOLUS :
-1. TOUT est rédigé intégralement — zéro zone vide, zéro "[à compléter]"
-2. Gradation de difficulté progressive : Exercice 1 (mémorisation) → Exercice 2 (application) → Exercice 3+ (synthèse)
-3. Barème détaillé avec points par question, total = /20 obligatoirement
-4. Contexte ivoirien dans CHAQUE exercice (données réelles CI/FCFA/Afrique)
-5. Consignes précises et sans ambiguïté pour chaque exercice
+{{description}}
 
 === STRUCTURE OBLIGATOIRE ===
 
-# ════════════════════════════════════════════════════════
-#             EN-TÊTE OFFICIEL / PAGE DE GARDE
-# ════════════════════════════════════════════════════════
+###TITRE_ROUGE### SUJET D'EXAMEN — [MATIÈRE] — [NIVEAU]
 
 **RÉPUBLIQUE DE CÔTE D'IVOIRE**
 Union — Discipline — Travail
-
 
 **Établissement :** [Nom complet de l'établissement]
 **Année scolaire :** 2025 — 2026
 **Matière :** [Matière complète]
 **Niveau / Série :** [ex: Terminale D]
-**Type d'épreuve :** [Devoir Surveillé n°1 / Examen Blanc / Brevet Blanc / BAC Blanc...]
-**Durée :** [ex: 3 heures]
-**Coefficient :** [ex: 5]
-**Barème total :** /20
+**Type d'épreuve :** [Devoir Surveillé / Examen Blanc / BAC Blanc / Interrogation...]
+**Durée :** [ex: 3 heures]     **Coefficient :** [ex: 5]     **Barème :** /20
 
-
-**Nom et Prénoms :** ..............................................
-**Numéro de table :** .............. **Salle :** .................
-**Signature du surveillant :** ...................................
-
+**Nom et Prénoms :** ..............................................    **N° de table :** ...........
+**Salle :** ...................    **Signature du surveillant :** .....................................
 
 **CONSIGNES GÉNÉRALES :**
 - Lisez attentivement l'intégralité du sujet avant de commencer
-- Répondez sur la copie dans l'ordre des questions ou en indiquant clairement le numéro
-- Les réponses doivent être rédigées en français correct et lisible
-- Les téléphones portables et documents sont strictement interdits
-- Toute tentative de fraude entraîne l'exclusion immédiate de l'épreuve
-- La présentation, la propreté et la lisibilité sont prises en compte dans la notation
+- Indiquez clairement le numéro de chaque question dans votre copie
+- Rédigez en français correct, lisible et soigné — la présentation est notée
+- Téléphones portables, montres connectées et documents interdits
+- Toute tentative de fraude entraîne l'exclusion immédiate et la note zéro
 
-
-**BARÈME DE NOTATION :**
-| Exercice | Intitulé complet | Points |
-|----------|-----------------|--------|
-| Exercice 1 | [Type d'exercice — ex: Questions à choix multiples] | /[X] |
-| Exercice 2 | [Type d'exercice — ex: Vrai ou Faux avec justification] | /[X] |
-| Exercice 3 | [Type d'exercice — ex: Problème contextualisé] | /[X] |
-| Exercice 4 | [Type d'exercice — ex: Questions de synthèse] | /[X] |
+**RÉPARTITION DES POINTS :**
+| Exercice | Intitulé | Barème |
+|----------|----------|--------|
+| Exercice 1 | [Type et thème] | /[X] |
+| Exercice 2 | [Type et thème] | /[X] |
+| Exercice 3 | [Type et thème] | /[X] |
+| Exercice 4 | [Type et thème si nécessaire] | /[X] |
 | **TOTAL** | | **/20** |
 
-
-**Rappel :** Les points de chaque question sont indiqués entre parenthèses. La présentation soignée est valorisée.
-
-
 ---SAUT_DE_PAGE---
 
-[RÉDIGER TOUS LES EXERCICES ICI — formats choisis selon le niveau et la matière]
-[Séparer chaque exercice avec ════════════════════════════════════════════════════════]
-[Utiliser ---SAUT_DE_PAGE--- si le sujet dépasse 2 pages d'exercices]
+[RÉDIGER ICI LES EXERCICES COMPLETS — choisir les formats les plus adaptés à la matière et au niveau]
+[Séparer chaque exercice par ════════════════════════════════════════════════════════]
+[Utiliser ---SAUT_DE_PAGE--- si le sujet dépasse 2 pages]
 
----SAUT_DE_PAGE---
+[SI CORRIGÉ DEMANDÉ — après un ---SAUT_DE_PAGE--- :]
 
-[CORRIGÉ COMPLET ICI — UNIQUEMENT SI "corrigé" ou "correction" mentionné dans la demande]
+## ✦ ÉLÉMENTS DE CORRECTION — [Matière] — [Niveau]
+**⚠️ Document STRICTEMENT RÉSERVÉ AU PROFESSEUR — Ne pas distribuer aux élèves**
 
-## ÉLÉMENTS DE CORRECTION — [Matière] — [Niveau/Série]
+### ✦ Corrigé Exercice 1 — [Titre]
+[Correction complète et détaillée avec justifications et points partiels]
 
-**NB :** Ce corrigé est réservé à l'usage EXCLUSIF du professeur. Ne pas distribuer aux élèves.
+### ✦ Corrigé Exercice 2 — [Titre]
+[Correction avec TOUTES les étapes de calcul, formules, unités]
 
-### Corrigé Exercice 1 — [Titre]
-
-**Q1 :** [Réponse complète avec justification détaillée et référence aux données] → **(X/X)**
-**Q2 :** [Réponse complète avec justification] → **(X/X)**
-
-Pour QCM : **Q1 → C) Yamoussoukro** — La ville de Yamoussoukro est la capitale politique depuis 1983, tandis qu'Abidjan reste la capitale économique et administrative de facto.
-Pour VF : **N°1 → VRAI** — La CI produit effectivement 45% du cacao mondial / **N°2 → FAUX** — [Correction complète]
-Pour calculs : montrer TOUTES les étapes numériques avec les formules
-Pour texte lacunaire : réécrire le texte complet avec les mots correctement placés
-
-Rédige le sujet d'examen COMPLET en français. Tout doit être intégralement rédigé — aucune zone vide, aucun "[à compléter]". Le contexte ivoirien doit être présent dans CHAQUE exercice."""
+Rédige le sujet en français. TOUT doit être intégralement rédigé. Aucune zone vide, aucun "[à compléter]". Contexte ivoirien dans chaque exercice. Total = /20 obligatoirement."""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -1750,8 +1588,37 @@ def creer_docx(contenu, service, client_nom):
             run_break._r.append(br)
             i += 1
             continue
+        # ── MARQUEUR TITRE ROUGE — Grand titre centré rouge ─────
+        if l.strip().startswith("###TITRE_ROUGE###"):
+            texte_titre = l.strip().replace("###TITRE_ROUGE###", "").strip()
+            p_rouge = doc.add_paragraph()
+            p_rouge.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_rouge.paragraph_format.space_before = Pt(12)
+            p_rouge.paragraph_format.space_after  = Pt(12)
+            run_rouge = p_rouge.add_run(texte_titre)
+            run_rouge.bold = True
+            run_rouge.font.name = "Arial"
+            run_rouge.font.size = Pt(28)
+            run_rouge.font.color.rgb = RC(0xC0, 0x00, 0x00)  # Rouge vif
+            i += 1
+            continue
+
+        # ── MARQUEUR ESPACE — Grand espace vertical ───────────────
+        if l.strip() == "###ESPACE###":
+            p_esp = doc.add_paragraph()
+            p_esp.paragraph_format.space_before = Pt(0)
+            p_esp.paragraph_format.space_after  = Pt(0)
+            p_esp.paragraph_format.line_spacing = Pt(36)  # ~1.2cm d'espace
+            i += 1
+            continue
+
         # ── LIGNES DE SÉPARATION ════ ET ──── ─────────────────────
         if l.strip().startswith("════") or l.strip().startswith("━━━━"):
+            # Ne pas dessiner le trait si la prochaine ligne non-vide est un saut de page
+            next_content = next((lignes[j].strip() for j in range(i+1, len(lignes)) if lignes[j].strip()), "")
+            if next_content == "---SAUT_DE_PAGE---":
+                i += 1
+                continue  # Ignorer ce trait — il serait au bas de page et créerait un espace vide
             p_line = doc.add_paragraph()
             p_line.paragraph_format.space_before = Pt(4)
             p_line.paragraph_format.space_after  = Pt(4)
