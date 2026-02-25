@@ -1426,29 +1426,53 @@ Fournis un document structuré avec :
 Rédige en français, format professionnel et exhaustif."""
 
         elif "Excel" in service or "Data" in service:
-            prompt = f"""Tu es un expert Excel et Data Analytics. Crée une structure complète pour :
+            prompt = f"""Tu es un expert Excel et Data Analytics africain francophone.
+Tu dois analyser la demande et retourner UNIQUEMENT un objet JSON valide, sans texte avant ni après, sans balises markdown.
 
+DEMANDE CLIENT :
 {description}
 
-## FEUILLES À CRÉER
-(Liste des onglets avec description)
+STRUCTURE JSON OBLIGATOIRE :
+{{
+  "titre": "Titre principal du classeur Excel",
+  "contexte": "Description courte en 1 phrase",
+  "feuilles": [
+    {{
+      "nom": "Nom feuille 1 (max 25 car.)",
+      "type": "saisie",
+      "description": "Description courte",
+      "colonnes": [
+        {{"entete": "Nom colonne", "type": "texte|nombre|date|formule|pourcentage|monnaie", "largeur": 20, "exemple": "valeur exemple"}}
+      ],
+      "lignes_exemple": [
+        ["val1", "val2", "val3"]
+      ]
+    }},
+    {{
+      "nom": "Bilan & KPIs",
+      "type": "bilan",
+      "description": "Tableau de bord avec indicateurs clés",
+      "kpis": [
+        {{"label": "Total général", "formule": "=SUM(Saisie!C:C)", "type": "monnaie", "couleur": "bleu"}},
+        {{"label": "Moyenne", "formule": "=AVERAGE(Saisie!C:C)", "type": "monnaie", "couleur": "vert"}},
+        {{"label": "Valeur max", "formule": "=MAX(Saisie!C:C)", "type": "monnaie", "couleur": "orange"}},
+        {{"label": "Valeur min", "formule": "=MIN(Saisie!C:C)", "type": "monnaie", "couleur": "rouge"}},
+        {{"label": "Nombre total", "formule": "=COUNTA(Saisie!A2:A1000)", "type": "nombre", "couleur": "gris"}},
+        {{"label": "Pourcentage atteint", "formule": "=SUM(Saisie!C:C)/500000", "type": "pourcentage", "couleur": "violet"}}
+      ]
+    }}
+  ]
+}}
 
-## STRUCTURE DES COLONNES PAR FEUILLE
-(En-têtes, types de données)
-
-## FORMULES EXCEL CLÉS
-(Avec syntaxe exacte : =SOMME(), =RECHERCHEV(), =SI(), etc.)
-
-## DONNÉES D'EXEMPLE
-(5-10 lignes d'exemple réalistes)
-
-## MISE EN FORME RECOMMANDÉE
-(Couleurs, styles, graphiques suggérés)
-
-## TABLEAU DE BORD
-(Description du tableau de bord final)
-
-Rédige en français, sois très précis et technique."""
+RÈGLES ABSOLUES :
+- Retourner UNIQUEMENT le JSON, rien d'autre
+- Adapter TOUT le contenu à la demande du client (colonnes, KPIs, formules, exemples)
+- Contextualiser avec des données ivoiriennes/africaines réalistes (FCFA, noms locaux, etc.)
+- Minimum 2 feuilles : 1 feuille de saisie + 1 feuille Bilan & KPIs
+- Maximum 4 feuilles
+- Lignes exemple : 8 à 12 lignes réalistes et variées
+- KPIs : minimum 6 indicateurs pertinents selon le sujet (total, moyenne, max, min, nombre, %)
+- Les formules doivent référencer le bon nom de feuille"""
 
         else:
             prompt = f"""Tu es un expert professionnel. Réalise cette mission de façon complète et professionnelle :
@@ -1978,165 +2002,260 @@ def creer_docx(contenu, service, client_nom):
 
 
 def creer_xlsx(description, client_nom):
+    """
+    Génère un Excel dynamique basé sur le JSON retourné par Gemini.
+    Si le JSON est invalide, fallback sur un template générique.
+    """
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    import json, re
 
-    wb = Workbook()
+    # ── PALETTE DE COULEURS ────────────────────────────────────────
+    COULEURS = {
+        "bleu":   {"bg": "1F4E79", "fg": "FFFFFF"},
+        "vert":   {"bg": "1E8449", "fg": "FFFFFF"},
+        "orange": {"bg": "D35400", "fg": "FFFFFF"},
+        "rouge":  {"bg": "C0392B", "fg": "FFFFFF"},
+        "violet": {"bg": "7D3C98", "fg": "FFFFFF"},
+        "gris":   {"bg": "5D6D7E", "fg": "FFFFFF"},
+        "cyan":   {"bg": "117A65", "fg": "FFFFFF"},
+        "or":     {"bg": "B7950B", "fg": "FFFFFF"},
+    }
     BLEU_FONCE = "1F4E79"
-    BLEU_CLAIR = "BDD7EE"
+    BLEU_MOY   = "2E75B6"
+    BLEU_CLAIR = "D6E4F0"
     BLANC      = "FFFFFF"
-    GRIS       = "F2F2F2"
+    GRIS_CLAIR = "F2F2F2"
+    GRIS_MED   = "E8E8E8"
 
     def hdr(cell, bg=BLEU_FONCE, fg=BLANC, bold=True, size=11):
-        cell.font = Font(bold=bold, color=fg, name="Arial", size=size)
-        cell.fill = PatternFill("solid", start_color=bg)
+        cell.font      = Font(bold=bold, color=fg, name="Arial", size=size)
+        cell.fill      = PatternFill("solid", start_color=bg)
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-    def brd(cell):
-        s = Side(style="thin", color="CCCCCC")
+    def brd(cell, color="CCCCCC", style="thin"):
+        s = Side(style=style, color=color)
         cell.border = Border(top=s, bottom=s, left=s, right=s)
 
-    ws1 = wb.active
-    ws1.title = "Saisie Dépenses"
-    ws1.sheet_view.showGridLines = False
+    def brd_epais(cell):
+        s_ext = Side(style="medium", color="1F4E79")
+        s_int = Side(style="thin",   color="CCCCCC")
+        cell.border = Border(top=s_ext, bottom=s_ext, left=s_ext, right=s_ext)
 
-    ws1.merge_cells("A1:H1")
-    t = ws1["A1"]
-    t.value = f"SUIVI DES DÉPENSES — JANVIER 2026  |  {client_nom}"
-    hdr(t, size=13); ws1.row_dimensions[1].height = 34
+    def fmt_cell(cell, type_col, valeur=None):
+        """Applique le format nombre/monnaie/date/pourcentage selon le type."""
+        if type_col == "monnaie":
+            cell.number_format = '#,##0 "FCFA"'
+        elif type_col == "pourcentage":
+            cell.number_format = "0.0%"
+        elif type_col == "nombre":
+            cell.number_format = "#,##0"
+        elif type_col == "date":
+            cell.number_format = "DD/MM/YYYY"
 
-    ws1.merge_cells("A2:H2")
-    ws1["A2"].value = f"Généré le {datetime.now().strftime('%d/%m/%Y')} — Nova AI"
-    ws1["A2"].font = Font(italic=True, color="7F7F7F", name="Arial", size=10)
-    ws1["A2"].alignment = Alignment(horizontal="center")
+    # ── PARSE JSON GEMINI ──────────────────────────────────────────
+    data = None
+    try:
+        # Nettoyer le texte : enlever balises markdown si présentes
+        texte = description.strip()
+        texte = re.sub(r"^```json\s*", "", texte)
+        texte = re.sub(r"```\s*$", "", texte)
+        texte = re.sub(r"^```\s*", "", texte)
+        data = json.loads(texte)
+    except Exception:
+        data = None
 
-    cols   = ["N°","Date","Description","Catégorie","Bénéficiaire","Montant (FCFA)","Mode Paiement","Notes"]
-    widths = [5, 13, 30, 18, 20, 18, 16, 25]
-    for c,(h,w) in enumerate(zip(cols,widths),1):
-        cell = ws1.cell(row=3,column=c,value=h); hdr(cell); brd(cell)
-        ws1.column_dimensions[get_column_letter(c)].width = w
-    ws1.row_dimensions[3].height = 26
+    wb = Workbook()
+    wb.remove(wb.active)  # Supprimer feuille vide par défaut
 
-    rows = [
-        [1,"01/01/2026","Courses alimentaires","Alimentation","Supermarché",15000,"Espèces",""],
-        [2,"03/01/2026","Transport taxi","Transport","Taxi",5000,"Mobile Money",""],
-        [3,"05/01/2026","Facture électricité","Factures","CIE",22000,"Virement","Janvier 2026"],
-        [4,"07/01/2026","Restaurant déjeuner","Restauration","Maquis du coin",7500,"Espèces",""],
-        [5,"10/01/2026","Recharge téléphone","Communication","Orange CI",3000,"Mobile Money",""],
-        [6,"12/01/2026","Médicaments pharmacie","Santé","Pharmacie Plus",12000,"Espèces",""],
-        [7,"15/01/2026","Internet mensuel","Communication","MTN CI",8000,"Virement","Abonnement mensuel"],
-        [8,"18/01/2026","Vêtements enfants","Habillement","Marché",20000,"Espèces",""],
-        [9,"22/01/2026","Loyer","Logement","Propriétaire",150000,"Virement","Loyer janvier"],
-        [10,"28/01/2026","Courses alimentaires","Alimentation","Marché",18000,"Espèces","Fin de mois"],
-    ]
-    for r,row in enumerate(rows,4):
-        bg = GRIS if r%2==0 else BLANC
-        for c,val in enumerate(row,1):
-            cell = ws1.cell(row=r,column=c,value=val)
-            cell.font = Font(name="Arial",size=10,
-                             bold=(c==6), color=("1F4E79" if c==6 else "000000"))
-            cell.fill = PatternFill("solid",start_color=bg)
-            cell.alignment = Alignment(vertical="center",
-                                       horizontal="center" if c in [1,2,6,7] else "left")
-            brd(cell)
-            if c==6: cell.number_format = '#,##0 "FCFA"'
+    if not data or "feuilles" not in data:
+        # ── FALLBACK : template générique si JSON invalide ─────────
+        ws = wb.create_sheet("Données")
+        ws.sheet_view.showGridLines = False
+        ws.merge_cells("A1:D1")
+        ws["A1"].value = f"{client_nom} — Données"
+        hdr(ws["A1"], size=13); ws.row_dimensions[1].height = 32
+        ws["A2"].value = description[:200]
+        ws["A2"].font = Font(italic=True, color="7F7F7F", name="Arial", size=10)
+        buf = BytesIO(); wb.save(buf); buf.seek(0)
+        return buf
 
-    tr = len(rows)+4
-    ws1.merge_cells(f"A{tr}:E{tr}")
-    hdr(ws1[f"A{tr}"],size=11); ws1[f"A{tr}"].value="TOTAL JANVIER"; brd(ws1[f"A{tr}"])
-    tot = ws1[f"F{tr}"]
-    tot.value=f"=SUM(F4:F{tr-1})"
-    tot.number_format='#,##0 "FCFA"'; hdr(tot); brd(tot)
-    ws1.row_dimensions[tr].height=28
+    titre_classeur = data.get("titre", f"Classeur {client_nom}")
 
-    ws2 = wb.create_sheet("Catégories")
-    ws2.sheet_view.showGridLines = False
-    ws2.merge_cells("A1:D1"); t2=ws2["A1"]; t2.value="CATÉGORIES DE DÉPENSES"; hdr(t2,size=13); ws2.row_dimensions[1].height=32
+    # ── CONSTRUCTION DE CHAQUE FEUILLE ─────────────────────────────
+    for feuille in data.get("feuilles", []):
+        nom_feuille = feuille.get("nom", "Feuille")[:31]
+        type_feuille = feuille.get("type", "saisie")
+        colonnes = feuille.get("colonnes", [])
+        lignes   = feuille.get("lignes_exemple", [])
+        kpis     = feuille.get("kpis", [])
 
-    h2=["Catégorie","Budget Prévu (FCFA)","Total Réel (FCFA)","Écart (FCFA)"]
-    for c,(h,w) in enumerate(zip(h2,[25,22,22,22]),1):
-        cell=ws2.cell(row=2,column=c,value=h); hdr(cell,bg="2E75B6"); brd(cell)
-        ws2.column_dimensions[get_column_letter(c)].width=w
+        ws = wb.create_sheet(nom_feuille)
+        ws.sheet_view.showGridLines = False
 
-    cats=[("Alimentation",50000),("Transport",20000),("Factures",30000),
-          ("Restauration",15000),("Communication",15000),("Santé",20000),
-          ("Habillement",25000),("Logement",150000),("Loisirs",10000),("Autres",10000)]
-    for r,(cat,budget) in enumerate(cats,3):
-        bg = BLEU_CLAIR if r%2==0 else BLANC
-        c1=ws2.cell(row=r,column=1,value=cat); c1.font=Font(name="Arial",size=10,bold=True)
-        c1.fill=PatternFill("solid",start_color=bg); c1.alignment=Alignment(vertical="center"); brd(c1)
-        c2=ws2.cell(row=r,column=2,value=budget); c2.number_format='#,##0 "FCFA"'
-        c2.font=Font(name="Arial",size=10,color="0000FF")
-        c2.fill=PatternFill("solid",start_color=bg); c2.alignment=Alignment(horizontal="center"); brd(c2)
-        c3=ws2.cell(row=r,column=3,value=f"=SUMIF('Saisie Dépenses'!D:D,A{r},'Saisie Dépenses'!F:F)")
-        c3.number_format='#,##0 "FCFA"'; c3.fill=PatternFill("solid",start_color=bg)
-        c3.alignment=Alignment(horizontal="center"); brd(c3); c3.font=Font(name="Arial",size=10)
-        c4=ws2.cell(row=r,column=4,value=f"=B{r}-C{r}"); c4.number_format='#,##0 "FCFA"'
-        c4.fill=PatternFill("solid",start_color=bg); c4.alignment=Alignment(horizontal="center"); brd(c4)
-        c4.font=Font(name="Arial",size=10)
+        n_cols = max(len(colonnes), 4)
+        last_col = get_column_letter(n_cols)
 
-    tr2=len(cats)+3
-    ws2.cell(row=tr2,column=1,value="TOTAL")
-    hdr(ws2.cell(row=tr2,column=1)); brd(ws2.cell(row=tr2,column=1))
-    for col in [2,3,4]:
-        cell=ws2.cell(row=tr2,column=col,value=f"=SUM({get_column_letter(col)}3:{get_column_letter(col)}{tr2-1})")
-        cell.number_format='#,##0 "FCFA"'; hdr(cell); brd(cell)
+        # ── EN-TÊTE PRINCIPAL ──────────────────────────────────────
+        ws.merge_cells(f"A1:{last_col}1")
+        cell_titre = ws.cell(row=1, column=1, value=f"{titre_classeur}  |  {client_nom}")
+        hdr(cell_titre, size=13); ws.row_dimensions[1].height = 36
 
-    ws3 = wb.create_sheet("Tableau de Bord")
-    ws3.sheet_view.showGridLines = False
-    ws3.merge_cells("A1:E1"); t3=ws3["A1"]; t3.value="TABLEAU DE BORD — JANVIER 2026"
-    hdr(t3,size=13); ws3.row_dimensions[1].height=34
+        ws.merge_cells(f"A2:{last_col}2")
+        cell_desc = ws.cell(row=2, column=1, value=f"{feuille.get('description', '')}  —  Généré le {datetime.now().strftime('%d/%m/%Y')}")
+        cell_desc.font      = Font(italic=True, color="7F7F7F", name="Arial", size=10)
+        cell_desc.alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[2].height = 20
 
-    ws3.column_dimensions["A"].width=26; ws3.column_dimensions["B"].width=22
-    ws3.column_dimensions["C"].width=4;  ws3.column_dimensions["D"].width=26
-    ws3.column_dimensions["E"].width=22
+        # ── FEUILLE DE TYPE SAISIE ─────────────────────────────────
+        if type_feuille == "saisie" and colonnes:
+            # En-têtes colonnes
+            for c_idx, col in enumerate(colonnes, 1):
+                cell = ws.cell(row=3, column=c_idx, value=col["entete"])
+                hdr(cell, bg=BLEU_MOY); brd(cell)
+                ws.column_dimensions[get_column_letter(c_idx)].width = col.get("largeur", 18)
+            ws.row_dimensions[3].height = 28
 
-    kpis=[
-        ("Total Dépenses Janvier","='Saisie Dépenses'!F14",BLEU_FONCE),
-        ("Budget Total Prévu",    "='Catégories'!B13",    "2E75B6"),
-        ("Écart Budget/Réel",     "='Catégories'!D13",    "375623"),
-        ("Nb de Transactions",    "=COUNTA('Saisie Dépenses'!A4:A1000)-1","7F7F7F"),
-    ]
-    positions=[(3,1,2),(3,4,5),(6,1,2),(6,4,5)]
-    for (row,cl,cv),(label,formula,bg) in zip(positions,kpis):
-        lc=ws3.cell(row=row,column=cl,value=label)
-        lc.font=Font(bold=True,name="Arial",size=11,color=BLANC)
-        lc.fill=PatternFill("solid",start_color=bg)
-        lc.alignment=Alignment(horizontal="center",vertical="center"); ws3.row_dimensions[row].height=32
-        vc=ws3.cell(row=row,column=cv,value=formula)
-        vc.number_format='#,##0 "FCFA"' if "Nb" not in label else "0"
-        vc.font=Font(bold=True,name="Arial",size=13,color=BLANC)
-        vc.fill=PatternFill("solid",start_color=bg)
-        vc.alignment=Alignment(horizontal="center",vertical="center")
+            # Lignes de données exemple
+            for r_idx, ligne in enumerate(lignes, 4):
+                bg = GRIS_CLAIR if r_idx % 2 == 0 else BLANC
+                for c_idx, val in enumerate(ligne, 1):
+                    if c_idx > len(colonnes):
+                        break
+                    cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                    type_col = colonnes[c_idx-1].get("type", "texte")
+                    cell.font      = Font(name="Arial", size=10,
+                                          bold=(type_col in ["monnaie","nombre"]),
+                                          color=("1F4E79" if type_col == "monnaie" else "000000"))
+                    cell.fill      = PatternFill("solid", start_color=bg)
+                    cell.alignment = Alignment(vertical="center",
+                                               horizontal="center" if type_col in ["monnaie","nombre","date","pourcentage"] else "left")
+                    fmt_cell(cell, type_col)
+                    brd(cell)
 
-    ws3.merge_cells("A9:E9"); rh=ws3["A9"]
-    rh.value="RÉCAPITULATIF PAR CATÉGORIE"; hdr(rh,bg="2E75B6",size=12); ws3.row_dimensions[9].height=28
+            # Ligne TOTAL
+            if lignes:
+                total_row = len(lignes) + 4
+                ws.row_dimensions[total_row].height = 28
+                # Trouver la 1re colonne numérique pour placer le label TOTAL
+                first_num_col = next((c_idx for c_idx, col in enumerate(colonnes, 1)
+                                      if col.get("type") in ["monnaie", "nombre"]), None)
+                # Colonnes texte → label "TOTAL"
+                for c_idx, col in enumerate(colonnes, 1):
+                    cell_t = ws.cell(row=total_row, column=c_idx)
+                    if col.get("type") not in ["monnaie", "nombre"]:
+                        if c_idx == 1:
+                            cell_t.value = "TOTAL"
+                        hdr(cell_t, size=11); brd_epais(cell_t)
+                    else:
+                        col_letter = get_column_letter(c_idx)
+                        cell_t.value = f"=SUM({col_letter}4:{col_letter}{total_row-1})"
+                        fmt_cell(cell_t, col["type"])
+                        hdr(cell_t, size=11); brd_epais(cell_t)
 
-    rh2=["Catégorie","Budget (FCFA)","Réel (FCFA)","Écart (FCFA)","% Consommé"]
-    for c,h in enumerate(rh2,1):
-        cell=ws3.cell(row=10,column=c,value=h); hdr(cell); brd(cell)
-        ws3.column_dimensions[get_column_letter(c)].width=[26,18,18,18,14][c-1]
+            # Figer la ligne d'en-tête
+            ws.freeze_panes = "A4"
 
-    for r,cat in enumerate([c for c,_ in cats],11):
-        cat_row=r-8
-        bg=BLEU_CLAIR if r%2==0 else BLANC
-        c1=ws3.cell(row=r,column=1,value=cat)
-        c1.font=Font(name="Arial",size=10,bold=True)
-        c1.fill=PatternFill("solid",start_color=bg); c1.alignment=Alignment(vertical="center"); brd(c1)
-        for col,formula in enumerate([
-            f"='Catégories'!B{cat_row+2}",
-            f"='Catégories'!C{cat_row+2}",
-            f"='Catégories'!D{cat_row+2}",
-            f"=IF(B{r}=0,0,C{r}/B{r})",
-        ],2):
-            cell=ws3.cell(row=r,column=col,value=formula)
-            cell.font=Font(name="Arial",size=10)
-            cell.fill=PatternFill("solid",start_color=bg)
-            cell.alignment=Alignment(horizontal="center"); brd(cell)
-            cell.number_format='#,##0 "FCFA"' if col<6 else "0.0%"
+        # ── FEUILLE DE TYPE BILAN / KPIs ───────────────────────────
+        elif type_feuille == "bilan" and kpis:
+            # Titre section KPIs
+            ws.merge_cells(f"A3:{last_col}3")
+            cell_kpi_title = ws.cell(row=3, column=1, value="━━  INDICATEURS CLÉS DE PERFORMANCE  ━━")
+            hdr(cell_kpi_title, bg=BLEU_FONCE, size=12); ws.row_dimensions[3].height = 30
 
-    buf=BytesIO(); wb.save(buf); buf.seek(0)
+            # Disposition des KPIs : 2 par ligne (label | valeur | espace | label | valeur)
+            ws.column_dimensions["A"].width = 30
+            ws.column_dimensions["B"].width = 24
+            ws.column_dimensions["C"].width = 3
+            ws.column_dimensions["D"].width = 30
+            ws.column_dimensions["E"].width = 24
+
+            row_kpi = 4
+            for idx, kpi in enumerate(kpis):
+                if idx % 2 == 0 and idx > 0:
+                    row_kpi += 2  # Saut d'une ligne entre paires
+
+                col_start = 1 if idx % 2 == 0 else 4
+                couleur_key = kpi.get("couleur", "bleu")
+                bg_kpi = COULEURS.get(couleur_key, COULEURS["bleu"])["bg"]
+                fg_kpi = COULEURS.get(couleur_key, COULEURS["bleu"])["fg"]
+
+                # Label
+                cl = ws.cell(row=row_kpi, column=col_start, value=kpi["label"])
+                cl.font      = Font(bold=True, name="Arial", size=11, color=fg_kpi)
+                cl.fill      = PatternFill("solid", start_color=bg_kpi)
+                cl.alignment = Alignment(horizontal="center", vertical="center")
+                brd_epais(cl)
+                ws.row_dimensions[row_kpi].height = 36
+
+                # Valeur
+                cv = ws.cell(row=row_kpi, column=col_start+1, value=kpi.get("formule", 0))
+                cv.font      = Font(bold=True, name="Arial", size=14, color=fg_kpi)
+                cv.fill      = PatternFill("solid", start_color=bg_kpi)
+                cv.alignment = Alignment(horizontal="center", vertical="center")
+                fmt_cell(cv, kpi.get("type", "nombre"))
+                brd_epais(cv)
+
+            # ── TABLEAU RÉCAPITULATIF sous les KPIs ───────────────
+            row_recap = row_kpi + 3
+
+            # Trouver la 1re feuille de saisie pour le récap
+            feuille_saisie = next((f for f in data["feuilles"] if f.get("type") == "saisie"), None)
+            if feuille_saisie:
+                nom_s   = feuille_saisie["nom"][:31]
+                cols_s  = feuille_saisie.get("colonnes", [])
+
+                ws.merge_cells(f"A{row_recap}:E{row_recap}")
+                cell_recap_title = ws.cell(row=row_recap, column=1, value=f"RÉCAPITULATIF — {nom_s.upper()}")
+                hdr(cell_recap_title, bg=BLEU_MOY, size=12)
+                ws.row_dimensions[row_recap].height = 28
+                row_recap += 1
+
+                # En-têtes récap
+                recap_cols = [c["entete"] for c in cols_s[:5]]
+                for c_idx, h in enumerate(recap_cols, 1):
+                    cell = ws.cell(row=row_recap, column=c_idx, value=h)
+                    hdr(cell, bg=BLEU_FONCE); brd(cell)
+                ws.row_dimensions[row_recap].height = 24
+                row_recap += 1
+
+                # Lignes récap (depuis les données exemple)
+                for r_idx, ligne in enumerate(feuille_saisie.get("lignes_exemple", [])[:8], row_recap):
+                    bg = BLEU_CLAIR if r_idx % 2 == 0 else BLANC
+                    for c_idx, val in enumerate(ligne[:5], 1):
+                        if c_idx > len(cols_s):
+                            break
+                        cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                        type_col = cols_s[c_idx-1].get("type", "texte")
+                        cell.font      = Font(name="Arial", size=10,
+                                              color=("1F4E79" if type_col == "monnaie" else "000000"))
+                        cell.fill      = PatternFill("solid", start_color=bg)
+                        cell.alignment = Alignment(vertical="center",
+                                                   horizontal="center" if type_col in ["monnaie","nombre","date"] else "left")
+                        fmt_cell(cell, type_col)
+                        brd(cell)
+
+        # ── AUTRES TYPES DE FEUILLES (générique) ──────────────────
+        else:
+            if colonnes:
+                for c_idx, col in enumerate(colonnes, 1):
+                    cell = ws.cell(row=3, column=c_idx, value=col["entete"])
+                    hdr(cell); brd(cell)
+                    ws.column_dimensions[get_column_letter(c_idx)].width = col.get("largeur", 18)
+                for r_idx, ligne in enumerate(lignes, 4):
+                    for c_idx, val in enumerate(ligne, 1):
+                        cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                        cell.font = Font(name="Arial", size=10)
+                        cell.alignment = Alignment(vertical="center")
+                        brd(cell)
+
+    # ── MISE EN FORME FINALE : onglets colorés ─────────────────────
+    couleurs_onglets = ["1F4E79", "1E8449", "D35400", "7D3C98"]
+    for i, ws in enumerate(wb.worksheets):
+        ws.sheet_properties.tabColor = couleurs_onglets[i % len(couleurs_onglets)]
+
+    buf = BytesIO(); wb.save(buf); buf.seek(0)
     return buf
 
 
