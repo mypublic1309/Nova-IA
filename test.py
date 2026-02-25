@@ -42,6 +42,8 @@ def load_db():
                 "premium": r.get("premium", False),
                 "premium_plan": r.get("premium_plan", None),
                 "premium_expiry": r.get("premium_expiry", None),
+                "gen_used": r.get("gen_used", 0),
+                "gen_date": r.get("gen_date", None),
             }
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
@@ -74,9 +76,12 @@ def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan
             "uid": uid, "whatsapp": whatsapp,
             "email": email, "joined": str(datetime.now()),
             "premium": premium, "premium_plan": premium_plan, "premium_expiry": premium_expiry,
+            "gen_used": 0, "gen_date": None,
         }).execute()
+        return True
     except Exception as e:
         st.error(f"Erreur sauvegarde utilisateur : {e}")
+        return False
 
 def update_premium_status(uid, premium, premium_plan, premium_expiry):
     try:
@@ -145,11 +150,70 @@ Connectez-vous à la console admin pour traiter cette mission.
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
+def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
+    """Email envoyé quand Gemini a généré le doc automatiquement — pour info admin."""
+    try:
+        import resend
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        corps = f"""
+✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+
+👤 Client      : {client_nom}
+📱 WhatsApp    : {client_wa}
+🛠️ Service     : {service}
+📄 Fichier     : {nom_fichier}
+
+⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+
+Le document a été livré directement au client via l'interface Nova.
+Vous n'avez rien à faire pour cette commande.
+        """
+        resend.Emails.send({
+            "from": "Nova AI <onboarding@resend.dev>",
+            "to": [st.secrets["EMAIL_RECEIVER"]],
+            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
+            "text": corps
+        })
+    except Exception:
+        pass  # Silencieux — l'email d'info admin n'est pas critique
+
 PLANS_PREMIUM = {
-    "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 1},
-    "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 4},
-    "30 Jours":   {"jours": 30, "prix": "2500 FC", "emoji": "👑", "generations": 8},
+    "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 2},
+    "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 5},
+    "30 Jours":   {"jours": 30, "prix": "2500 FC", "emoji": "👑", "generations": 9},
 }
+
+def get_gen_quota(user_data):
+    """Retourne (gen_used_aujourd_hui, quota_max) selon le plan."""
+    plan = user_data.get("premium_plan")
+    quota = PLANS_PREMIUM.get(plan, {}).get("generations", 0) if plan else 0
+    gen_date = user_data.get("gen_date")
+    today = datetime.now().strftime("%Y-%m-%d")
+    if gen_date != today:
+        return 0, quota  # Nouveau jour → compteur remis à zéro
+    return user_data.get("gen_used", 0), quota
+
+def quota_restant(user_data):
+    used, quota = get_gen_quota(user_data)
+    return max(0, quota - used)
+
+def incrementer_gen(uid):
+    """Incrémente le compteur de générations du jour pour l'utilisateur."""
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        # Recharger pour avoir la valeur fraîche
+        row = supabase.table("users").select("gen_used, gen_date").eq("uid", uid).execute().data
+        if row:
+            gen_date = row[0].get("gen_date")
+            gen_used = row[0].get("gen_used", 0) if gen_date == today else 0
+        else:
+            gen_used = 0
+        supabase.table("users").update({
+            "gen_used": gen_used + 1,
+            "gen_date": today,
+        }).eq("uid", uid).execute()
+    except Exception as e:
+        pass  # Ne pas bloquer la génération si le compteur échoue
 
 def is_premium_actif(user_data):
     if not user_data.get("premium"):
@@ -340,46 +404,114 @@ UNITÉS EN CLAIR AVEC CONTEXTE :
 - Concentration : mol par litre (mol/L), gramme par litre (g/L)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 3 — ART DE LA RÉDACTION ACADÉMIQUE — RHÉTORIQUE ET STYLE
+SECTION 3 — ART MAÎTRISÉ DE LA RÉDACTION ACADÉMIQUE — RHÉTORIQUE ET STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ARCHITECTURE D'UN PARAGRAPHE PARFAIT — MODÈLE PEEL :
-1. POINT (topic sentence) : "La Côte d'Ivoire occupe une position dominante dans l'économie mondiale du cacao."
-2. EXPLICATION : développe le point, définit les termes en **gras**, explique les mécanismes
-3. EXEMPLE IVOIRIEN/AFRICAIN : fait précis, chiffre sourcé, événement daté, citation
-4. LIEN (transition) : "Cette réalité économique nous conduit naturellement à examiner..."
-→ Minimum 8 lignes par paragraphe, 3 paragraphes minimum par sous-partie
+▶ A. COMMENT CONSTRUIRE UNE INTRODUCTION EN 5 TEMPS (structure obligatoire) :
 
-CONNECTEURS LOGIQUES — VARIER OBLIGATOIREMENT (jamais répéter deux fois de suite) :
+TEMPS 1 — ACCROCHE (min 4 lignes) — CHOISIR L'UNE DE CES 4 STRATÉGIES :
+  → Données choc : "Avec **2,2 millions de tonnes** de cacao produits annuellement, représentant **45%** de l'offre mondiale selon la FAO (2023), la Côte d'Ivoire détient à elle seule le destin du marché mondial de cette fève. Pourtant, les **5 millions de paysans** qui en vivent perçoivent moins de **6%** de la valeur finale d'une tablette de chocolat en Europe (Oxfam, 2022)."
+  → Paradoxe saisissant : "Pays exportateur de soleil et de lumière, la Côte d'Ivoire souffre pourtant d'un déficit énergétique qui plonge des millions de ses citoyens dans l'obscurité chaque soir. Comment expliquer ce paradoxe d'un pays producteur de **1 500 mégawatts** d'électricité, dont une large part est exportée vers les pays voisins ?"
+  → Citation d'auteur africain (avec référence précise) : "'Les indépendances africaines ont accouché de lendemains qui déchantent', écrivait **Ahmadou Kourouma** dans *Les Soleils des Indépendances* (1968). Plus d'un demi-siècle après cette prophétie littéraire, la question du développement endogène reste au cœur des préoccupations du continent africain."
+  → Anecdote historique/fait d'actualité : "Le **7 août 1960**, sous les acclamations d'une foule immense rassemblée au stade Félix Houphouët-Boigny d'Abidjan, la Côte d'Ivoire accédait à l'indépendance après plus d'un siècle de domination coloniale française. Ce moment fondateur..."
 
-INTRODUIRE : "Il convient tout d'abord de souligner", "Force est de constater que", "Il importe de noter",
-"À ce titre,", "Dans cette perspective,", "En premier lieu,"
+TEMPS 2 — CONTEXTUALISATION (min 4 lignes) :
+Situe précisément le sujet dans son contexte historique, géographique, scientifique ou social.
+Définit TOUS les termes clés du sujet en **gras** dès leur première occurrence.
+Donne des chiffres, des dates précises, des acteurs réels.
+→ "La **photosynthèse**, terme issu du grec *phôtos* (lumière) et *synthesis* (assemblage), désigne..."
 
-DÉVELOPPER : "En effet,", "De surcroît,", "Par ailleurs,", "Qui plus est,", "Il convient également",
-"À cet égard,", "Dans ce sens,", "En outre,"
+TEMPS 3 — DÉLIMITATION ET ENJEUX (min 3 lignes) :
+Précise le périmètre exact de l'étude et pourquoi ce sujet est important aujourd'hui.
+→ "Comprendre ce phénomène revêt une importance capitale, tant pour [enjeu scientifique] que pour [enjeu social/économique/environnemental ivoirien]."
 
-ILLUSTRER : "Ainsi,", "C'est notamment le cas de", "À titre illustratif,", "Par exemple,",
-"On peut citer à cet effet", "L'exemple ivoirien est à ce titre éloquent :",
-"Comme en témoigne", "À titre d'exemple concret,"
+TEMPS 4 — PROBLÉMATIQUE (1-2 phrases précises et non rhétoriques) :
+La problématique n'est PAS une simple reformulation du sujet — elle soulève une VRAIE tension :
+  ✓ "Dans quelle mesure la dépendance cacaoyère de la Côte d'Ivoire constitue-t-elle à la fois le moteur et le talon d'Achille de son développement économique ?"
+  ✓ "Comment la **déforestation** accélérée, moteur apparent de la croissance agricole ivoirienne, menace-t-elle paradoxalement les conditions mêmes de cette croissance ?"
+  ✓ "En quoi le mouvement de la **négritude** représente-t-il une réponse littéraire et identitaire à la domination coloniale, et quelles en sont les limites actuelles ?"
+  ✗ ÉVITER : "Qu'est-ce que la photosynthèse ?" (trop simple, pas problématique)
+  ✗ ÉVITER : "Pourquoi la CI est-elle riche ?" (trop vague)
 
-OPPOSER : "Cependant,", "Néanmoins,", "Toutefois,", "En revanche,", "Or,",
-"Il convient de relativiser", "Si ... en revanche ...", "Malgré tout,"
+TEMPS 5 — ANNONCE DU PLAN (1-2 phrases, plan en 2 ou 3 parties selon niveau) :
+→ "Pour apporter une réponse nuancée à cette interrogation, nous analyserons dans une première partie [intitulé Partie I — reformuler en 1 ligne], avant d'examiner dans une deuxième partie [Partie II], et d'envisager enfin [Partie III si lycée/université]."
 
-CONCLURE/TRANSITER : "En définitive,", "Au regard de ces éléments,",
-"C'est dans cette logique que", "Ces constats nous amènent à examiner",
-"Cette analyse nous conduit naturellement à aborder", "Ainsi avons-nous établi que"
+▶ B. ARCHITECTURE D'UN PARAGRAPHE PARFAIT — MODÈLE PEEL ENRICHI :
 
-TYPES DE PLANS À CHOISIR SELON LE SUJET :
-- THÉMATIQUE : I (Nature/Définition) → II (Causes/Mécanismes) → III (Effets/Solutions)
-- DIALECTIQUE : I (Thèse : position dominante) → II (Antithèse : limites/critiques) → III (Synthèse/Dépassement)
-- CHRONOLOGIQUE : I (Passé/Origines) → II (Présent/État actuel) → III (Avenir/Perspectives)
-- ANALYTIQUE : I (Dimension économique) → II (Dimension sociale/culturelle) → III (Dimension politique/environnementale)
+Structure de chaque paragraphe de développement (min 8-10 lignes) :
 
-CONSTRUCTION D'UNE PROBLÉMATIQUE DE QUALITÉ :
-- "Dans quelle mesure [sujet] contribue-t-il à [enjeu pour CI/Afrique] ?"
-- "Comment [phénomène] se manifeste-t-il en Côte d'Ivoire et quels en sont les impacts ?"
-- "En quoi [sujet] représente-t-il à la fois [avantage] et [défi] pour [acteurs] ?"
-- "Si [thèse commune], dans quelle mesure peut-on affirmer que [antithèse nuancée] ?"
+1. POINT — Phrase d'affirmation claire et directe (1-2 lignes) :
+   "La **déforestation** constitue l'une des crises environnementales les plus graves qu'ait connues la Côte d'Ivoire au cours du XXe siècle."
+
+2. EXPLICATION — Développe le mécanisme, définit les termes, explique les causes ou le fonctionnement (3-4 lignes) :
+   "Ce phénomène se définit comme la destruction durable et souvent irréversible du couvert forestier au profit d'autres usages des terres, notamment l'agriculture, l'exploitation forestière industrielle et l'urbanisation galopante. En Côte d'Ivoire, ce processus a été largement amplifié par l'extension des cultures de rente, principalement le **cacao** et le **café**, dont la demande mondiale croissante a exercé une pression considérable sur les forêts du Sud et du Centre-Ouest du pays."
+
+3. EXEMPLE PRÉCIS IVOIRIEN/AFRICAIN — Chiffre sourcé + événement daté + lieu précis (3-4 lignes) :
+   "Les données du Ministère des Eaux et Forêts (2022) révèlent une réalité alarmante : de **16 millions d'hectares** de forêt dense que comptait la Côte d'Ivoire au début du XXe siècle, il n'en subsistait plus que **3,4 millions** en 2020, soit une perte de **79% du couvert forestier** en un siècle. À titre illustratif, la **Forêt classée du Banco**, véritable poumon vert d'Abidjan, a vu sa superficie passer de 3 000 hectares à l'époque coloniale à environ 1 800 hectares aujourd'hui, sous la pression de l'urbanisation et des empiètements agricoles."
+
+4. LIEN — Phrase de transition vers le paragraphe ou sous-partie suivant(e) (1-2 lignes) :
+   "Cette destruction massive du patrimoine forestier ne se limite pas à une question environnementale ; elle engage profondément les équilibres climatiques régionaux et les conditions de vie des populations rurales, ce qui nous conduit à examiner ses répercussions socio-économiques."
+
+▶ C. TRANSITIONS OBLIGATOIRES ENTRE GRANDES PARTIES — MODÈLES :
+
+TRANSITION I → II (min 4 lignes) :
+"Ainsi avons-nous établi, au terme de cette première partie, que [résumé en 1 phrase de la Partie I]. Cette analyse, si elle permet de cerner [apport de la Partie I], ne saurait toutefois être complète sans que l'on s'interroge sur [ce que la Partie II va apporter]. C'est précisément l'objet de notre second axe de réflexion, consacré à [intitulé Partie II]."
+
+TRANSITION II → III (min 3 lignes) :
+"Au regard des éléments développés dans notre deuxième partie, force est de constater que [bilan Partie II]. Ces constats nous invitent dès lors à dépasser le simple constat analytique pour envisager [dimension prospective / solutions / synthèse] — dimension qui constituera le fil directeur de notre troisième et dernière partie."
+
+▶ D. CONNECTEURS LOGIQUES — VARIER OBLIGATOIREMENT (jamais répéter deux fois de suite) :
+
+INTRODUIRE : "Il convient tout d'abord de souligner que", "Force est de constater que", "Il importe de noter que",
+"À ce titre,", "Dans cette perspective,", "En premier lieu,", "Il y a lieu de préciser que",
+"D'emblée, il apparaît que", "Au seuil de cette analyse,"
+
+DÉVELOPPER : "En effet,", "De surcroît,", "Par ailleurs,", "Qui plus est,", "Il convient également de noter que",
+"À cet égard,", "Dans ce sens,", "En outre,", "Il faut également souligner que",
+"On notera de surcroît que", "À cela s'ajoute le fait que"
+
+ILLUSTRER : "Ainsi,", "C'est notamment le cas de", "À titre illustratif,", "À titre d'exemple concret,",
+"On peut citer à cet effet", "L'exemple ivoirien est à ce titre particulièrement éloquent :",
+"Comme en témoigne", "Les données de [institution] le confirment :", "Pour s'en convaincre,"
+
+OPPOSER/NUANCER : "Cependant,", "Néanmoins,", "Toutefois,", "En revanche,", "Or,",
+"Il convient toutefois de relativiser ce constat :", "Si [thèse]... en revanche [nuance]...",
+"Malgré tout,", "Il serait néanmoins réducteur de", "Cette réalité ne doit pas occulter le fait que"
+
+CONCLURE/TRANSITER : "En définitive,", "Au regard de ces éléments,", "Au terme de cette analyse,",
+"C'est dans cette logique que", "Ces constats nous amènent naturellement à examiner",
+"Cette analyse nous conduit à aborder", "Ainsi avons-nous établi que", "Il ressort de ce qui précède que"
+
+▶ E. TYPES DE PLANS À CHOISIR INTELLIGEMMENT SELON LE SUJET :
+
+THÉMATIQUE (sujets descriptifs) : I (Nature/Définition/Caractéristiques) → II (Causes/Mécanismes/Fonctionnement) → III (Effets/Impacts/Solutions)
+→ Idéal pour : "La déforestation en CI", "Le paludisme en Afrique", "Le coupé-décalé ivoirien"
+
+DIALECTIQUE (sujets controversés) : I (Thèse : position principale/avantages) → II (Antithèse : limites/critiques/risques) → III (Synthèse/Dépassement/Voie du milieu)
+→ Idéal pour : "L'agriculture extensive, moteur ou frein du développement ?", "La mondialisation, chance ou menace pour l'Afrique ?"
+
+CHRONOLOGIQUE (sujets historiques) : I (Origines/Passé lointain) → II (Évolutions/État actuel/Ruptures) → III (Perspectives/Avenir/Défis contemporains)
+→ Idéal pour : "L'histoire de la Côte d'Ivoire", "L'évolution du système éducatif africain"
+
+ANALYTIQUE (sujets complexes multi-dimensionnels) : I (Dimension économique/scientifique) → II (Dimension sociale/humaine/culturelle) → III (Dimension politique/environnementale/internationale)
+→ Idéal pour : "Les enjeux de l'eau en Afrique de l'Ouest", "La question du développement durable"
+
+▶ F. CONSTRUCTION D'UNE CONCLUSION EN 3 TEMPS (structure obligatoire) :
+
+TEMPS 1 — BILAN HIÉRARCHISÉ (min 6 lignes) :
+Résume l'essentiel de chaque grande partie en 2 phrases fortes.
+NE JAMAIS reproduire mot pour mot — reformuler et synthétiser.
+"En premier lieu, nous avons mis en évidence que [synthèse Partie I en 1-2 phrases reformulées]. Dans un deuxième temps, notre analyse a démontré que [synthèse Partie II]. Enfin, nous avons pu établir que [synthèse Partie III]."
+
+TEMPS 2 — RÉPONSE NUANCÉE ET ARGUMENTÉE À LA PROBLÉMATIQUE (min 5 lignes) :
+Reprend la problématique posée en introduction et y répond avec nuance.
+"Au terme de cette analyse, il apparaît clairement que [réponse directe à la problématique]. Cette réponse doit cependant être nuancée : si [aspect positif / première dimension], il n'en demeure pas moins que [limite / dimension problématique]."
+
+TEMPS 3 — OUVERTURE PROSPECTIVE ET ÉLARGISSEMENT (min 4 lignes) :
+Ouvre sur un enjeu futur, une question connexe plus large, ou un défi pour CI/Afrique.
+Doit être logiquement reliée au sujet traité — jamais artificielle.
+Propositions d'ouverture : transition numérique et éducation en Afrique | ZLECAF et intégration économique régionale | développement durable et ODD 2030 | santé tropicale et systèmes de santé africains | changement climatique et agriculture africaine | valorisation des langues nationales en éducation.
+"Cette réflexion sur [sujet] nous invite finalement à nous interroger sur [question d'ouverture plus large], enjeu fondamental pour l'avenir [du continent / de la Côte d'Ivoire / de la jeunesse africaine]."
 
 CITATIONS ET RÉFÉRENCES — FORMAT ACADÉMIQUE RIGOUREUX :
 - Citation directe : « La forêt tropicale est le poumon de la planète. » (FAO, 2022, p. 12)
@@ -499,55 +631,49 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQU
 
 === STRUCTURE OBLIGATOIRE DU DOCUMENT — RESPECTER CET ORDRE EXACT ===
 
-# ════════════════════════════════════════════════════════
-#                      PAGE DE GARDE
-# ════════════════════════════════════════════════════════
-
-**[NOM COMPLET DE L'ÉTABLISSEMENT EN MAJUSCULES — ex: LYCÉE SAINTE-MARIE DE COCODY]**
-[Ville], Côte d'Ivoire
-Année scolaire : 2025 - 2026
+⚠️ RÈGLE MISE EN PAGE CRITIQUE :
+- La PAGE DE GARDE doit tenir sur UNE SEULE PAGE : max 1 ligne vide entre chaque bloc, aucun titre # inutile
+- Le SOMMAIRE doit tenir sur UNE SEULE PAGE : entrées compactes, pas de ligne vide entre chaque entrée
+- JAMAIS de titre de section (# PAGE DE GARDE, # SOMMAIRE...) — commence directement avec le contenu
+- JAMAIS de lignes vides consécutives dans ces deux sections
 
 ────────────────────────────────────────────────────────
 
-                 EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
-
-    **[TITRE COMPLET, ACCROCHEUR ET ÉLABORÉ DE L'EXPOSÉ EN MAJUSCULES]**
+**[NOM COMPLET DE L'ÉTABLISSEMENT EN MAJUSCULES]**
+[Ville], Côte d'Ivoire — Année scolaire : 2025 - 2026
 
 ────────────────────────────────────────────────────────
 
-**Matière :**                    [Matière complète — ex: Sciences de la Vie et de la Terre]
-**Niveau / Série :**             [Niveau exact — ex: Terminale D]
-**Présenté par :**               [Noms complets — ex: KONÉ Aminata & BAMBA Issouf]
-**Sous la direction de :**       [Titre + Nom — ex: M. COULIBALY Jean-Baptiste, Prof. de SVT]
-**Date de présentation :**       [Date complète — ex: Lundi 10 mars 2025]
-**Année scolaire :**             2025 - 2026
+EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
+**[TITRE COMPLET ET ACCROCHEUR DE L'EXPOSÉ EN MAJUSCULES]**
+
+────────────────────────────────────────────────────────
+
+**Matière :** [Matière complète]
+**Niveau / Série :** [Niveau — ex: Terminale D]
+**Présenté par :** [Noms complets]
+**Sous la direction de :** [Titre + Nom du professeur]
+**Date de présentation :** [Date complète]
+**Année scolaire :** 2025 - 2026
 
 ────────────────────────────────────────────────────────
 
 ---SAUT_DE_PAGE---
-
-# ════════════════════════════════════════════════════════
-#                SOMMAIRE / TABLE DES MATIÈRES
-# ════════════════════════════════════════════════════════
 
 **SOMMAIRE**
 
 ────────────────────────────────────────────────────────
 
 Introduction ............................................................. p. 3
-
-**I. [Titre accrocheur et précis de la 1re grande partie]** ............. p. 4
-   1.1 [Titre descriptif de la 1re sous-partie] .......................... p. 4
-   1.2 [Titre descriptif de la 2e sous-partie] ........................... p. 5
-
-**II. [Titre accrocheur et précis de la 2e grande partie]** ............. p. 6
-   2.1 [Titre descriptif de la 1re sous-partie] .......................... p. 6
-   2.2 [Titre descriptif de la 2e sous-partie] ........................... p. 7
-
-**III. [Titre de la 3e grande partie — si niveau le justifie]** ......... p. 8
+**I. [Titre 1re grande partie]** ........................................ p. 4
+   1.1 [Titre 1re sous-partie] ........................................... p. 4
+   1.2 [Titre 2e sous-partie] ............................................ p. 5
+**II. [Titre 2e grande partie]** ......................................... p. 6
+   2.1 [Titre 1re sous-partie] ........................................... p. 6
+   2.2 [Titre 2e sous-partie] ............................................ p. 7
+**III. [Titre 3e grande partie — lycée/université uniquement]** ......... p. 8
    3.1 [Titre sous-partie] ............................................... p. 8
    3.2 [Titre sous-partie] ............................................... p. 9
-
 Conclusion ............................................................... p. 10
 Bibliographie ............................................................ p. 11
 
@@ -563,13 +689,15 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[ACCROCHE PERCUTANTE — Min 6 lignes : fait saisissant, statistique sourcée, citation d'auteur africain avec référence, ou réalité concrète de CI/Afrique. Ex: "Selon le rapport annuel de la FAO (2023), la Côte d'Ivoire produit à elle seule **45%** du cacao mondial, avec **2,2 millions de tonnes** annuelles..."]
+[ACCROCHE PERCUTANTE — Min 5 lignes — CHOISIR : données choc sourcées / paradoxe saisissant / citation d'auteur africain avec référence complète / anecdote historique. Ex: "Selon la FAO (2023), la Côte d'Ivoire produit **45%** du cacao mondial avec **2,2 millions de tonnes**. Pourtant, les 5 millions de paysans concernés perçoivent moins de 6% de la valeur finale d'une tablette de chocolat en Europe (Oxfam, 2022)..."]
 
-[CONTEXTUALISATION APPROFONDIE — Min 5 lignes : situe précisément dans contexte historique/géographique/scientifique/social. Définit termes clés en **gras**. Donne chiffres et dates.]
+[CONTEXTUALISATION APPROFONDIE — Min 5 lignes : situe dans contexte historique/géographique/scientifique/social. Définit TOUS les termes clés en **gras** dès leur première occurrence. Donne chiffres, dates précises, acteurs réels.]
 
-[PROBLÉMATIQUE PRÉCISE : "Ainsi, nous pouvons nous demander : [question centrale bien formulée, spécifique et problématique] ?"]
+[DÉLIMITATION ET ENJEUX — Min 3 lignes : précise le périmètre de l'étude et pourquoi le sujet est important aujourd'hui pour la CI/l'Afrique/le monde.]
 
-[ANNONCE DU PLAN : "Pour répondre à cette problématique, nous étudierons dans un premier temps [Partie I en 1 ligne], puis dans un deuxième temps [Partie II], et enfin [Partie III si applicable]."]
+[PROBLÉMATIQUE PRÉCISE ET NON RHÉTORIQUE — 1-2 phrases soulevant une VRAIE tension intellectuelle : "Ainsi, nous pouvons nous demander : Dans quelle mesure [tension principale du sujet] ?"]
+
+[ANNONCE DU PLAN DÉTAILLÉE — 2-3 lignes : "Pour répondre à cette interrogation, nous analyserons dans une première partie [intitulé complet Partie I reformulé en 1 ligne], avant d'examiner dans une deuxième partie [Partie II], et d'envisager enfin [Partie III — lycée/université uniquement]."]
 
 ────────────────────────────────────────────────────────
 
@@ -587,9 +715,13 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[PARAGRAPHE 1 — 8 à 10 lignes : phrase d'annonce + développement PEEL. Définir les termes clés en **gras**. Citer source ou statistique précise.]
+[PARAGRAPHE 1 — 8 à 10 lignes — MODÈLE PEEL :
+→ POINT (1-2 lignes) : affirmation directe et claire du sous-argument
+→ EXPLICATION (3-4 lignes) : développe le mécanisme, définit les termes en **gras**, explique les causes
+→ EXEMPLE IVOIRIEN (3-4 lignes) : chiffre sourcé (institution + année) + fait précis + lieu géographique réel
+→ LIEN (1-2 lignes) : transition vers le paragraphe 2]
 
-[PARAGRAPHE 2 — 8 à 10 lignes : approfondissement, nouvel angle. Exemple africain comparatif. Connecteurs variés.]
+[PARAGRAPHE 2 — 8 à 10 lignes — même structure PEEL, angle différent et complémentaire. Connecteurs variés. Exemple africain comparatif si pertinent.]
 
 [SI PERTINENT — Tableau de données :
 **Tableau 1 : [Titre précis et descriptif]**
@@ -607,7 +739,9 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[3 paragraphes de 8 à 10 lignes chacun. Angle différent de 1.1. Exemples ivoiriens + données chiffrées. Dernier paragraphe : transition vers Partie II.]
+[3 paragraphes de 8 à 10 lignes chacun. Angle différent de 1.1. Exemples ivoiriens + données chiffrées.]
+
+[TRANSITION OBLIGATOIRE VERS PARTIE II — Min 4 lignes : "Ainsi avons-nous établi, au terme de cette première partie, que [synthèse Partie I en 1 phrase]. Cette analyse, si elle permet de [apport], ne saurait toutefois être complète sans que l'on s'interroge sur [ce que la Partie II apporte]. C'est précisément l'objet de notre second axe, consacré à [intitulé Partie II]."]
 
 ════════════════════════════════════════════════════════
 
@@ -629,7 +763,7 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[3 paragraphes de 8 à 10 lignes. Transition vers Partie III ou vers Conclusion.]
+[3 paragraphes de 8 à 10 lignes. Dernier paragraphe inclut TRANSITION VERS PARTIE III — "Au regard des éléments développés dans cette deuxième partie, force est de constater que [bilan]. Ces constats nous invitent dès lors à dépasser le simple constat pour envisager [dimension prospective/solutions], fil directeur de notre troisième partie."]
 
 ════════════════════════════════════════════════════════
 
@@ -665,11 +799,11 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[SYNTHÈSE HIÉRARCHISÉE — Min 7 lignes : résume l'essentiel de chaque grande partie en 1-2 phrases fortes. Reformule — ne répète JAMAIS mot pour mot. "En premier lieu, nous avons établi que..., puis nous avons démontré que..., enfin nous avons souligné que..."]
+[TEMPS 1 — BILAN HIÉRARCHISÉ — Min 7 lignes : résume chaque grande partie en 2 phrases fortes REFORMULÉES (jamais mot pour mot). "En premier lieu, nous avons mis en évidence que [synthèse Partie I]. Dans un second temps, notre analyse a démontré que [synthèse Partie II]. Enfin, nous avons établi que [synthèse Partie III]."]
 
-[RÉPONSE NUANCÉE À LA PROBLÉMATIQUE — Min 5 lignes : répond clairement, précisément et avec nuance à la question de l'introduction. Fondée sur les éléments du développement.]
+[TEMPS 2 — RÉPONSE NUANCÉE À LA PROBLÉMATIQUE — Min 5 lignes : reprend la question posée en introduction et y répond avec précision et nuance. "Au terme de cette analyse, il apparaît que [réponse directe]. Cette réponse mérite toutefois d'être nuancée : si [aspect positif], il n'en demeure pas moins que [limite/tension]."]
 
-[OUVERTURE PROSPECTIVE — Min 4 lignes : enjeu futur majeur pour CI ou Afrique, lien avec autre domaine, question nouvelle. Grands défis : développement durable, intégration africaine (ZLECAF), transition numérique, santé tropicale.]
+[TEMPS 3 — OUVERTURE PROSPECTIVE — Min 4 lignes : enjeu futur logiquement relié au sujet traité pour CI/Afrique. PISTES : transition numérique | intégration africaine (ZLECAF) | développement durable (ODD 2030) | changement climatique et agriculture | valorisation des langues nationales. "Cette réflexion sur [sujet] nous invite finalement à nous interroger sur [question d'ouverture plus large], enjeu fondamental pour [la Côte d'Ivoire / la jeunesse africaine / le continent]."]
 
 ────────────────────────────────────────────────────────
 
@@ -705,7 +839,16 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-Rédige maintenant l'exposé COMPLET en français avec la plus grande rigueur académique. TOUT doit être rédigé intégralement avec de vrais contenus enrichis — aucun "[à compléter]", aucune zone vide."""
+Rédige maintenant l'exposé COMPLET en français avec la plus grande rigueur académique.
+
+IMPÉRATIFS ABSOLUS :
+1. TOUT est rédigé intégralement — zéro "[à compléter]", zéro zone vide
+2. Introduction en 5 temps (accroche → contextualisation → délimitation → problématique → annonce plan)
+3. Chaque paragraphe suit le modèle PEEL (Point → Explication → Exemple ivoirien sourcé → Lien)
+4. Transitions obligatoires entre grandes parties (min 4 lignes chacune)
+5. Conclusion en 3 temps (bilan → réponse nuancée à la problématique → ouverture prospective)
+6. Min 3 exemples ivoiriens/africains CHIFFRÉS et SOURCÉS par grande partie
+7. Connecteurs logiques variés — jamais le même deux fois de suite dans un paragraphe"""
 
 
         # ================================================================
@@ -1099,20 +1242,73 @@ HISTOIRE-GÉO CONTEXTUALISÉS :
 SECTION 5 — RÈGLES ABSOLUES DE CONCEPTION DES SUJETS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RÈGLE 1 — COMPLÉTUDE TOTALE : JAMAIS "[À compléter]", "[insérer question]", "[...]" → TOUT rédigé intégralement avec de vrais contenus
-RÈGLE 2 — QUESTIONS RÉELLES : Toutes questions entièrement formulées, tous choix QCM complets et plausibles, tous textes lacunaires entièrement rédigés
-RÈGLE 3 — CONTEXTUALISATION CI : Problèmes maths en FCFA, sciences avec données CI (barrages, maladies, cacao), histoire avec événements CI
-RÈGLE 4 — ZÉRO LaTeX : Formules en texte clair — "F = m x a" jamais "$F = ma$"
-RÈGLE 5 — BARÈME COHÉRENT : Total toujours = 20 points, répartition logique selon difficulté
-RÈGLE 6 — ADAPTATION NIVEAU : CEPE (primaire simple) / BEPC (collège) / BAC série précise (lycée) — adapter strictement
-RÈGLE 7 — CORRIGÉ UNIQUEMENT SI DEMANDÉ : N'inclure le corrigé que si "corrigé", "correction", "éléments de réponse" est mentionné
-RÈGLE 8 — CORRIGÉ EXHAUSTIF : Si demandé, montrer TOUTES les étapes de calcul, justifier CHAQUE réponse, barèmes détaillés
+RÈGLE 1 — COMPLÉTUDE TOTALE ABSOLUE :
+JAMAIS "[À compléter]", "[insérer question]", "[...]", "[Réponse ici]" → TOUT intégralement rédigé avec de vrais contenus. Si une question n'est pas complète, le document est un ÉCHEC.
+
+RÈGLE 2 — TOUTES LES QUESTIONS SONT DES VRAIES QUESTIONS :
+- QCM : 4 choix tous rédigés, distractors plausibles et de longueur similaire
+- VF : affirmations complètes et non ambiguës
+- Texte lacunaire : texte entier rédigé avec tous les blancs _______________ (min 15 underscores)
+- Questions ouvertes : libellé précis, nombre de lignes de réponse adapté aux points alloués
+
+RÈGLE 3 — CONTEXTUALISATION IVOIRIENNE OBLIGATOIRE PARTOUT :
+- Maths : problèmes en FCFA avec prix réels (cacao 350F/kg, gbaka 200F, riz 400F/kg)
+- Sciences : données CI réelles (barrages Soubré 275MW, Kossou 174MW, température Abidjan 26°C)
+- Histoire-Géo : événements, dates et lieux ivoiriens (indépendance 7/8/1960, superficie 322 463 km²)
+- Français : auteurs africains francophones réels (Dadié, Kourouma, Laye, Oyono, Beti)
+- Chaque exercice doit avoir AU MOINS UN élément de contexte ivoirien ou africain
+
+RÈGLE 4 — ZÉRO LaTeX : Formules en texte clair — "F = m x a" JAMAIS "$F = ma$"
+Formules chimiques sans exposants Unicode — "CO2" JAMAIS "CO₂"
+
+RÈGLE 5 — BARÈME COHÉRENT ET PÉDAGOGIQUE :
+- Total TOUJOURS = 20 points (jamais 18, 19 ou 21)
+- Répartition logique : questions simples ≤ 1pt, questions de synthèse 3-5pts
+- Indiquer les points sur CHAQUE question individuelle (pas seulement par exercice)
+- Format : **Question 1** (1 point), **Question 2** (1,5 points), **Sous-total Exercice 1 : /5**
+
+RÈGLE 6 — ADAPTATION STRICTE AU NIVEAU :
+- CEPE (CM1-CM2) : phrases max 15 mots, vocabulaire CP/CE, calculs < 100, 1-2 pages, /20
+- BEPC (3ème) : vocabulaire courant + termes disciplinaires définis, 3-4 exercices, 2-4 pages, /20
+- BAC (Terminale) : rigueur maximale, terminologie disciplinaire maîtrisée, 4-5 exercices, 4-6 pages, /20
+- Adapter STRICTEMENT la longueur, la difficulté et le vocabulaire au niveau indiqué
+
+RÈGLE 7 — GRADATION DE DIFFICULTÉ PROGRESSIVE DANS LE SUJET :
+- Exercice 1 = questions de connaissance/mémorisation (rappel de cours, définitions, QCM)
+- Exercice 2 = questions de compréhension/application (calculs simples, textes, Vrai/Faux)
+- Exercice 3 = questions d'analyse/synthèse (problèmes contextualisés, rédaction, commentaire)
+- Exercice 4+ = production élaborée si demandé (mini-essai, résolution de problème complexe)
+Cette progression permet aux élèves de débuter en confiance et d'aller progressivement vers le difficile.
+
+RÈGLE 8 — CONSIGNES CLAIRES ET SANS AMBIGUÏTÉ :
+Chaque exercice commence par une **Consigne :** en gras, formulée en 1-2 phrases maximales.
+La consigne indique : QUOI faire + COMMENT faire + COMBIEN (nombre de réponses attendues).
+✓ "**Consigne :** Cochez la lettre correspondant à la SEULE bonne réponse pour chacune des 5 questions."
+✓ "**Consigne :** Résolvez le problème en montrant TOUTES les étapes de calcul. Résultat sans démarche = 0 point."
+✗ À éviter : "Répondez aux questions." (trop vague)
+
+RÈGLE 9 — CORRIGÉ UNIQUEMENT SI DEMANDÉ :
+N'inclure le corrigé que si "corrigé", "correction", "éléments de réponse", "barème détaillé" est mentionné dans la description.
+
+RÈGLE 10 — CORRIGÉ EXHAUSTIF QUAND DEMANDÉ :
+- QCM : indiquer la lettre + justification en 1-2 phrases précises pourquoi les autres options sont fausses
+- VF : indiquer V ou F + justification complète pour CHAQUE affirmation
+- Calculs : montrer TOUTES les étapes numériques avec les formules et les unités
+- Texte lacunaire : réécrire le texte COMPLET avec les mots correctement placés soulignés en **gras**
+- Questions ouvertes : éléments de réponse attendus + indication des points partiels possibles
 
 === MISSION ===
 
 Crée maintenant un sujet d'examen COMPLET, PARFAITEMENT STRUCTURÉ et TOTALEMENT RÉDIGÉ basé sur :
 
 {description}
+
+IMPÉRATIFS ABSOLUS :
+1. TOUT est rédigé intégralement — zéro zone vide, zéro "[à compléter]"
+2. Gradation de difficulté progressive : Exercice 1 (mémorisation) → Exercice 2 (application) → Exercice 3+ (synthèse)
+3. Barème détaillé avec points par question, total = /20 obligatoirement
+4. Contexte ivoirien dans CHAQUE exercice (données réelles CI/FCFA/Afrique)
+5. Consignes précises et sans ambiguïté pour chaque exercice
 
 === STRUCTURE OBLIGATOIRE ===
 
@@ -1153,12 +1349,17 @@ Union — Discipline — Travail
 ────────────────────────────────────────────────────────
 
 **BARÈME DE NOTATION :**
-| Exercice | Intitulé | Points |
-|----------|----------|--------|
-| Exercice 1 | [Intitulé complet] | /[X] |
-| Exercice 2 | [Intitulé complet] | /[X] |
-| Exercice 3 | [Intitulé complet] | /[X] |
+| Exercice | Intitulé complet | Points |
+|----------|-----------------|--------|
+| Exercice 1 | [Type d'exercice — ex: Questions à choix multiples] | /[X] |
+| Exercice 2 | [Type d'exercice — ex: Vrai ou Faux avec justification] | /[X] |
+| Exercice 3 | [Type d'exercice — ex: Problème contextualisé] | /[X] |
+| Exercice 4 | [Type d'exercice — ex: Questions de synthèse] | /[X] |
 | **TOTAL** | | **/20** |
+
+────────────────────────────────────────────────────────
+
+**Rappel :** Les points de chaque question sont indiqués entre parenthèses. La présentation soignée est valorisée.
 
 ────────────────────────────────────────────────────────
 
@@ -1227,29 +1428,53 @@ Fournis un document structuré avec :
 Rédige en français, format professionnel et exhaustif."""
 
         elif "Excel" in service or "Data" in service:
-            prompt = f"""Tu es un expert Excel et Data Analytics. Crée une structure complète pour :
+            prompt = f"""Tu es un expert Excel et Data Analytics africain francophone.
+Tu dois analyser la demande et retourner UNIQUEMENT un objet JSON valide, sans texte avant ni après, sans balises markdown.
 
+DEMANDE CLIENT :
 {description}
 
-## FEUILLES À CRÉER
-(Liste des onglets avec description)
+STRUCTURE JSON OBLIGATOIRE :
+{{
+  "titre": "Titre principal du classeur Excel",
+  "contexte": "Description courte en 1 phrase",
+  "feuilles": [
+    {{
+      "nom": "Nom feuille 1 (max 25 car.)",
+      "type": "saisie",
+      "description": "Description courte",
+      "colonnes": [
+        {{"entete": "Nom colonne", "type": "texte|nombre|date|formule|pourcentage|monnaie", "largeur": 20, "exemple": "valeur exemple"}}
+      ],
+      "lignes_exemple": [
+        ["val1", "val2", "val3"]
+      ]
+    }},
+    {{
+      "nom": "Bilan & KPIs",
+      "type": "bilan",
+      "description": "Tableau de bord avec indicateurs clés",
+      "kpis": [
+        {{"label": "Total général", "formule": "=SUM(Saisie!C:C)", "type": "monnaie", "couleur": "bleu"}},
+        {{"label": "Moyenne", "formule": "=AVERAGE(Saisie!C:C)", "type": "monnaie", "couleur": "vert"}},
+        {{"label": "Valeur max", "formule": "=MAX(Saisie!C:C)", "type": "monnaie", "couleur": "orange"}},
+        {{"label": "Valeur min", "formule": "=MIN(Saisie!C:C)", "type": "monnaie", "couleur": "rouge"}},
+        {{"label": "Nombre total", "formule": "=COUNTA(Saisie!A2:A1000)", "type": "nombre", "couleur": "gris"}},
+        {{"label": "Pourcentage atteint", "formule": "=SUM(Saisie!C:C)/500000", "type": "pourcentage", "couleur": "violet"}}
+      ]
+    }}
+  ]
+}}
 
-## STRUCTURE DES COLONNES PAR FEUILLE
-(En-têtes, types de données)
-
-## FORMULES EXCEL CLÉS
-(Avec syntaxe exacte : =SOMME(), =RECHERCHEV(), =SI(), etc.)
-
-## DONNÉES D'EXEMPLE
-(5-10 lignes d'exemple réalistes)
-
-## MISE EN FORME RECOMMANDÉE
-(Couleurs, styles, graphiques suggérés)
-
-## TABLEAU DE BORD
-(Description du tableau de bord final)
-
-Rédige en français, sois très précis et technique."""
+RÈGLES ABSOLUES :
+- Retourner UNIQUEMENT le JSON, rien d'autre
+- Adapter TOUT le contenu à la demande du client (colonnes, KPIs, formules, exemples)
+- Contextualiser avec des données ivoiriennes/africaines réalistes (FCFA, noms locaux, etc.)
+- Minimum 2 feuilles : 1 feuille de saisie + 1 feuille Bilan & KPIs
+- Maximum 4 feuilles
+- Lignes exemple : 8 à 12 lignes réalistes et variées
+- KPIs : minimum 6 indicateurs pertinents selon le sujet (total, moyenne, max, min, nombre, %)
+- Les formules doivent référencer le bon nom de feuille"""
 
         else:
             prompt = f"""Tu es un expert professionnel. Réalise cette mission de façon complète et professionnelle :
@@ -1422,6 +1647,15 @@ def creer_docx(contenu, service, client_nom):
 
     doc = Document()
 
+    # Supprimer le paragraphe vide créé automatiquement par python-docx
+    if doc.paragraphs:
+        p = doc.paragraphs[0]._element
+        p.getparent().remove(p)
+
+    # Neutraliser le start_type NEW_PAGE de la 1re section
+    from docx.enum.section import WD_SECTION
+    doc.sections[0].start_type = WD_SECTION.CONTINUOUS
+
     for section in doc.sections:
         section.top_margin    = Cm(2)
         section.bottom_margin = Cm(2)
@@ -1431,6 +1665,41 @@ def creer_docx(contenu, service, client_nom):
     style = doc.styles["Normal"]
     style.font.name = "Arial"
     style.font.size = Pt(11)
+
+    # ── CORRECTION DÉFINITIVE DES STYLES HEADING ──────────────────
+    # Les styles Heading1/2/3/4 ont keepNext + keepLines + spacing before=480
+    # qui font que Word insère une page quasi-blanche après chaque saut de page.
+    # On les corrige tous à la source.
+    def fix_heading_style(style_name, font_size, color_rgb):
+        try:
+            st = doc.styles[style_name]
+            st.font.name  = "Arial"
+            st.font.size  = Pt(font_size)
+            st.font.bold  = True
+            st.font.color.rgb = RC(*color_rgb)
+            pPr = st.element.get_or_add_pPr()
+            # Supprimer keepNext (cause principale de la page blanche)
+            for child in list(pPr):
+                tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                if tag in ('keepNext', 'keepLines', 'pageBreakBefore'):
+                    pPr.remove(child)
+            # Forcer spacing before=0 after=6
+            from docx.oxml import OxmlElement as _OE2
+            from docx.oxml.ns import qn as _qn2
+            for child in list(pPr):
+                if child.tag.endswith('}spacing') or child.tag == 'spacing':
+                    pPr.remove(child)
+            spacing = _OE2("w:spacing")
+            spacing.set(_qn2("w:before"), "0")
+            spacing.set(_qn2("w:after"),  "60")
+            pPr.append(spacing)
+        except Exception:
+            pass
+
+    fix_heading_style("Heading 1", 16, (0x1F, 0x4E, 0x79))
+    fix_heading_style("Heading 2", 14, (0x2E, 0x75, 0xB6))
+    fix_heading_style("Heading 3", 12, (0x1F, 0x4E, 0x79))
+    fix_heading_style("Heading 4", 11, (0x40, 0x40, 0x40))
 
     from docx.oxml import OxmlElement
     def set_cell_bg(cell, hex_color):
@@ -1445,7 +1714,7 @@ def creer_docx(contenu, service, client_nom):
     from docx.shared import RGBColor as RC
     p_titre = doc.add_paragraph()
     p_titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_t = p_titre.add_run("⚡ NOVA AI  —  " + service.replace("📝","").replace("👔","").replace("📊","").replace("⚙️","").replace("🎨","").replace("📚","").replace("📄","").strip())
+    run_t = p_titre.add_run(service.replace("📝","").replace("👔","").replace("📊","").replace("⚙️","").replace("🎨","").replace("📚","").replace("📄","").strip())
     run_t.bold = True
     run_t.font.size = Pt(16)
     run_t.font.color.rgb = RC(0x1F, 0x4E, 0x79)
@@ -1469,7 +1738,6 @@ def creer_docx(contenu, service, client_nom):
     bottom.set(qn("w:color"), "1F4E79")
     pBdr.append(bottom)
     pPr.append(pBdr)
-    doc.add_paragraph("")
 
     def add_formatted_para(doc, text, style_name="Normal", bold=False, size=11, color=None, align=None):
         p = doc.add_paragraph(style=style_name)
@@ -1520,6 +1788,8 @@ def creer_docx(contenu, service, client_nom):
 
     lignes = contenu.split("\n")
     i = 0
+    sauts_de_page_count = 0  # Compteur de sauts de page pour détecter page garde + sommaire
+
     while i < len(lignes):
         l = lignes[i].rstrip()
 
@@ -1527,7 +1797,7 @@ def creer_docx(contenu, service, client_nom):
         if l.strip() == "---SAUT_DE_PAGE---":
             from docx.oxml.ns import qn as _qn
             from docx.oxml import OxmlElement as _OE
-            # Paragraphe vide portant le saut de page réel
+            sauts_de_page_count += 1
             p_break = doc.add_paragraph()
             p_break.paragraph_format.space_before = Pt(0)
             p_break.paragraph_format.space_after  = Pt(0)
@@ -1540,6 +1810,9 @@ def creer_docx(contenu, service, client_nom):
         # ── LIGNES DE SÉPARATION ════ ET ──── ─────────────────────
         if l.strip().startswith("════") or l.strip().startswith("━━━━"):
             p_line = doc.add_paragraph()
+            p_line.paragraph_format.space_before = Pt(4)
+            p_line.paragraph_format.space_after  = Pt(4)
+            p_line.paragraph_format.line_spacing = Pt(1)
             pPr2 = p_line._p.get_or_add_pPr()
             pBdr2 = OxmlElement("w:pBdr")
             bot2 = OxmlElement("w:bottom")
@@ -1554,6 +1827,9 @@ def creer_docx(contenu, service, client_nom):
 
         if l.strip().startswith("────") or l.strip().startswith("----"):
             p_line = doc.add_paragraph()
+            p_line.paragraph_format.space_before = Pt(3)
+            p_line.paragraph_format.space_after  = Pt(3)
+            p_line.paragraph_format.line_spacing = Pt(1)
             pPr2 = p_line._p.get_or_add_pPr()
             pBdr2 = OxmlElement("w:pBdr")
             bot2 = OxmlElement("w:bottom")
@@ -1700,7 +1976,12 @@ def creer_docx(contenu, service, client_nom):
             continue
 
         if not l.strip():
-            doc.add_paragraph("")
+            p_vide = doc.add_paragraph()
+            # Dans page de garde (avant 1er saut) et sommaire (avant 2e saut) : espacement réduit
+            if sauts_de_page_count < 2:
+                p_vide.paragraph_format.space_before = Pt(0)
+                p_vide.paragraph_format.space_after  = Pt(0)
+                p_vide.paragraph_format.line_spacing = Pt(6)
             i += 1
             continue
 
@@ -1715,7 +1996,11 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
 
-        add_formatted_para(doc, l.strip())
+        p = add_formatted_para(doc, l.strip())
+        # Mode compact pour page de garde et sommaire
+        if sauts_de_page_count < 2:
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after  = Pt(3)
         i += 1
 
     buf = BytesIO()
@@ -1725,165 +2010,260 @@ def creer_docx(contenu, service, client_nom):
 
 
 def creer_xlsx(description, client_nom):
+    """
+    Génère un Excel dynamique basé sur le JSON retourné par Gemini.
+    Si le JSON est invalide, fallback sur un template générique.
+    """
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+    import json, re
 
-    wb = Workbook()
+    # ── PALETTE DE COULEURS ────────────────────────────────────────
+    COULEURS = {
+        "bleu":   {"bg": "1F4E79", "fg": "FFFFFF"},
+        "vert":   {"bg": "1E8449", "fg": "FFFFFF"},
+        "orange": {"bg": "D35400", "fg": "FFFFFF"},
+        "rouge":  {"bg": "C0392B", "fg": "FFFFFF"},
+        "violet": {"bg": "7D3C98", "fg": "FFFFFF"},
+        "gris":   {"bg": "5D6D7E", "fg": "FFFFFF"},
+        "cyan":   {"bg": "117A65", "fg": "FFFFFF"},
+        "or":     {"bg": "B7950B", "fg": "FFFFFF"},
+    }
     BLEU_FONCE = "1F4E79"
-    BLEU_CLAIR = "BDD7EE"
+    BLEU_MOY   = "2E75B6"
+    BLEU_CLAIR = "D6E4F0"
     BLANC      = "FFFFFF"
-    GRIS       = "F2F2F2"
+    GRIS_CLAIR = "F2F2F2"
+    GRIS_MED   = "E8E8E8"
 
     def hdr(cell, bg=BLEU_FONCE, fg=BLANC, bold=True, size=11):
-        cell.font = Font(bold=bold, color=fg, name="Arial", size=size)
-        cell.fill = PatternFill("solid", start_color=bg)
+        cell.font      = Font(bold=bold, color=fg, name="Arial", size=size)
+        cell.fill      = PatternFill("solid", start_color=bg)
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-    def brd(cell):
-        s = Side(style="thin", color="CCCCCC")
+    def brd(cell, color="CCCCCC", style="thin"):
+        s = Side(style=style, color=color)
         cell.border = Border(top=s, bottom=s, left=s, right=s)
 
-    ws1 = wb.active
-    ws1.title = "Saisie Dépenses"
-    ws1.sheet_view.showGridLines = False
+    def brd_epais(cell):
+        s_ext = Side(style="medium", color="1F4E79")
+        s_int = Side(style="thin",   color="CCCCCC")
+        cell.border = Border(top=s_ext, bottom=s_ext, left=s_ext, right=s_ext)
 
-    ws1.merge_cells("A1:H1")
-    t = ws1["A1"]
-    t.value = f"SUIVI DES DÉPENSES — JANVIER 2026  |  {client_nom}"
-    hdr(t, size=13); ws1.row_dimensions[1].height = 34
+    def fmt_cell(cell, type_col, valeur=None):
+        """Applique le format nombre/monnaie/date/pourcentage selon le type."""
+        if type_col == "monnaie":
+            cell.number_format = '#,##0 "FCFA"'
+        elif type_col == "pourcentage":
+            cell.number_format = "0.0%"
+        elif type_col == "nombre":
+            cell.number_format = "#,##0"
+        elif type_col == "date":
+            cell.number_format = "DD/MM/YYYY"
 
-    ws1.merge_cells("A2:H2")
-    ws1["A2"].value = f"Généré le {datetime.now().strftime('%d/%m/%Y')} — Nova AI"
-    ws1["A2"].font = Font(italic=True, color="7F7F7F", name="Arial", size=10)
-    ws1["A2"].alignment = Alignment(horizontal="center")
+    # ── PARSE JSON GEMINI ──────────────────────────────────────────
+    data = None
+    try:
+        # Nettoyer le texte : enlever balises markdown si présentes
+        texte = description.strip()
+        texte = re.sub(r"^```json\s*", "", texte)
+        texte = re.sub(r"```\s*$", "", texte)
+        texte = re.sub(r"^```\s*", "", texte)
+        data = json.loads(texte)
+    except Exception:
+        data = None
 
-    cols   = ["N°","Date","Description","Catégorie","Bénéficiaire","Montant (FCFA)","Mode Paiement","Notes"]
-    widths = [5, 13, 30, 18, 20, 18, 16, 25]
-    for c,(h,w) in enumerate(zip(cols,widths),1):
-        cell = ws1.cell(row=3,column=c,value=h); hdr(cell); brd(cell)
-        ws1.column_dimensions[get_column_letter(c)].width = w
-    ws1.row_dimensions[3].height = 26
+    wb = Workbook()
+    wb.remove(wb.active)  # Supprimer feuille vide par défaut
 
-    rows = [
-        [1,"01/01/2026","Courses alimentaires","Alimentation","Supermarché",15000,"Espèces",""],
-        [2,"03/01/2026","Transport taxi","Transport","Taxi",5000,"Mobile Money",""],
-        [3,"05/01/2026","Facture électricité","Factures","CIE",22000,"Virement","Janvier 2026"],
-        [4,"07/01/2026","Restaurant déjeuner","Restauration","Maquis du coin",7500,"Espèces",""],
-        [5,"10/01/2026","Recharge téléphone","Communication","Orange CI",3000,"Mobile Money",""],
-        [6,"12/01/2026","Médicaments pharmacie","Santé","Pharmacie Plus",12000,"Espèces",""],
-        [7,"15/01/2026","Internet mensuel","Communication","MTN CI",8000,"Virement","Abonnement mensuel"],
-        [8,"18/01/2026","Vêtements enfants","Habillement","Marché",20000,"Espèces",""],
-        [9,"22/01/2026","Loyer","Logement","Propriétaire",150000,"Virement","Loyer janvier"],
-        [10,"28/01/2026","Courses alimentaires","Alimentation","Marché",18000,"Espèces","Fin de mois"],
-    ]
-    for r,row in enumerate(rows,4):
-        bg = GRIS if r%2==0 else BLANC
-        for c,val in enumerate(row,1):
-            cell = ws1.cell(row=r,column=c,value=val)
-            cell.font = Font(name="Arial",size=10,
-                             bold=(c==6), color=("1F4E79" if c==6 else "000000"))
-            cell.fill = PatternFill("solid",start_color=bg)
-            cell.alignment = Alignment(vertical="center",
-                                       horizontal="center" if c in [1,2,6,7] else "left")
-            brd(cell)
-            if c==6: cell.number_format = '#,##0 "FCFA"'
+    if not data or "feuilles" not in data:
+        # ── FALLBACK : template générique si JSON invalide ─────────
+        ws = wb.create_sheet("Données")
+        ws.sheet_view.showGridLines = False
+        ws.merge_cells("A1:D1")
+        ws["A1"].value = f"{client_nom} — Données"
+        hdr(ws["A1"], size=13); ws.row_dimensions[1].height = 32
+        ws["A2"].value = description[:200]
+        ws["A2"].font = Font(italic=True, color="7F7F7F", name="Arial", size=10)
+        buf = BytesIO(); wb.save(buf); buf.seek(0)
+        return buf
 
-    tr = len(rows)+4
-    ws1.merge_cells(f"A{tr}:E{tr}")
-    hdr(ws1[f"A{tr}"],size=11); ws1[f"A{tr}"].value="TOTAL JANVIER"; brd(ws1[f"A{tr}"])
-    tot = ws1[f"F{tr}"]
-    tot.value=f"=SUM(F4:F{tr-1})"
-    tot.number_format='#,##0 "FCFA"'; hdr(tot); brd(tot)
-    ws1.row_dimensions[tr].height=28
+    titre_classeur = data.get("titre", f"Classeur {client_nom}")
 
-    ws2 = wb.create_sheet("Catégories")
-    ws2.sheet_view.showGridLines = False
-    ws2.merge_cells("A1:D1"); t2=ws2["A1"]; t2.value="CATÉGORIES DE DÉPENSES"; hdr(t2,size=13); ws2.row_dimensions[1].height=32
+    # ── CONSTRUCTION DE CHAQUE FEUILLE ─────────────────────────────
+    for feuille in data.get("feuilles", []):
+        nom_feuille = feuille.get("nom", "Feuille")[:31]
+        type_feuille = feuille.get("type", "saisie")
+        colonnes = feuille.get("colonnes", [])
+        lignes   = feuille.get("lignes_exemple", [])
+        kpis     = feuille.get("kpis", [])
 
-    h2=["Catégorie","Budget Prévu (FCFA)","Total Réel (FCFA)","Écart (FCFA)"]
-    for c,(h,w) in enumerate(zip(h2,[25,22,22,22]),1):
-        cell=ws2.cell(row=2,column=c,value=h); hdr(cell,bg="2E75B6"); brd(cell)
-        ws2.column_dimensions[get_column_letter(c)].width=w
+        ws = wb.create_sheet(nom_feuille)
+        ws.sheet_view.showGridLines = False
 
-    cats=[("Alimentation",50000),("Transport",20000),("Factures",30000),
-          ("Restauration",15000),("Communication",15000),("Santé",20000),
-          ("Habillement",25000),("Logement",150000),("Loisirs",10000),("Autres",10000)]
-    for r,(cat,budget) in enumerate(cats,3):
-        bg = BLEU_CLAIR if r%2==0 else BLANC
-        c1=ws2.cell(row=r,column=1,value=cat); c1.font=Font(name="Arial",size=10,bold=True)
-        c1.fill=PatternFill("solid",start_color=bg); c1.alignment=Alignment(vertical="center"); brd(c1)
-        c2=ws2.cell(row=r,column=2,value=budget); c2.number_format='#,##0 "FCFA"'
-        c2.font=Font(name="Arial",size=10,color="0000FF")
-        c2.fill=PatternFill("solid",start_color=bg); c2.alignment=Alignment(horizontal="center"); brd(c2)
-        c3=ws2.cell(row=r,column=3,value=f"=SUMIF('Saisie Dépenses'!D:D,A{r},'Saisie Dépenses'!F:F)")
-        c3.number_format='#,##0 "FCFA"'; c3.fill=PatternFill("solid",start_color=bg)
-        c3.alignment=Alignment(horizontal="center"); brd(c3); c3.font=Font(name="Arial",size=10)
-        c4=ws2.cell(row=r,column=4,value=f"=B{r}-C{r}"); c4.number_format='#,##0 "FCFA"'
-        c4.fill=PatternFill("solid",start_color=bg); c4.alignment=Alignment(horizontal="center"); brd(c4)
-        c4.font=Font(name="Arial",size=10)
+        n_cols = max(len(colonnes), 4)
+        last_col = get_column_letter(n_cols)
 
-    tr2=len(cats)+3
-    ws2.cell(row=tr2,column=1,value="TOTAL")
-    hdr(ws2.cell(row=tr2,column=1)); brd(ws2.cell(row=tr2,column=1))
-    for col in [2,3,4]:
-        cell=ws2.cell(row=tr2,column=col,value=f"=SUM({get_column_letter(col)}3:{get_column_letter(col)}{tr2-1})")
-        cell.number_format='#,##0 "FCFA"'; hdr(cell); brd(cell)
+        # ── EN-TÊTE PRINCIPAL ──────────────────────────────────────
+        ws.merge_cells(f"A1:{last_col}1")
+        cell_titre = ws.cell(row=1, column=1, value=f"{titre_classeur}  |  {client_nom}")
+        hdr(cell_titre, size=13); ws.row_dimensions[1].height = 36
 
-    ws3 = wb.create_sheet("Tableau de Bord")
-    ws3.sheet_view.showGridLines = False
-    ws3.merge_cells("A1:E1"); t3=ws3["A1"]; t3.value="TABLEAU DE BORD — JANVIER 2026"
-    hdr(t3,size=13); ws3.row_dimensions[1].height=34
+        ws.merge_cells(f"A2:{last_col}2")
+        cell_desc = ws.cell(row=2, column=1, value=f"{feuille.get('description', '')}  —  Généré le {datetime.now().strftime('%d/%m/%Y')}")
+        cell_desc.font      = Font(italic=True, color="7F7F7F", name="Arial", size=10)
+        cell_desc.alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[2].height = 20
 
-    ws3.column_dimensions["A"].width=26; ws3.column_dimensions["B"].width=22
-    ws3.column_dimensions["C"].width=4;  ws3.column_dimensions["D"].width=26
-    ws3.column_dimensions["E"].width=22
+        # ── FEUILLE DE TYPE SAISIE ─────────────────────────────────
+        if type_feuille == "saisie" and colonnes:
+            # En-têtes colonnes
+            for c_idx, col in enumerate(colonnes, 1):
+                cell = ws.cell(row=3, column=c_idx, value=col["entete"])
+                hdr(cell, bg=BLEU_MOY); brd(cell)
+                ws.column_dimensions[get_column_letter(c_idx)].width = col.get("largeur", 18)
+            ws.row_dimensions[3].height = 28
 
-    kpis=[
-        ("Total Dépenses Janvier","='Saisie Dépenses'!F14",BLEU_FONCE),
-        ("Budget Total Prévu",    "='Catégories'!B13",    "2E75B6"),
-        ("Écart Budget/Réel",     "='Catégories'!D13",    "375623"),
-        ("Nb de Transactions",    "=COUNTA('Saisie Dépenses'!A4:A1000)-1","7F7F7F"),
-    ]
-    positions=[(3,1,2),(3,4,5),(6,1,2),(6,4,5)]
-    for (row,cl,cv),(label,formula,bg) in zip(positions,kpis):
-        lc=ws3.cell(row=row,column=cl,value=label)
-        lc.font=Font(bold=True,name="Arial",size=11,color=BLANC)
-        lc.fill=PatternFill("solid",start_color=bg)
-        lc.alignment=Alignment(horizontal="center",vertical="center"); ws3.row_dimensions[row].height=32
-        vc=ws3.cell(row=row,column=cv,value=formula)
-        vc.number_format='#,##0 "FCFA"' if "Nb" not in label else "0"
-        vc.font=Font(bold=True,name="Arial",size=13,color=BLANC)
-        vc.fill=PatternFill("solid",start_color=bg)
-        vc.alignment=Alignment(horizontal="center",vertical="center")
+            # Lignes de données exemple
+            for r_idx, ligne in enumerate(lignes, 4):
+                bg = GRIS_CLAIR if r_idx % 2 == 0 else BLANC
+                for c_idx, val in enumerate(ligne, 1):
+                    if c_idx > len(colonnes):
+                        break
+                    cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                    type_col = colonnes[c_idx-1].get("type", "texte")
+                    cell.font      = Font(name="Arial", size=10,
+                                          bold=(type_col in ["monnaie","nombre"]),
+                                          color=("1F4E79" if type_col == "monnaie" else "000000"))
+                    cell.fill      = PatternFill("solid", start_color=bg)
+                    cell.alignment = Alignment(vertical="center",
+                                               horizontal="center" if type_col in ["monnaie","nombre","date","pourcentage"] else "left")
+                    fmt_cell(cell, type_col)
+                    brd(cell)
 
-    ws3.merge_cells("A9:E9"); rh=ws3["A9"]
-    rh.value="RÉCAPITULATIF PAR CATÉGORIE"; hdr(rh,bg="2E75B6",size=12); ws3.row_dimensions[9].height=28
+            # Ligne TOTAL
+            if lignes:
+                total_row = len(lignes) + 4
+                ws.row_dimensions[total_row].height = 28
+                # Trouver la 1re colonne numérique pour placer le label TOTAL
+                first_num_col = next((c_idx for c_idx, col in enumerate(colonnes, 1)
+                                      if col.get("type") in ["monnaie", "nombre"]), None)
+                # Colonnes texte → label "TOTAL"
+                for c_idx, col in enumerate(colonnes, 1):
+                    cell_t = ws.cell(row=total_row, column=c_idx)
+                    if col.get("type") not in ["monnaie", "nombre"]:
+                        if c_idx == 1:
+                            cell_t.value = "TOTAL"
+                        hdr(cell_t, size=11); brd_epais(cell_t)
+                    else:
+                        col_letter = get_column_letter(c_idx)
+                        cell_t.value = f"=SUM({col_letter}4:{col_letter}{total_row-1})"
+                        fmt_cell(cell_t, col["type"])
+                        hdr(cell_t, size=11); brd_epais(cell_t)
 
-    rh2=["Catégorie","Budget (FCFA)","Réel (FCFA)","Écart (FCFA)","% Consommé"]
-    for c,h in enumerate(rh2,1):
-        cell=ws3.cell(row=10,column=c,value=h); hdr(cell); brd(cell)
-        ws3.column_dimensions[get_column_letter(c)].width=[26,18,18,18,14][c-1]
+            # Figer la ligne d'en-tête
+            ws.freeze_panes = "A4"
 
-    for r,cat in enumerate([c for c,_ in cats],11):
-        cat_row=r-8
-        bg=BLEU_CLAIR if r%2==0 else BLANC
-        c1=ws3.cell(row=r,column=1,value=cat)
-        c1.font=Font(name="Arial",size=10,bold=True)
-        c1.fill=PatternFill("solid",start_color=bg); c1.alignment=Alignment(vertical="center"); brd(c1)
-        for col,formula in enumerate([
-            f"='Catégories'!B{cat_row+2}",
-            f"='Catégories'!C{cat_row+2}",
-            f"='Catégories'!D{cat_row+2}",
-            f"=IF(B{r}=0,0,C{r}/B{r})",
-        ],2):
-            cell=ws3.cell(row=r,column=col,value=formula)
-            cell.font=Font(name="Arial",size=10)
-            cell.fill=PatternFill("solid",start_color=bg)
-            cell.alignment=Alignment(horizontal="center"); brd(cell)
-            cell.number_format='#,##0 "FCFA"' if col<6 else "0.0%"
+        # ── FEUILLE DE TYPE BILAN / KPIs ───────────────────────────
+        elif type_feuille == "bilan" and kpis:
+            # Titre section KPIs
+            ws.merge_cells(f"A3:{last_col}3")
+            cell_kpi_title = ws.cell(row=3, column=1, value="━━  INDICATEURS CLÉS DE PERFORMANCE  ━━")
+            hdr(cell_kpi_title, bg=BLEU_FONCE, size=12); ws.row_dimensions[3].height = 30
 
-    buf=BytesIO(); wb.save(buf); buf.seek(0)
+            # Disposition des KPIs : 2 par ligne (label | valeur | espace | label | valeur)
+            ws.column_dimensions["A"].width = 30
+            ws.column_dimensions["B"].width = 24
+            ws.column_dimensions["C"].width = 3
+            ws.column_dimensions["D"].width = 30
+            ws.column_dimensions["E"].width = 24
+
+            row_kpi = 4
+            for idx, kpi in enumerate(kpis):
+                if idx % 2 == 0 and idx > 0:
+                    row_kpi += 2  # Saut d'une ligne entre paires
+
+                col_start = 1 if idx % 2 == 0 else 4
+                couleur_key = kpi.get("couleur", "bleu")
+                bg_kpi = COULEURS.get(couleur_key, COULEURS["bleu"])["bg"]
+                fg_kpi = COULEURS.get(couleur_key, COULEURS["bleu"])["fg"]
+
+                # Label
+                cl = ws.cell(row=row_kpi, column=col_start, value=kpi["label"])
+                cl.font      = Font(bold=True, name="Arial", size=11, color=fg_kpi)
+                cl.fill      = PatternFill("solid", start_color=bg_kpi)
+                cl.alignment = Alignment(horizontal="center", vertical="center")
+                brd_epais(cl)
+                ws.row_dimensions[row_kpi].height = 36
+
+                # Valeur
+                cv = ws.cell(row=row_kpi, column=col_start+1, value=kpi.get("formule", 0))
+                cv.font      = Font(bold=True, name="Arial", size=14, color=fg_kpi)
+                cv.fill      = PatternFill("solid", start_color=bg_kpi)
+                cv.alignment = Alignment(horizontal="center", vertical="center")
+                fmt_cell(cv, kpi.get("type", "nombre"))
+                brd_epais(cv)
+
+            # ── TABLEAU RÉCAPITULATIF sous les KPIs ───────────────
+            row_recap = row_kpi + 3
+
+            # Trouver la 1re feuille de saisie pour le récap
+            feuille_saisie = next((f for f in data["feuilles"] if f.get("type") == "saisie"), None)
+            if feuille_saisie:
+                nom_s   = feuille_saisie["nom"][:31]
+                cols_s  = feuille_saisie.get("colonnes", [])
+
+                ws.merge_cells(f"A{row_recap}:E{row_recap}")
+                cell_recap_title = ws.cell(row=row_recap, column=1, value=f"RÉCAPITULATIF — {nom_s.upper()}")
+                hdr(cell_recap_title, bg=BLEU_MOY, size=12)
+                ws.row_dimensions[row_recap].height = 28
+                row_recap += 1
+
+                # En-têtes récap
+                recap_cols = [c["entete"] for c in cols_s[:5]]
+                for c_idx, h in enumerate(recap_cols, 1):
+                    cell = ws.cell(row=row_recap, column=c_idx, value=h)
+                    hdr(cell, bg=BLEU_FONCE); brd(cell)
+                ws.row_dimensions[row_recap].height = 24
+                row_recap += 1
+
+                # Lignes récap (depuis les données exemple)
+                for r_idx, ligne in enumerate(feuille_saisie.get("lignes_exemple", [])[:8], row_recap):
+                    bg = BLEU_CLAIR if r_idx % 2 == 0 else BLANC
+                    for c_idx, val in enumerate(ligne[:5], 1):
+                        if c_idx > len(cols_s):
+                            break
+                        cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                        type_col = cols_s[c_idx-1].get("type", "texte")
+                        cell.font      = Font(name="Arial", size=10,
+                                              color=("1F4E79" if type_col == "monnaie" else "000000"))
+                        cell.fill      = PatternFill("solid", start_color=bg)
+                        cell.alignment = Alignment(vertical="center",
+                                                   horizontal="center" if type_col in ["monnaie","nombre","date"] else "left")
+                        fmt_cell(cell, type_col)
+                        brd(cell)
+
+        # ── AUTRES TYPES DE FEUILLES (générique) ──────────────────
+        else:
+            if colonnes:
+                for c_idx, col in enumerate(colonnes, 1):
+                    cell = ws.cell(row=3, column=c_idx, value=col["entete"])
+                    hdr(cell); brd(cell)
+                    ws.column_dimensions[get_column_letter(c_idx)].width = col.get("largeur", 18)
+                for r_idx, ligne in enumerate(lignes, 4):
+                    for c_idx, val in enumerate(ligne, 1):
+                        cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                        cell.font = Font(name="Arial", size=10)
+                        cell.alignment = Alignment(vertical="center")
+                        brd(cell)
+
+    # ── MISE EN FORME FINALE : onglets colorés ─────────────────────
+    couleurs_onglets = ["1F4E79", "1E8449", "D35400", "7D3C98"]
+    for i, ws in enumerate(wb.worksheets):
+        ws.sheet_properties.tabColor = couleurs_onglets[i % len(couleurs_onglets)]
+
+    buf = BytesIO(); wb.save(buf); buf.seek(0)
     return buf
 
 
@@ -2819,7 +3199,6 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="auth-page">', unsafe_allow_html=True)
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
@@ -2868,26 +3247,30 @@ def show_auth_page():
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
-                        db["users"][new_uid] = {
-                            "whatsapp": normalize_wa(new_wa),
-                            "email": "Non renseigné",
-                            "joined": str(datetime.now()),
-                            "premium": False,
-                            "premium_plan": None,
-                            "premium_expiry": None,
-                        }
-                        save_user(new_uid, normalize_wa(new_wa))
-                        st.session_state["current_user"] = new_uid
-                        st.session_state["view"] = "home"
-                        st.session_state["db"] = load_db()
-                        st.query_params["user_id"] = new_uid
-                        st.rerun()
+                        succes = save_user(new_uid, normalize_wa(new_wa))
+                        if succes:
+                            db["users"][new_uid] = {
+                                "whatsapp": normalize_wa(new_wa),
+                                "email": "Non renseigné",
+                                "joined": str(datetime.now()),
+                                "premium": False,
+                                "premium_plan": None,
+                                "premium_expiry": None,
+                                "gen_used": 0,
+                                "gen_date": None,
+                            }
+                            st.session_state["current_user"] = new_uid
+                            st.session_state["view"] = "home"
+                            st.session_state["db"] = load_db()
+                            st.query_params["user_id"] = new_uid
+                            st.rerun()
+                        else:
+                            st.error("❌ Impossible de créer le compte. Vérifie ta connexion ou contacte le support.")
                     else:
                         st.warning("⚠️ Identifiant déjà utilisé.")
                 else:
                     st.error("Champs obligatoires.")
 
-    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
     <div class="auth-secure-badge">
@@ -3412,12 +3795,22 @@ def main_dashboard():
             """, unsafe_allow_html=True)
 
         if premium_actif and service in SERVICES_GEMINI:
-            st.markdown("""
+            _udata_q = st.session_state["db"]["users"].get(user, {})
+            _restant  = quota_restant(_udata_q)
+            _plan_q   = _udata_q.get("premium_plan", "")
+            _quota_q  = PLANS_PREMIUM.get(_plan_q, {}).get("generations", 0)
+            _used_q, _ = get_gen_quota(_udata_q)
+            _couleur_quota = "#2ecc71" if _restant > 1 else ("#FFD700" if _restant == 1 else "#e74c3c")
+            st.markdown(f"""
             <div style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,140,0,.06));
                  border:1px solid rgba(255,215,0,.5);border-radius:12px;padding:12px 18px;margin:10px 0;">
                 <span style="color:#FFD700;font-weight:800;">⚡ PREMIUM — Génération IA automatique activée</span>
                 <span style="color:rgba(255,255,255,.5);font-size:.8rem;display:block;margin-top:3px;">
-                    Votre document sera généré et livré en moins d'1 minute après soumission.
+                    Votre document sera généré et livré en moins d'1 minute.
+                </span>
+                <span style="color:{_couleur_quota};font-size:.85rem;font-weight:700;display:block;margin-top:6px;">
+                    📊 Générations aujourd'hui : {_used_q}/{_quota_q} utilisées — 
+                    {'✅ ' + str(_restant) + ' restante(s)' if _restant > 0 else '🚫 Quota atteint — demande manuelle uniquement'}
                 </span>
             </div>""", unsafe_allow_html=True)
 
@@ -3430,80 +3823,99 @@ def main_dashboard():
             elif premium_actif and service in SERVICES_GEMINI and not champs_manquants:
                 import threading
 
-                processing_box = st.empty()
-                processing_box.markdown("""
-                <div class="nova-processing">
-                    <div class="nova-processing-title">⚡ NOVA IA EST EN COURS DE TRAITEMENT</div>
-                    <div class="nova-processing-sub">Génération automatique en cours · Merci de patienter (max 1 minute)</div>
-                </div>""", unsafe_allow_html=True)
+                # ── VÉRIFICATION DU QUOTA DE GÉNÉRATIONS ──────────────────
+                user_data_frais = st.session_state["db"]["users"].get(user, {})
+                restant = quota_restant(user_data_frais)
+                plan_actuel = user_data_frais.get("premium_plan", "")
+                quota_max = PLANS_PREMIUM.get(plan_actuel, {}).get("generations", 0)
+                used_auj, _ = get_gen_quota(user_data_frais)
 
-                barre = st.progress(0)
-                label_prog = st.empty()
-                t_start = time.time()
-                result_holder = {}
-
-                def generer():
-                    try:
-                        contenu = generer_avec_gemini(service, prompt, user)
-                        if contenu.startswith("❌"):
-                            result_holder["erreur"] = contenu
-                            return
-                        if service == "📊 Data & Excel Analytics":
-                            buf  = creer_xlsx(prompt, user)
-                            nom  = f"NovaAI_{user}_{service[:20].strip()}.xlsx".replace(" ", "_").replace("/", "-")
-                            mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        else:
-                            buf  = creer_docx(contenu, service, user)
-                            nom  = f"NovaAI_{user}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
-                            mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        result_holder["buf"]  = buf
-                        result_holder["nom"]  = nom
-                        result_holder["mime"] = mime
-                    except Exception as e:
-                        result_holder["erreur"] = f"❌ Erreur : {e}"
-
-                thread = threading.Thread(target=generer)
-                thread.start()
-
-                pct = 0
-                while thread.is_alive():
-                    elapsed = time.time() - t_start
-                    pct = min(int(elapsed / 60 * 90), 90)
-                    barre.progress(pct)
-                    label_prog.markdown(f"<p style='text-align:center;color:#FFD700;font-weight:bold;'>⚡ Nova IA traite votre demande... {pct}%</p>", unsafe_allow_html=True)
-                    time.sleep(0.5)
-                thread.join()
-
-                barre.progress(100)
-                label_prog.markdown("<p style='text-align:center;color:#2ecc71;font-weight:bold;'>✅ Traitement terminé !</p>", unsafe_allow_html=True)
-                time.sleep(0.8)
-                barre.empty(); label_prog.empty(); processing_box.empty()
-
-                duree = int(time.time() - t_start)
-
-                if "erreur" in result_holder:
-                    st.error(result_holder["erreur"])
-                    st.info("💡 Votre demande a été transmise à l'équipe Nova pour traitement manuel.")
-                    new_req = {
-                        "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
-                        "user": user, "service": service,
-                        "desc": prompt, "whatsapp": normalize_wa(wa_display),
-                        "status": "Traitement Nova en cours...", "incomplet": False,
-                        "champs_manquants": [], "timestamp": str(datetime.now()),
-                    }
-                    st.session_state["db"]["demandes"].append(new_req)
-                    save_demande(new_req)
-                else:
-                    save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
-                    st.session_state["premium_livrable"] = {
-                        "buf":     result_holder["buf"],
-                        "nom":     result_holder["nom"],
-                        "mime":    result_holder["mime"],
-                        "service": service,
-                        "duree":   duree,
-                    }
-                    st.session_state["db"] = load_db()
+                if restant <= 0:
+                    st.error(f"🚫 Limite de générations atteinte pour aujourd'hui ({used_auj}/{quota_max} utilisées).")
+                    st.info("💡 Votre quota se renouvelle demain, ou contactez Nova pour upgrader votre plan.")
+                    # Basculer en mode demande manuelle
+                    st.session_state["is_glowing"] = True
                     st.rerun()
+                else:
+                    processing_box = st.empty()
+                    processing_box.markdown(f"""
+                    <div class="nova-processing">
+                        <div class="nova-processing-title">⚡ GÉNÉRATION EN COURS</div>
+                        <div class="nova-processing-sub">Génération automatique · Quota restant après cette génération : {restant - 1}/{quota_max}</div>
+                    </div>""", unsafe_allow_html=True)
+
+                    barre = st.progress(0)
+                    label_prog = st.empty()
+                    t_start = time.time()
+                    result_holder = {}
+
+                    def generer():
+                        try:
+                            contenu = generer_avec_gemini(service, prompt, user)
+                            if contenu.startswith("❌"):
+                                result_holder["erreur"] = contenu
+                                return
+                            if service == "📊 Data & Excel Analytics":
+                                buf  = creer_xlsx(prompt, user)
+                                nom  = f"{user}_{service[:20].strip()}.xlsx".replace(" ", "_").replace("/", "-")
+                                mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            else:
+                                buf  = creer_docx(contenu, service, user)
+                                nom  = f"{user}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            result_holder["buf"]  = buf
+                            result_holder["nom"]  = nom
+                            result_holder["mime"] = mime
+                        except Exception as e:
+                            result_holder["erreur"] = f"❌ Erreur : {e}"
+
+                    thread = threading.Thread(target=generer)
+                    thread.start()
+
+                    pct = 0
+                    while thread.is_alive():
+                        elapsed = time.time() - t_start
+                        pct = min(int(elapsed / 60 * 90), 90)
+                        barre.progress(pct)
+                        label_prog.markdown(f"<p style='text-align:center;color:#FFD700;font-weight:bold;'>⚡ Génération en cours... {pct}%</p>", unsafe_allow_html=True)
+                        time.sleep(0.5)
+                    thread.join()
+
+                    barre.progress(100)
+                    label_prog.markdown("<p style='text-align:center;color:#2ecc71;font-weight:bold;'>✅ Document généré !</p>", unsafe_allow_html=True)
+                    time.sleep(0.8)
+                    barre.empty(); label_prog.empty(); processing_box.empty()
+
+                    duree = int(time.time() - t_start)
+
+                    if "erreur" in result_holder:
+                        st.error(result_holder["erreur"])
+                        st.info("💡 Votre demande a été transmise à l'équipe Nova pour traitement manuel.")
+                        new_req = {
+                            "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
+                            "user": user, "service": service,
+                            "desc": prompt, "whatsapp": normalize_wa(wa_display),
+                            "status": "Traitement Nova en cours...", "incomplet": False,
+                            "champs_manquants": [], "timestamp": str(datetime.now()),
+                        }
+                        st.session_state["db"]["demandes"].append(new_req)
+                        save_demande(new_req)
+                    else:
+                        # Incrémenter le compteur de générations
+                        incrementer_gen(user)
+                        save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
+                        # Email admin — Gemini a déjà répondu
+                        wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
+                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
+                        st.session_state["premium_livrable"] = {
+                            "buf":     result_holder["buf"],
+                            "nom":     result_holder["nom"],
+                            "mime":    result_holder["mime"],
+                            "service": service,
+                            "duree":   duree,
+                        }
+                        st.session_state["db"] = load_db()
+                        st.rerun()
 
             else:
                 st.session_state["is_glowing"] = True
@@ -3786,7 +4198,7 @@ def main_dashboard():
                                 SERVICE_EXCEL = "📊 Data & Excel Analytics"
                                 if result["service"] == SERVICE_EXCEL:
                                     buf = creer_xlsx(result.get("desc", ""), result["client"])
-                                    nom_fichier = f"NovaAI_{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
+                                    nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
                                     st.download_button(
                                         label="📥 TÉLÉCHARGER LE FICHIER EXCEL (.xlsx)",
                                         data=buf,
@@ -3798,7 +4210,7 @@ def main_dashboard():
                                     st.info("📊 Fichier Excel avec 3 feuilles : Saisie, Catégories, Tableau de Bord")
                                 else:
                                     buf = creer_docx(result["contenu"], result["service"], result["client"])
-                                    nom_fichier = f"NovaAI_{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                    nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
                                     st.download_button(
                                         label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
                                         data=buf,
@@ -3921,8 +4333,14 @@ components.html("""
     </script>
 """, height=0)
 
+# Masquer l'iframe vide créée par components.html
+st.markdown("""
+    <style>
+    iframe[title="components.v1.html"] { display: none !important; height: 0 !important; }
+    </style>
+""", unsafe_allow_html=True)
+
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
 else:
     main_dashboard()
-
