@@ -358,84 +358,40 @@ COMMENT LE MOTEUR NOVA CONVERTIT TON TEXTE EN WORD :
    ✗ Indentations avec espaces multiples
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 2 — FORMULES MATHÉMATIQUES ET SCIENTIFIQUES — NOTATION NOVA
+SECTION 2 — MOTEUR FORMULES NOVA — GUIDE COMPLET
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚡ NOVA possède un MOTEUR DE FORMULES INTÉGRÉ qui convertit automatiquement :
-  - LaTeX inline ($...$) → rendu Word avec vrais exposants/indices
-  - Notation directe ^{} et _{} → vrais exposants/indices Word
-  - Tous les symboles grecs et mathématiques Unicode
+NOVA possède un moteur qui convertit toutes les notations mathématiques/scientifiques
+en vrais exposants/indices Word. 4 modes disponibles :
 
-TU PEUX UTILISER L'UNE DE CES 3 NOTATIONS — elles sont toutes acceptées :
+① ###FORMULE### [formule] → formule mise en valeur (fond bleu clair, centré, 13pt gras)
+  ###FORMULE### E = m × c^{{2}}
+  ###FORMULE### F = (G × m_{{1}} × m_{{2}}) / r^{{2}}
+  ###FORMULE### Δ = b^{{2}} - 4ac  →  x_{{1,2}} = (-b ± √Δ) / (2a)
 
-① NOTATION NOVA DIRECTE (recommandée) :
-  - Exposant : x^{2}, E = mc^{2}, ax^{2} + bx + c = 0
-  - Indice   : H_{2}O, CO_{2}, C_{6}H_{12}O_{6}, m_{1}, x_{1,2}
-  - Fraction : (a + b)/(c - d)
-  - Racine   : √(2gh), √(b^{2} - 4ac)
-  - Symboles Unicode directement : α β γ δ ε θ λ μ π σ φ ω Ω Δ Σ
-  - Opérateurs : × ÷ ± ≤ ≥ ≠ ≈ → ⇌ ∈ ∞ ∫ ∂
+② ###DEBUT_FORMULES### / ###FIN_FORMULES### → bloc de formules groupées
+  ###DEBUT_FORMULES###
+  U = R × I       (loi d'Ohm)
+  P = U × I       (puissance électrique)
+  E = P × t       (énergie en Joules)
+  ###FIN_FORMULES###
 
-② LATEX INLINE (aussi accepté, converti automatiquement) :
-  - $E = mc^{2}$, $\frac{U}{R} = I$, $\sqrt{b^{2}-4ac}$
-  - $\omega = 2\pi f$, $F = \frac{Gm_{1}m_{2}}{r^{2}}$
-  - $6CO_{2} + 6H_{2}O \rightarrow C_{6}H_{12}O_{6} + 6O_{2}$
+③ INLINE dans le texte avec ^{{}} et _{{}} :
+  "La résistance vaut R_{{eq}} = R_{{1}} + R_{{2}} = 50 Ω"
+  "L'énergie cinétique E_{{c}} = (1/2)×m×v^{{2}}"
+  "Le noyau ^{{14}}_{{6}}C émet un β^{{-}}"
+  "H_{{2}}O, CO_{{2}}, C_{{6}}H_{{12}}O_{{6}}, SO_{{4}}^{{2-}}, Ca^{{2+}}"
 
-③ TEXTE CLAIR (pour formules simples) :
-  - F = m × a, v = d/t, U = R × I, P × V = n × R × T
+④ LaTeX $...$ converti automatiquement :
+  "$\frac{{U}}{{R}} = I$" | "$\sqrt{{b^{{2}}-4ac}}$" | "$\omega = 2\pi f$"
 
-EXEMPLES PAR MATIÈRE :
+TOUS LES SYMBOLES DISPONIBLES (utilise directement) :
+  α β γ δ ε ζ η θ ι κ λ μ ν ξ π ρ σ τ υ φ χ ψ ω
+  Α Β Γ Δ Ε Ζ Η Θ Λ Μ Ξ Π Ρ Σ Τ Υ Φ Ψ Ω
+  × · ÷ ± √ ∞ ∂ ∇ ∫ ∬ ∮ Σ Π ∝ ≈ ≃ ≅ ≡ ≠ ≤ ≥ ≪ ≫
+  ∈ ∉ ⊂ ⊃ ⊆ ⊇ ∪ ∩ ∅ ∀ ∃ ∧ ∨ ¬ ⊕ ℝ ℕ ℤ ℚ ℂ
+  ∠ ⊥ ∥ △ ° ⇌ ⟶ → ← ↔ ⟹ ⟺ ↑ ↓ ↦
 
-MATHÉMATIQUES :
-  Équation 2nd degré : ax^{2} + bx + c = 0  →  Δ = b^{2} - 4ac
-  Solutions : x_{1,2} = (-b ± √(b^{2} - 4ac)) / (2a)
-  Fonction : f(x) = 2x^{3} - 5x^{2} + 3x - 1
-  Géométrie : AB^{2} = AC^{2} + BC^{2} (Pythagore)
-  Probabilité : P(A∪B) = P(A) + P(B) - P(A∩B)
-  Somme : Σ_{i=1}^{n} x_{i}  /  Intégrale : ∫_{a}^{b} f(x)dx
-
-PHYSIQUE :
-  Mécanique : F = m × a  /  E_{c} = (1/2) × m × v^{2}  /  E_{p} = m × g × h
-  Électricité : U = R × I  /  P = U × I = R × I^{2} = U^{2}/R
-  Ondes : v = λ × f  /  ω = 2π × f  /  T = 1/f
-  Optique : n = sin(i_{1})/sin(i_{2})  /  n_{1}sin(θ_{1}) = n_{2}sin(θ_{2})
-  Thermodynamique : P × V = n × R × T  (R = 8,314 J·mol^{-1}·K^{-1})
-  Énergie : E = h × f  /  E = m × c^{2}  /  ΔE = mc^{2}
-
-CHIMIE :
-  Photosynthèse : 6CO_{2} + 6H_{2}O → C_{6}H_{12}O_{6} + 6O_{2}
-  Respiration : C_{6}H_{12}O_{6} + 6O_{2} → 6CO_{2} + 6H_{2}O + ATP
-  Acide-base : pH = -log([H^{+}])  /  K_{e} = [H^{+}] × [OH^{-}] = 10^{-14}
-  Dosage : C_{1} × V_{1} = C_{2} × V_{2}  /  C = n/V
-  Précipitation : K_{s} = [A^{+}]^{a} × [B^{-}]^{b}
-  Gaz : PV = nRT  /  P_{1}V_{1}/T_{1} = P_{2}V_{2}/T_{2}
-
-BIOLOGIE / SVT :
-  Flux génétique : ADN → ARNm → Protéine (transcription/traduction)
-  Formules moléculaires : ATP (C_{10}H_{16}N_{5}O_{13}P_{3})  /  Glucose : C_{6}H_{12}O_{6}
-  pH sanguin : 7,35 ≤ pH ≤ 7,45
-  Pression osmotique : π = n × R × T / V = C × R × T
-
-SYMBOLES GRECS DISPONIBLES (utiliser directement) :
-  Minuscules : α β γ δ ε ζ η θ ι κ λ μ ν ξ π ρ σ τ υ φ χ ψ ω
-  Majuscules : Γ Δ Θ Λ Ξ Π Σ Φ Ψ Ω
-
-OPÉRATEURS ET SYMBOLES MATH DISPONIBLES :
-  Arithmétique : × ÷ ± ∓ √
-  Relations : ≤ ≥ ≠ ≈ ≡ ∝ ~
-  Ensembles : ∈ ∉ ⊂ ⊃ ∪ ∩ ∅ ∀ ∃
-  Calcul : ∫ ∬ ∮ ∂ ∇ Σ Π ∞
-  Géométrie : ∠ ⊥ ∥ △
-  Logique : ∧ ∨ ¬ ⊕
-  Chimie : → ← ↔ ⇌ ↑ ↓
-
-UNITÉS (toujours précisées après la valeur) :
-  Mécanique : m, kg, s, N (Newton), J (Joule), W (Watt), Pa (Pascal)
-  Élec : V (Volt), A (Ampère), Ω (Ohm), F (Farad), H (Henry), Hz
-  Chimie : mol, mol/L, g/L, g·mol^{-1}, J·mol^{-1}·K^{-1}
-  Données CI : FCFA, km², ha, MW, kWh, °C
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SECTION 3 — ART MAÎTRISÉ DE LA RÉDACTION ACADÉMIQUE — RHÉTORIQUE ET STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -648,7 +604,7 @@ RÈGLE 1 — COMPLÉTUDE TOTALE : Zéro "[à compléter]", "[...]", "[insérer]"
 RÈGLE 2 — LONGUEUR SUBSTANTIELLE : Minimum 4 pages réelles (hors garde + sommaire) → viser 6 à 10 pages selon niveau
 RÈGLE 3 — QUALITÉ LINGUISTIQUE : Orthographe et grammaire irréprochables, ponctuation soignée, style académique soutenu
 RÈGLE 4 — CONTEXTUALISATION OBLIGATOIRE : Min 3 exemples ivoiriens/africains concrets ET chiffrés par grande partie
-RÈGLE 5 — ZÉRO LaTeX : Toutes formules en texte clair élégant (voir Section 2) — jamais de $, \\, \frac
+RÈGLE 5 — FORMULES NOVA : Utilise la notation x^{{2}}, H_{{2}}O, CO_{{2}}, √(expr), symboles Unicode α β γ π ω ≤ ≥ × → ⇌. LaTeX inline $...$ aussi accepté (converti auto). Voir Section 2 pour tous les exemples.
 RÈGLE 6 — STRUCTURE STRICTE : Séparateurs ════ et ---SAUT_DE_PAGE--- uniquement dans le corps (jamais dans page de garde ni sommaire)
 RÈGLE 6b — ANTI-ORPHELINES : Ne JAMAIS terminer une partie par une phrase de transition — la transition appartient au DÉBUT de la partie suivante (après le saut de page). Évite ainsi les 2-3 lignes orphelines en haut d'une page vide.
 RÈGLE 7 — ADAPTATION NIVEAU : Vocabulaire + profondeur + longueur strictement adaptés au niveau détecté
@@ -884,21 +840,103 @@ Chaque sujet que tu produis est ENTIÈREMENT rédigé, rigoureusement structuré
 ╚══════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 1 — CONVERSION MARKDOWN → WORD (MOTEUR NOVA)
+SECTION 1 — MISE EN PAGE + MOTEUR FORMULES NOVA COMPLET
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- ## EXERCICE N°X → Heading 2 (bleu, gras, Arial 14pt)
-- ### Partie / Sous-partie → Heading 3 (gras, Arial 12pt)
-- **texte** → gras (numéros de questions, consignes, termes importants, points)
-- Tableaux Markdown → tableaux Word formatés (en-tête bleu foncé, alternance lignes)
+MISE EN PAGE WORD :
+- ## EXERCICE N°X → Heading 2 (bleu gras Arial 14pt)
+- ### Partie A → Heading 3 (gras Arial 12pt)
+- **texte** → gras (consignes, termes, points)
+- Tableaux Markdown → tableaux Word (en-tête bleu foncé, lignes alternées)
 - ════════════════════════════════════════════════════════ → trait bleu épais entre exercices
-- ---SAUT_DE_PAGE--- → saut de page RÉEL (jamais précédé d\'un ════)
-- □ ou ☐ → cases à cocher (QCM, Vrai/Faux)
+- ---SAUT_DE_PAGE--- → saut de page réel (JAMAIS précédé d'un ════)
+- □ ☐ → cases à cocher (QCM, Vrai/Faux)
 - _______________ (min 15 underscores) → ligne de réponse élève
 
-ABSOLUMENT INTERDIT : LaTeX ($, \\, \frac), HTML, textes "[à compléter]", ════ juste avant ---SAUT_DE_PAGE---
+MOTEUR DE FORMULES — 4 MODES :
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+① ###FORMULE### [formule] — formule importante seule (fond bleu, centré, Arial 13pt gras)
+  ###FORMULE### E = m × c^{{2}}
+  ###FORMULE### F = (G × m_{{1}} × m_{{2}}) / r^{{2}}
+  ###FORMULE### Σ_{{k=1}}^{{n}} k = n × (n+1) / 2
+  ###FORMULE### ∫_{{a}}^{{b}} f(x) dx = F(b) - F(a)
+  ###FORMULE### t_{{1/2}} = ln(2) / λ
+  ###FORMULE### pH = -log([H_{{3}}O^{{+}}])
+
+② ###DEBUT_FORMULES### / ###FIN_FORMULES### — bloc de formules liées (fond gris bleuté)
+  ###DEBUT_FORMULES###
+  U = R × I
+  P = U × I = R × I^{{2}} = U^{{2}} / R
+  E = P × t    (énergie en J si P en W et t en s)
+  ###FIN_FORMULES###
+
+③ FORMULE INLINE dans le texte — utilise ^{{}} et _{{}} :
+  "On a a = F/m = 50/5 = 10 m·s^{{-2}}"
+  "La masse molaire de H_{{2}}O est M = 18 g·mol^{{-1}}"
+  "Le noyau de carbone 14 : ^{{14}}_{{6}}C → émission β^{{-}}"
+  "Résistance équivalente : R_{{1}} + R_{{2}} + R_{{3}} = 80 Ω"
+  "Discriminant : Δ = b^{{2}} - 4ac = 25 - 24 = 1"
+
+④ LaTeX $...$ inline — converti automatiquement :
+  "$\frac{{U}}{{R}} = I$" → I = U/R   |   "$E = mc^{{2}}$" → E = mc^{{2}}
+  "$\omega = 2\pi f$" → ω = 2πf   |   "$\sqrt{{b^{{2}}-4ac}}$" → √(b^{{2}}-4ac)
+  "$\vec{{AB}} \perp \vec{{CD}}$" → AB⃗ ⊥ CD⃗
+
+SYMBOLES DIRECTEMENT UTILISABLES (copier-coller dans le texte) :
+  Grecs min  : α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω
+  Grecs maj  : Α Β Γ Δ Ε Ζ Η Θ Κ Λ Μ Ν Ξ Π Ρ Σ Τ Υ Φ Χ Ψ Ω
+  Opérateurs : × · ÷ ± ∓ √ ∞ ∂ ∇ ∫ ∬ ∮ Σ Π ∝ ≈ ≃ ≅ ≡ ≠ ≤ ≥ ≪ ≫
+  Ensembles  : ∈ ∉ ⊂ ⊃ ⊆ ⊇ ∪ ∩ ∅ ∀ ∃ ∄ ∧ ∨ ¬ ⊕ ℝ ℕ ℤ ℚ ℂ
+  Géométrie  : ∠ ∡ ⊥ ∥ △ □ ° ⌊x⌋ ⌈x⌉ ⟨u,v⟩
+  Flèches    : → ← ↔ ↑ ↓ ⟹ ⟺ ↦ ⇌ ⟶
+  Chimie     : ⇌ ⟶ → +  |  ions : Ca^{{2+}} Cl^{{-}} Fe^{{3+}} SO_{{4}}^{{2-}}
+
+FORMULAIRE PHYSIQUE-CHIMIE INTÉGRAL (prêt à l'emploi) :
+  Mécanique    : F = m×a | P = m×g | W = F×d×cos(α)
+                 E_{{c}} = (1/2)×m×v^{{2}} | E_{{p}} = m×g×h | p = m×v
+                 T = 2π×√(L/g) | T^{{2}} = (4π^{{2}}/g)×L
+  Électricité  : U = R×I | P = U×I = R×I^{{2}} = U^{{2}}/R
+                 R_{{série}} = R_{{1}}+R_{{2}} | 1/R_{{||}} = 1/R_{{1}}+1/R_{{2}}
+                 C = Q/U | i = C×du/dt | u_{{L}} = L×di/dt
+                 Z = √(R^{{2}}+(L×ω-1/(C×ω))^{{2}}) | f = 1/T | ω = 2π×f
+  Optique      : n = c/v | n_{{1}}×sin(i_{{1}}) = n_{{2}}×sin(i_{{2}})
+                 1/f' = 1/OA' - 1/OA | G = A'B'/AB = OA'/OA | λ = c/ν
+  Thermodynamique : Q = m×c×ΔT | PV = nRT | ΔU = Q+W | η = W_{{utile}}/Q_{{absorbé}}
+  Nucléaire    : ^{{A}}_{{Z}}X → ^{{A-4}}_{{Z-2}}Y + ^{{4}}_{{2}}He (désintégration α)
+                 ^{{A}}_{{Z}}X → ^{{A}}_{{Z+1}}Y + β^{{-}} + ν̄ (désintégration β^{{-}})
+                 E = Δm×c^{{2}} | N(t) = N_{{0}}×e^{{-λt}} | t_{{1/2}} = ln(2)/λ
+  Ondes        : v = λ×f | δ = d×sin(θ) = k×λ | Δx = λ×D/a
+
+FORMULAIRE MATHÉMATIQUES INTÉGRAL (prêt à l'emploi) :
+  Algèbre      : Δ = b^{{2}}-4ac | x = (-b±√Δ)/(2a)
+                 (a+b)^{{2}} = a^{{2}}+2ab+b^{{2}} | (a-b)^{{2}} = a^{{2}}-2ab+b^{{2}}
+                 (a+b)^{{3}} = a^{{3}}+3a^{{2}}b+3ab^{{2}}+b^{{3}}
+                 C^{{p}}_{{n}} = n!/(p!×(n-p)!)
+  Analyse      : f'(x) = lim_{{h→0}} (f(x+h)-f(x))/h | (uv)' = u'v + uv'
+                 ∫u'v = [uv] - ∫uv' | ∫_{{a}}^{{b}} f(x)dx = F(b)-F(a)
+                 lim_{{x→0}} sin(x)/x = 1 | lim_{{x→+∞}} (1+1/x)^{{x}} = e
+  Trigonométrie: sin^{{2}}(θ)+cos^{{2}}(θ) = 1 | tan(θ) = sin(θ)/cos(θ)
+                 sin(a+b) = sin(a)cos(b)+cos(a)sin(b)
+                 cos(2a) = cos^{{2}}(a)-sin^{{2}}(a) = 1-2sin^{{2}}(a)
+  Géométrie    : BC^{{2}} = AB^{{2}}+AC^{{2}} (Pythagore, rectangle en A)
+                 Aire△ = (1/2)×b×h | Aire disque = π×r^{{2}} | V sphère = (4/3)×π×r^{{3}}
+                 cos(A) = (AB^{{2}}+AC^{{2}}-BC^{{2}})/(2×AB×AC) (Al-Kashi)
+  Stats/Probas : x̄ = (1/n)×Σ_{{i=1}}^{{n}} x_{{i}} | σ^{{2}} = (1/n)×Σ(x_{{i}}-x̄)^{{2}}
+                 P(A∪B) = P(A)+P(B)-P(A∩B) | P(A/B) = P(A∩B)/P(B)
+
+FORMULAIRE CHIMIE (prêt à l'emploi) :
+  Quantités    : n = m/M | n = C×V | n = V/V_{{m}} (V_{{m}} = 24 L·mol^{{-1}} à 25°C)
+  pH/pOH       : pH = -log([H_{{3}}O^{{+}}]) | pOH = -log([OH^{{-}}]) | pH + pOH = 14
+  Dosage       : C_{{A}}×V_{{A}} = C_{{B}}×V_{{B}}×n_{{stoech}}
+  Cinétique    : v = -d[A]/dt | k loi ordre 1 : ln([A]/[A]_{{0}}) = -k×t
+  Thermochimie : ΔH_{{r}} = Σ ΔH_{{f}}(produits) - Σ ΔH_{{f}}(réactifs)
+  Équations bilan type :
+    6CO_{{2}} + 6H_{{2}}O → C_{{6}}H_{{12}}O_{{6}} + 6O_{{2}}
+    CaCO_{{3}} → CaO + CO_{{2}}
+    Zn + 2HCl → ZnCl_{{2}} + H_{{2}}
+
+INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
+
 SECTION 2 — ANALYSE AUTOMATIQUE DE LA DEMANDE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -938,9 +976,13 @@ Séquence recommandée :
   Exercice 1 — CALCUL/QCM RAPIDE (révision des formules et notions fondamentales, /4 ou /5)
     • Calcul direct : "Calculez : 3/4 + 5/6 = ..." / "Développez : (2x-3)² = ..."
     • QCM formules : "La solution de l\'équation 2x + 6 = 0 est : □ A) x=3  □ B) x=-3  □ C) x=6  □ D) x=-6"
-  Exercice 2 — GÉOMÉTRIE OU ALGÈBRE (démonstration guidée avec données, /5 ou /6)
-    • "Dans le triangle ABC rectangle en A, AB = 6 cm, AC = 8 cm. Calculez BC puis sin(B)."
-    • "Résolvez dans R le système : 3x + 2y = 14 et x - y = 1. Vérifiez votre réponse."
+  Exercice 2 — GÉOMÉTRIE OU ALGÈBRE (démonstration guidée, /5 ou /6)
+    • "Dans le triangle ABC rectangle en A, AB = 6 cm, AC = 8 cm.
+       ###FORMULE### BC^{{2}} = AB^{{2}} + AC^{{2}}  (théorème de Pythagore)
+       a) Calculez BC. b) Calculez sin(B̂) et cos(B̂). c) Déduisez la mesure de l\'angle B̂."
+    • "Résolvez dans ℝ le système : 3x + 2y = 14 et x - y = 1. Vérifiez votre réponse."
+    • Pour les équations du second degré :
+       ###FORMULE### Δ = b^{{2}} - 4ac   puis   x_{{1,2}} = (-b ± √Δ) / (2a)
   Exercice 3 — PROBLÈME CONTEXTUALISÉ CI (/6 ou /8)
     • Données réalistes : marchés ivoiriens, agriculture, construction, transport en FCFA
     • Sous-questions numérotées guidant l\'élève étape par étape
@@ -955,10 +997,14 @@ Séquence recommandée :
     • "Énoncez la loi d\'Ohm et écrivez sa relation mathématique."
     • "Schéma à légender : circuit électrique avec 5 composants numérotés"
   Exercice 2 — APPLICATION NUMÉRIQUE (calcul avec unités, /6 ou /7)
-    • "Un barrage hydroélectrique produit une puissance de 275 MW (Barrage Soubré, 2017).
-       Calculez l\'énergie produite en 24h en MJ puis en kWh."
-    • "Une résistance R = 50 Ohm est alimentée par une tension U = 220 V.
-       a) Calculez le courant I qui la traverse. b) Calculez la puissance dissipée P."
+    • Rappeler la formule avec ###FORMULE### AVANT chaque calcul puis appliquer numériquement
+    • "Le barrage de Soubré (275 MW, 2017) fonctionne 24h :
+       ###FORMULE### E = P × t
+       a) Calculez E en MJ. b) Convertissez en kWh. c) Calculez le nombre de foyers alimentés (1 foyer = 300 kWh/mois)."
+    • "R = 50 Ω alimentée sous U = 220 V :
+       ###FORMULE### U = R × I   (loi d\'Ohm)
+       ###FORMULE### P = U × I = U^{{2}} / R
+       a) Calculez I. b) Calculez P. c) Énergie consommée en 2h."
   Exercice 3 — EXPLOITATION DOCUMENTAIRE (/5 ou /7)
     • Tableau de mesures expérimentales → tracé de courbe décrit → questions d\'interprétation
     • "Décrivez l\'évolution observée... Quelle loi physique illustre ce phénomène ?"
@@ -1156,7 +1202,12 @@ SECTION 7 — 15 RÈGLES ABSOLUES + CORRIGÉ EXHAUSTIF
 RÈGLE 1  — ZÉRO ZONE VIDE : JAMAIS "[à compléter]", "[...]", "[insérer]" → TOUT intégralement rédigé
 RÈGLE 2  — TOTAL /20 OBLIGATOIRE : répartition cohérente, jamais 18, 19 ou 21 points au total
 RÈGLE 3  — POINTS SUR CHAQUE QUESTION INDIVIDUELLE : "*(1 point)*" ou "*(1,5 pt)*" après chaque question
-RÈGLE 4  — ZÉRO LaTeX : "F = m x a" jamais "$F=ma$" / "CO2" jamais "CO₂" / "omega" jamais "ω"
+RÈGLE 4  — NOTATION NOVA POUR LES FORMULES :
+  Exposants : x^{{2}}, mc^{{2}}, b^{{2}}-4ac  |  Indices : H_{{2}}O, CO_{{2}}, C_{{6}}H_{{12}}O_{{6}}, m_{{1}}
+  Grec Unicode : α β γ δ θ λ μ π σ φ ω Ω Δ Σ  |  Opérateurs : × ÷ ± ≤ ≥ ≠ ≈ → ⇌ √ ∞
+  Physique : F=m×a | U=R×I | ω=2πf | P=UI=RI^{{2}}=U^{{2}}/R
+  Chimie : 6CO_{{2}}+6H_{{2}}O→C_{{6}}H_{{12}}O_{{6}}+6O_{{2}}  |  pH=-log([H^{{+}}])
+  LaTeX inline $...$ aussi accepté et converti automatiquement
 RÈGLE 5  — CONTEXTE IVOIRIEN DANS CHAQUE EXERCICE : noms CI, FCFA, données réelles, auteurs CI
 RÈGLE 6  — GRADATION PROGRESSIVE : Exercice 1 (rappel/restitution) → Exercice 2 (application) → Exercice 3+ (analyse/synthèse)
 RÈGLE 7  — CONSIGNES EN GRAS ET PRÉCISES : **Consigne :** + QUOI + COMMENT + COMBIEN
@@ -1340,12 +1391,17 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
             "| Col1 | Col2 | Col3 |\n|------|------|------|\n| Val  | Val  | Val  |\n"
             "Toujours *Source : [Institution réelle, Année]* APRÈS le tableau\n\n"
 
-            "══ RÈGLE 3 : ZÉRO LaTeX — FORMULES EN TEXTE CLAIR ══\n"
-            "INTERDIT : $formule$ \\frac{}{} \\omega \\text{} \\\\ \\begin{}\n"
-            "OBLIGATOIRE : F = m x a | U = R x I | x² + y² | delta = b² - 4ac\n"
-            "Chimie : CO2 H2O C6H12O6 (jamais symboles Unicode CO₂)\n"
-            "Grecs  : alpha beta gamma delta omega pi sigma theta (en LETTRES)\n"
-            "Unités : Newton (N) Volt (V) Ampère (A) Ohm (Ohm) Joule (J) Pascal (Pa)\n\n"
+            "══ RÈGLE 3 : FORMULES — NOTATION NOVA (exposants et indices réels) ══\n"
+            "NOVA possède un moteur de formules intégré. Utilise la notation suivante :\n"
+            "  Exposant : x^{2}  E = mc^{2}  ax^{2}+bx+c=0  Δ = b^{2}-4ac\n"
+            "  Indice   : H_{2}O  CO_{2}  C_{6}H_{12}O_{6}  m_{1}  x_{1,2}\n"
+            "  Fraction : (a+b)/(c-d)  |  Racine : √(2gh)  √(b^{2}-4ac)\n"
+            "  Grec Unicode direct : α β γ δ ε θ λ μ π σ φ ω Ω Δ Σ\n"
+            "  Opérateurs : × ÷ ± ≤ ≥ ≠ ≈ → ⇌ ∈ ∞ ∫ ∂ ∠ ⊥\n"
+            "  LaTeX inline accepté : $E=mc^{2}$ $\\frac{U}{R}=I$ $\\omega=2\\pi f$\n"
+            "CHIMIE : 6CO_{2}+6H_{2}O → C_{6}H_{12}O_{6}+6O_{2}\n"
+            "PHYSIQUE : F=m×a | U=R×I | P=UI=RI^{2}=U^{2}/R | ω=2πf\n"
+            "UNITÉS : N J W Pa V A Ω Hz mol mol/L g·mol^{-1} K^{-1}\n\n"
 
             "══ RÈGLE 4 : RÉDACTION ENCYCLOPÉDIQUE ══\n"
             "• Paragraphes 8 à 10 lignes MINIMUM dans le développement\n"
@@ -1595,189 +1651,285 @@ def creer_docx(contenu, service, client_nom):
     import re as _re
 
     # ══════════════════════════════════════════════════════════════
-    # MOTEUR DE FORMULES NOVA — superscript, subscript, grec,
-    # LaTeX, chimie, maths, physique, tous signes spéciaux
+    # ══════════════════════════════════════════════════════════════
+    # MOTEUR DE FORMULES NOVA v3 — LaTeX complet, chimie, physique,
+    # maths supérieures, vecteurs, intégrales, nucléaire, OMML-like
     # ══════════════════════════════════════════════════════════════
 
     import re as _re
 
-    # ── Étape 1 : table LaTeX → notation Nova ─────────────────────
-    # Règle d'or : _{...} et ^{...} sont TOUJOURS préservés avec
+    # ── TABLE DE CONVERSION LaTeX → notation Nova ─────────────────
+    # Règle fondamentale : ^{...} et _{...} TOUJOURS préservés avec
     # leurs accolades pour que le parser Word les lise correctement.
-    # Les accolades orphelines (ex: \text{mot}) sont nettoyées séparément.
     LATEX_TO_NOVA = [
-        # Fractions
-        (_re.compile(r'\\(?:d|t)?frac\{([^}]+)\}\{([^}]+)\}'), r'(\1)/(\2)'),
-        # Racines
-        (_re.compile(r'\\sqrt\[([^\]]+)\]\{([^}]+)\}'), r'(\2)^{1/\1}'),
-        (_re.compile(r'\\sqrt\{([^}]+)\}'), r'√(\1)'),
-        (_re.compile(r'\\sqrt'),             r'√'),
-        # Exposants/indices LaTeX → format Nova avec accolades PRÉSERVÉES
-        (_re.compile(r'\^\{([^}]+)\}'), lambda m: '^{' + m.group(1) + '}'),
-        (_re.compile(r'_\{([^}]+)\}'),  lambda m: '_{' + m.group(1) + '}'),
-        # Lettres grecques → Unicode
-        (_re.compile(r'\\Alpha'),    'Α'), (_re.compile(r'\\alpha'),    'α'),
-        (_re.compile(r'\\Beta'),     'Β'), (_re.compile(r'\\beta'),     'β'),
-        (_re.compile(r'\\Gamma'),    'Γ'), (_re.compile(r'\\gamma'),    'γ'),
-        (_re.compile(r'\\Delta'),    'Δ'), (_re.compile(r'\\delta'),    'δ'),
+        # ── Fractions (toutes variantes) ──
+        (_re.compile(r'\\(?:d|t|text)?frac\{([^}]+)\}\{([^}]+)\}'),   r'(\1)/(\2)'),
+        (_re.compile(r'\\cfrac\{([^}]+)\}\{([^}]+)\}'),               r'(\1)/(\2)'),
+        (_re.compile(r'\\sfrac\{([^}]+)\}\{([^}]+)\}'),               r'\1/\2'),
+        # ── Racines ──
+        (_re.compile(r'\\sqrt\[([^\]]+)\]\{([^}]+)\}'),  r'(\2)^{1/\1}'),
+        (_re.compile(r'\\sqrt\{([^}]+)\}'),               r'√(\1)'),
+        (_re.compile(r'\\sqrt'),                           r'√'),
+        # ── Exposants/indices LaTeX → format Nova (accolades préservées) ──
+        (_re.compile(r'\^\{([^}]+)\}'),  lambda m: '^{' + m.group(1) + '}'),
+        (_re.compile(r'_\{([^}]+)\}'),   lambda m: '_{' + m.group(1) + '}'),
+        # ── Notation nucléaire : ^{A}_{Z}X → ^A_Z X ──
+        (_re.compile(r'\^\{(\d+)\}_\{(\d+)\}([A-Za-z]+)'), r'^{\1}_{\2}\3'),
+        # ── Valeur absolue et norme ──
+        (_re.compile(r'\\left\s*\|([^|]+)\\right\s*\|'),   r'|\1|'),
+        (_re.compile(r'\\left\s*\\Vert([^V]+)\\right\s*\\Vert'), r'||\1||'),
+        (_re.compile(r'\\norm\{([^}]+)\}'),                 r'||\1||'),
+        (_re.compile(r'\\abs\{([^}]+)\}'),                  r'|\1|'),
+        # ── Combinaisons / Binôme ──
+        (_re.compile(r'\\binom\{([^}]+)\}\{([^}]+)\}'),    r'C(\1,\2)'),
+        (_re.compile(r'\\dbinom\{([^}]+)\}\{([^}]+)\}'),   r'C(\1,\2)'),
+        (_re.compile(r'\\tbinom\{([^}]+)\}\{([^}]+)\}'),   r'C(\1,\2)'),
+        # ── Vecteurs et dérivées ──
+        (_re.compile(r'\\overrightarrow\{([^}]+)\}'),  r'\1⃗'),
+        (_re.compile(r'\\overleftarrow\{([^}]+)\}'),   r'\1⃖'),
+        (_re.compile(r'\\vec\{([^}]+)\}'),             r'\1⃗'),
+        (_re.compile(r'\\hat\{([^}]+)\}'),             r'\1̂'),
+        (_re.compile(r'\\bar\{([^}]+)\}'),             r'\1̄'),
+        (_re.compile(r'\\tilde\{([^}]+)\}'),           r'\1̃'),
+        (_re.compile(r'\\dot\{([^}]+)\}'),             r'\1̇'),
+        (_re.compile(r'\\ddot\{([^}]+)\}'),            r'\1̈'),
+        (_re.compile(r'\\overline\{([^}]+)\}'),        r'\1̄'),
+        (_re.compile(r'\\underline\{([^}]+)\}'),       r'\1'),
+        (_re.compile(r'\\widehat\{([^}]+)\}'),         r'\1̂'),
+        (_re.compile(r'\\widetilde\{([^}]+)\}'),       r'\1̃'),
+        # ── Crochets et accolades ──
+        (_re.compile(r'\\lfloor'),  '⌊'), (_re.compile(r'\\rfloor'), '⌋'),
+        (_re.compile(r'\\lceil'),   '⌈'), (_re.compile(r'\\rceil'),  '⌉'),
+        (_re.compile(r'\\langle'),  '⟨'), (_re.compile(r'\\rangle'), '⟩'),
+        (_re.compile(r'\\{'),       '{'), (_re.compile(r'\\}'),       '}'),
+        # ── Lettres grecques — TOUTES les 24 lettres (minuscules et majuscules) ──
+        (_re.compile(r'\\Alpha'),    'Α'), (_re.compile(r'\\alpha'),      'α'),
+        (_re.compile(r'\\Beta'),     'Β'), (_re.compile(r'\\beta'),       'β'),
+        (_re.compile(r'\\Gamma'),    'Γ'), (_re.compile(r'\\gamma'),      'γ'),
+        (_re.compile(r'\\Delta'),    'Δ'), (_re.compile(r'\\delta'),      'δ'),
         (_re.compile(r'\\Epsilon'),  'Ε'), (_re.compile(r'\\(?:var)?epsilon'), 'ε'),
-        (_re.compile(r'\\Zeta'),     'Ζ'), (_re.compile(r'\\zeta'),     'ζ'),
-        (_re.compile(r'\\Eta'),      'Η'), (_re.compile(r'\\eta'),      'η'),
+        (_re.compile(r'\\Zeta'),     'Ζ'), (_re.compile(r'\\zeta'),       'ζ'),
+        (_re.compile(r'\\Eta'),      'Η'), (_re.compile(r'\\eta'),        'η'),
         (_re.compile(r'\\Theta'),    'Θ'), (_re.compile(r'\\(?:var)?theta'), 'θ'),
-        (_re.compile(r'\\Iota'),     'Ι'), (_re.compile(r'\\iota'),     'ι'),
+        (_re.compile(r'\\Iota'),     'Ι'), (_re.compile(r'\\iota'),       'ι'),
         (_re.compile(r'\\Kappa'),    'Κ'), (_re.compile(r'\\(?:var)?kappa'), 'κ'),
-        (_re.compile(r'\\Lambda'),   'Λ'), (_re.compile(r'\\lambda'),   'λ'),
-        (_re.compile(r'\\Mu'),       'Μ'), (_re.compile(r'\\mu'),       'μ'),
-        (_re.compile(r'\\Nu'),       'Ν'), (_re.compile(r'\\nu'),       'ν'),
-        (_re.compile(r'\\Xi'),       'Ξ'), (_re.compile(r'\\xi'),       'ξ'),
-        (_re.compile(r'\\Pi'),       'Π'), (_re.compile(r'\\pi'),       'π'),
+        (_re.compile(r'\\Lambda'),   'Λ'), (_re.compile(r'\\lambda'),     'λ'),
+        (_re.compile(r'\\Mu'),       'Μ'), (_re.compile(r'\\mu'),         'μ'),
+        (_re.compile(r'\\Nu'),       'Ν'), (_re.compile(r'\\nu'),         'ν'),
+        (_re.compile(r'\\Xi'),       'Ξ'), (_re.compile(r'\\xi'),         'ξ'),
+        (_re.compile(r'\\Omicron'),  'Ο'), (_re.compile(r'\\omicron'),    'ο'),
+        (_re.compile(r'\\Pi'),       'Π'), (_re.compile(r'\\pi'),         'π'),
         (_re.compile(r'\\varpi'),    'ϖ'),
         (_re.compile(r'\\Rho'),      'Ρ'), (_re.compile(r'\\(?:var)?rho'), 'ρ'),
-        (_re.compile(r'\\Sigma'),    'Σ'), (_re.compile(r'\\sigma'),    'σ'),
+        (_re.compile(r'\\Sigma'),    'Σ'), (_re.compile(r'\\sigma'),      'σ'),
         (_re.compile(r'\\varsigma'), 'ς'),
-        (_re.compile(r'\\Tau'),      'Τ'), (_re.compile(r'\\tau'),      'τ'),
-        (_re.compile(r'\\Upsilon'),  'Υ'), (_re.compile(r'\\upsilon'),  'υ'),
+        (_re.compile(r'\\Tau'),      'Τ'), (_re.compile(r'\\tau'),        'τ'),
+        (_re.compile(r'\\Upsilon'),  'Υ'), (_re.compile(r'\\upsilon'),    'υ'),
         (_re.compile(r'\\Phi'),      'Φ'), (_re.compile(r'\\(?:var)?phi'), 'φ'),
-        (_re.compile(r'\\Chi'),      'Χ'), (_re.compile(r'\\chi'),      'χ'),
-        (_re.compile(r'\\Psi'),      'Ψ'), (_re.compile(r'\\psi'),      'ψ'),
-        (_re.compile(r'\\Omega'),    'Ω'), (_re.compile(r'\\omega'),    'ω'),
-        # Opérateurs arithmétiques et relations
-        (_re.compile(r'\\times'),     '×'),
-        (_re.compile(r'\\cdot'),      '·'),
-        (_re.compile(r'\\div'),       '÷'),
-        (_re.compile(r'\\pm'),        '±'),
-        (_re.compile(r'\\mp'),        '∓'),
-        (_re.compile(r'\\leq?'),      '≤'),
-        (_re.compile(r'\\geq?'),      '≥'),
-        (_re.compile(r'\\neq'),       '≠'),
-        (_re.compile(r'\\approx'),    '≈'),
-        (_re.compile(r'\\equiv'),     '≡'),
-        (_re.compile(r'\\propto'),    '∝'),
-        (_re.compile(r'\\sim'),       '~'),
-        (_re.compile(r'\\simeq'),     '≃'),
-        # Symboles maths avancés
+        (_re.compile(r'\\Chi'),      'Χ'), (_re.compile(r'\\chi'),        'χ'),
+        (_re.compile(r'\\Psi'),      'Ψ'), (_re.compile(r'\\psi'),        'ψ'),
+        (_re.compile(r'\\Omega'),    'Ω'), (_re.compile(r'\\omega'),      'ω'),
+        # ── Ensembles de nombres ──
+        (_re.compile(r'\\mathbb\{R\}'), 'ℝ'), (_re.compile(r'\\mathbb\{N\}'), 'ℕ'),
+        (_re.compile(r'\\mathbb\{Z\}'), 'ℤ'), (_re.compile(r'\\mathbb\{Q\}'), 'ℚ'),
+        (_re.compile(r'\\mathbb\{C\}'), 'ℂ'), (_re.compile(r'\\mathbb\{P\}'), 'ℙ'),
+        (_re.compile(r'\\mathbb\{([^}]+)\}'), r'\1'),  # autres \mathbb
+        # ── Opérateurs arithmétiques et relations ──
+        (_re.compile(r'\\times'),     '×'),  (_re.compile(r'\\cdot'),     '·'),
+        (_re.compile(r'\\div'),       '÷'),  (_re.compile(r'\\pm'),       '±'),
+        (_re.compile(r'\\mp'),        '∓'),  (_re.compile(r'\\ast'),      '*'),
+        (_re.compile(r'\\star'),      '★'),  (_re.compile(r'\\circ'),     '∘'),
+        (_re.compile(r'\\bullet'),    '•'),  (_re.compile(r'\\ldots'),     '…'),
+        (_re.compile(r'\\cdots'),     '⋯'),  (_re.compile(r'\\vdots'),     '⋮'),
+        (_re.compile(r'\\ddots'),     '⋱'),
+        # ── Relations d'ordre ──
+        (_re.compile(r'\\leq?'),      '≤'),  (_re.compile(r'\\geq?'),     '≥'),
+        (_re.compile(r'\\ll'),        '≪'),  (_re.compile(r'\\gg'),       '≫'),
+        (_re.compile(r'\\neq'),       '≠'),  (_re.compile(r'\\approx'),   '≈'),
+        (_re.compile(r'\\equiv'),     '≡'),  (_re.compile(r'\\propto'),   '∝'),
+        (_re.compile(r'\\sim'),       '~'),  (_re.compile(r'\\simeq'),    '≃'),
+        (_re.compile(r'\\cong'),      '≅'),  (_re.compile(r'\\doteq'),    '≐'),
+        (_re.compile(r'\\not\\in'),   '∉'),  (_re.compile(r'\\not\\subset'),'⊄'),
+        (_re.compile(r'\\not='),      '≠'),  (_re.compile(r'\\not\\eq'),  '≠'),
+        # ── Symboles maths avancés ──
         (_re.compile(r'\\infty'),     '∞'),
-        (_re.compile(r'\\sum'),       'Σ'),
-        (_re.compile(r'\\prod'),      'Π'),
-        (_re.compile(r'\\int'),       '∫'),
-        (_re.compile(r'\\iint'),      '∬'),
-        (_re.compile(r'\\iiint'),     '∭'),
-        (_re.compile(r'\\oint'),      '∮'),
-        (_re.compile(r'\\partial'),   '∂'),
-        (_re.compile(r'\\nabla'),     '∇'),
-        (_re.compile(r'\\forall'),    '∀'),
-        (_re.compile(r'\\exists'),    '∃'),
+        (_re.compile(r'\\partial'),   '∂'),  (_re.compile(r'\\nabla'),    '∇'),
+        (_re.compile(r'\\forall'),    '∀'),  (_re.compile(r'\\exists'),   '∃'),
         (_re.compile(r'\\nexists'),   '∄'),
-        (_re.compile(r'\\emptyset'),  '∅'),
-        (_re.compile(r'\\varnothing'),'∅'),
-        # Logique et ensembles
-        (_re.compile(r'\\in'),        '∈'),
-        (_re.compile(r'\\notin'),     '∉'),
-        (_re.compile(r'\\subset'),    '⊂'),
-        (_re.compile(r'\\supset'),    '⊃'),
-        (_re.compile(r'\\subseteq'),  '⊆'),
-        (_re.compile(r'\\supseteq'),  '⊇'),
-        (_re.compile(r'\\cup'),       '∪'),
-        (_re.compile(r'\\cap'),       '∩'),
-        (_re.compile(r'\\land'),      '∧'),
-        (_re.compile(r'\\lor'),       '∨'),
-        (_re.compile(r'\\lnot'),      '¬'),
-        (_re.compile(r'\\neg'),       '¬'),
-        (_re.compile(r'\\oplus'),     '⊕'),
-        # Géométrie
-        (_re.compile(r'\\angle'),     '∠'),
-        (_re.compile(r'\\perp'),      '⊥'),
-        (_re.compile(r'\\parallel'),  '∥'),
-        (_re.compile(r'\\triangle'),  '△'),
-        (_re.compile(r'\\overline\{([^}]+)\}'), r'\1̄'),
-        (_re.compile(r'\\vec\{([^}]+)\}'),      r'\1⃗'),
-        (_re.compile(r'\\hat\{([^}]+)\}'),      r'\1̂'),
-        # Flèches
-        (_re.compile(r'\\Leftrightarrow'), '⟺'),
-        (_re.compile(r'\\Rightarrow'),     '⟹'),
-        (_re.compile(r'\\Leftarrow'),      '⟸'),
-        (_re.compile(r'\\rightarrow'),     '→'),
-        (_re.compile(r'\\leftarrow'),      '←'),
-        (_re.compile(r'\\leftrightarrow'), '↔'),
-        (_re.compile(r'\\to'),             '→'),
-        (_re.compile(r'\\gets'),           '←'),
-        (_re.compile(r'\\rightleftharpoons'), '⇌'),  # Chimie
-        (_re.compile(r'\\uparrow'),        '↑'),
-        (_re.compile(r'\\downarrow'),      '↓'),
-        # Unités et espaces
-        (_re.compile(r'\\,'),   ' '),
-        (_re.compile(r'\\;'),   ' '),
-        (_re.compile(r'\\:'),   ' '),
-        (_re.compile(r'\\!'),   ''),
-        (_re.compile(r'\\quad'), '  '),
-        (_re.compile(r'\\qquad'),'    '),
-        # Fonctions maths
-        (_re.compile(r'\\(?:arc)?sin\b'), 'sin'),
-        (_re.compile(r'\\(?:arc)?cos\b'), 'cos'),
-        (_re.compile(r'\\(?:arc)?tan\b'), 'tan'),
-        (_re.compile(r'\\ln\b'),  'ln'),
-        (_re.compile(r'\\log\b'), 'log'),
-        (_re.compile(r'\\exp\b'), 'exp'),
-        (_re.compile(r'\\lim\b'), 'lim'),
-        (_re.compile(r'\\max\b'), 'max'),
-        (_re.compile(r'\\min\b'), 'min'),
-        (_re.compile(r'\\det\b'), 'det'),
-        # Délimiteurs
-        (_re.compile(r'\\left\s*[\(\[|]'),  '('),
-        (_re.compile(r'\\right\s*[\)\]|]'), ')'),
-        (_re.compile(r'\\left\s*\\{'),      '{'),
-        (_re.compile(r'\\right\s*\\}'),     '}'),
-        # Nettoyage texte LaTeX
-        (_re.compile(r'\\(?:text|mathrm|mathbf|mathit|mathsf|mathcal|mathbb)\{([^}]+)\}'), r'\1'),
-        (_re.compile(r'\\(?:boldsymbol|hat|bar|tilde|dot|ddot)\{([^}]+)\}'), r'\1'),
-        (_re.compile(r'\\begin\{[^}]+\}'), ''),
-        (_re.compile(r'\\end\{[^}]+\}'),   ''),
-        # Retrait des \\ restants (fins de lignes LaTeX)
-        (_re.compile(r'\\\\'), ' '),
-        # Accolades ORPHELINES seulement (pas précédées de _ ou ^)
-        (_re.compile(r'(?<![_^])\{'), ''),
-        (_re.compile(r'(?<![_^][^}]*)\}'), ''),
+        (_re.compile(r'\\emptyset'),  '∅'),  (_re.compile(r'\\varnothing'),'∅'),
+        (_re.compile(r'\\aleph'),     'ℵ'),  (_re.compile(r'\\hbar'),     'ℏ'),
+        (_re.compile(r'\\ell'),       'ℓ'),  (_re.compile(r'\\wp'),       '℘'),
+        (_re.compile(r'\\Re'),        'ℜ'),  (_re.compile(r'\\Im'),       'ℑ'),
+        # ── Intégrales et sommes ──
+        (_re.compile(r'\\int'),       '∫'),  (_re.compile(r'\\iint'),     '∬'),
+        (_re.compile(r'\\iiint'),     '∭'),  (_re.compile(r'\\oint'),     '∮'),
+        (_re.compile(r'\\sum'),       'Σ'),  (_re.compile(r'\\prod'),     'Π'),
+        (_re.compile(r'\\coprod'),    '∐'),
+        # ── Logique et ensembles ──
+        (_re.compile(r'\\in\b'),      '∈'),  (_re.compile(r'\\notin'),    '∉'),
+        (_re.compile(r'\\subset'),    '⊂'),  (_re.compile(r'\\supset'),   '⊃'),
+        (_re.compile(r'\\subseteq'),  '⊆'),  (_re.compile(r'\\supseteq'), '⊇'),
+        (_re.compile(r'\\nsubset'),   '⊄'),  (_re.compile(r'\\nsupset'),  '⊅'),
+        (_re.compile(r'\\cup'),       '∪'),  (_re.compile(r'\\cap'),      '∩'),
+        (_re.compile(r'\\setminus'),  '∖'),  (_re.compile(r'\\complement'),'∁'),
+        (_re.compile(r'\\land'),      '∧'),  (_re.compile(r'\\lor'),      '∨'),
+        (_re.compile(r'\\lnot'),      '¬'),  (_re.compile(r'\\neg'),      '¬'),
+        (_re.compile(r'\\oplus'),     '⊕'),  (_re.compile(r'\\otimes'),   '⊗'),
+        (_re.compile(r'\\odot'),      '⊙'),
+        # ── Géométrie ──
+        (_re.compile(r'\\angle'),     '∠'),  (_re.compile(r'\\measuredangle'),'∡'),
+        (_re.compile(r'\\perp'),      '⊥'),  (_re.compile(r'\\parallel'), '∥'),
+        (_re.compile(r'\\triangle'),  '△'),  (_re.compile(r'\\square'),   '□'),
+        (_re.compile(r'\\diamond'),   '◇'),  (_re.compile(r'\\circ'),     '°'),
+        # ── Physique : unités et constantes ──
+        (_re.compile(r'\\Omega\b'),   'Ω'),  # ohm (déjà dans grec, redondant mais sûr)
+        (_re.compile(r'\\degree'),    '°'),
+        (_re.compile(r'\\celsius'),   '°C'),
+        # ── Chimie ──
+        (_re.compile(r'\\rightleftharpoons'), '⇌'),  # équilibre chimique
+        (_re.compile(r'\\longrightarrow'),    '⟶'),  # flèche réaction
+        (_re.compile(r'\\xlongrightarrow\{([^}]+)\}'), r'—\1→'),
+        # ── Flèches ──
+        (_re.compile(r'\\Leftrightarrow'),  '⟺'),  (_re.compile(r'\\iff'), '⟺'),
+        (_re.compile(r'\\Rightarrow'),      '⟹'),  (_re.compile(r'\\implies'),'⟹'),
+        (_re.compile(r'\\Leftarrow'),       '⟸'),
+        (_re.compile(r'\\rightarrow'),      '→'),  (_re.compile(r'\\to'), '→'),
+        (_re.compile(r'\\leftarrow'),       '←'),  (_re.compile(r'\\gets'),'←'),
+        (_re.compile(r'\\leftrightarrow'),  '↔'),
+        (_re.compile(r'\\uparrow'),         '↑'),  (_re.compile(r'\\downarrow'),'↓'),
+        (_re.compile(r'\\Uparrow'),         '⇑'),  (_re.compile(r'\\Downarrow'),'⇓'),
+        (_re.compile(r'\\nearrow'),         '↗'),  (_re.compile(r'\\searrow'),'↘'),
+        (_re.compile(r'\\swarrow'),         '↙'),  (_re.compile(r'\\nwarrow'),'↖'),
+        (_re.compile(r'\\mapsto'),          '↦'),
+        (_re.compile(r'\\longmapsto'),      '⟼'),
+        # ── Modulo et divisibilité ──
+        (_re.compile(r'\\pmod\{([^}]+)\}'), r' (mod \1)'),
+        (_re.compile(r'\\bmod\b'),          'mod'),
+        (_re.compile(r'\\mod\b'),           'mod'),
+        (_re.compile(r'\\gcd\b'),           'pgcd'),
+        (_re.compile(r'\\lcm\b'),           'ppcm'),
+        # ── Fonctions maths et physique ──
+        (_re.compile(r'\\arcsin\b'),  'arcsin'), (_re.compile(r'\\arccos\b'), 'arccos'),
+        (_re.compile(r'\\arctan\b'),  'arctan'), (_re.compile(r'\\arccot\b'), 'arccot'),
+        (_re.compile(r'\\sin\b'),     'sin'),    (_re.compile(r'\\cos\b'),    'cos'),
+        (_re.compile(r'\\tan\b'),     'tan'),    (_re.compile(r'\\cot\b'),    'cot'),
+        (_re.compile(r'\\sec\b'),     'sec'),    (_re.compile(r'\\csc\b'),    'cosec'),
+        (_re.compile(r'\\sinh\b'),    'sinh'),   (_re.compile(r'\\cosh\b'),   'cosh'),
+        (_re.compile(r'\\tanh\b'),    'tanh'),   (_re.compile(r'\\coth\b'),   'coth'),
+        (_re.compile(r'\\ln\b'),      'ln'),     (_re.compile(r'\\log\b'),    'log'),
+        (_re.compile(r'\\exp\b'),     'exp'),    (_re.compile(r'\\lim\b'),    'lim'),
+        (_re.compile(r'\\max\b'),     'max'),    (_re.compile(r'\\min\b'),    'min'),
+        (_re.compile(r'\\inf\b'),     'inf'),    (_re.compile(r'\\sup\b'),    'sup'),
+        (_re.compile(r'\\det\b'),     'det'),    (_re.compile(r'\\ker\b'),    'ker'),
+        (_re.compile(r'\\dim\b'),     'dim'),    (_re.compile(r'\\rank\b'),   'rang'),
+        (_re.compile(r'\\tr\b'),      'tr'),     (_re.compile(r'\\grad\b'),   'grad'),
+        (_re.compile(r'\\div\b'),     'div'),    (_re.compile(r'\\rot\b'),    'rot'),
+        (_re.compile(r'\\curl\b'),    'rot'),
+        # ── Délimiteurs auto-sizing (ignorés, juste les parenthèses restent) ──
+        (_re.compile(r'\\[Bb]ig[glr]?\s*[\(\[|<]'),  '('),
+        (_re.compile(r'\\[Bb]ig[glr]?\s*[\)\]|>]'),  ')'),
+        (_re.compile(r'\\left\s*[\(\[|<]'),   '('),
+        (_re.compile(r'\\right\s*[\)\]|>]'),  ')'),
+        (_re.compile(r'\\left\s*\\{'),        '{'),
+        (_re.compile(r'\\right\s*\\}'),       '}'),
+        (_re.compile(r'\\left\.'),            ''),
+        (_re.compile(r'\\right\.'),           ''),
+        # ── Espaces et mise en page LaTeX ──
+        (_re.compile(r'\\[,;:!]'),     ' '),
+        (_re.compile(r'\\quad'),       '  '),
+        (_re.compile(r'\\qquad'),      '   '),
+        (_re.compile(r'\\noindent'),   ''),
+        (_re.compile(r'\\newline'),    '\n'),
+        (_re.compile(r'\\\\'),         ' '),  # fin de ligne LaTeX
+        # ── Environnements ──
+        (_re.compile(r'\\begin\{[^}]+\}'),   ''),
+        (_re.compile(r'\\end\{[^}]+\}'),     ''),
+        (_re.compile(r'\\item\b'),           '• '),
+        # ── Nettoyage commandes texte ──
+        (_re.compile(r'\\(?:text|mathrm|mathbf|mathit|mathsf|mathcal|mathscr|mathfrak|mathbb)\{([^}]+)\}'), r'\1'),
+        (_re.compile(r'\\(?:boldsymbol|pmb)\{([^}]+)\}'), r'\1'),
+        (_re.compile(r'\\(?:underbrace|overbrace)\{([^}]+)\}(?:_\{[^}]+\})?'), r'\1'),
+        (_re.compile(r'\\(?:stackrel|overset|underset)\{[^}]+\}\{([^}]+)\}'), r'\1'),
+        (_re.compile(r'\\(?:color|textcolor)\{[^}]+\}\{([^}]+)\}'), r'\1'),
+        (_re.compile(r'\\label\{[^}]+\}'),   ''),
+        (_re.compile(r'\\tag\{[^}]+\}'),     ''),
+        (_re.compile(r'\\ref\{[^}]+\}'),     '?'),
+        # ── Retrait des backslashes restants isolés ──
+        (_re.compile(r'\\([A-Za-z]+)'),  r'\1'),  # \commande → commande (dernier recours)
     ]
 
     def nettoyer_latex_complet(texte):
-        """Convertit LaTeX/texte mathématique en notation Nova (^{} et _{} préservés)."""
-        # 1. Formules inline $...$  et blocs $$...$$
+        """Convertit LaTeX complet + notation Nova ^{} _{} en texte normalisé."""
+        # 1. Blocs $$...$$ et formules $...$
         def conv_dollar(m):
             f = m.group(1)
             for pat, repl in LATEX_TO_NOVA:
-                f = pat.sub(repl, f) if callable(repl) else pat.sub(repl, f)
+                try:
+                    f = pat.sub(repl, f) if callable(repl) else pat.sub(repl, f)
+                except Exception:
+                    pass
             return f
         texte = _re.sub(r'\$\$([^$]+)\$\$', conv_dollar, texte)
         texte = _re.sub(r'\$([^$]+)\$',     conv_dollar, texte)
-        # 2. Commandes LaTeX libres dans le texte
+        # 2. Commandes LaTeX hors dollars
         for pat, repl in LATEX_TO_NOVA:
-            if callable(repl):
-                texte = pat.sub(repl, texte)
+            try:
+                texte = pat.sub(repl, texte) if not callable(repl) else pat.sub(repl, texte)
+            except Exception:
+                pass
+        # 3. Nettoyer accolades orphelines (pas précédées de ^ ou _)
+        result = []
+        open_stack = []
+        for c in texte:
+            if c == '{':
+                prev = result[-1] if result else ''
+                if prev in ('^', '_'):
+                    result.append(c)
+                    open_stack.append(False)   # accolade utile
+                else:
+                    open_stack.append(True)    # accolade orpheline → ignorer
+            elif c == '}':
+                if open_stack and open_stack[-1]:
+                    open_stack.pop()           # ferme orpheline, on supprime
+                elif open_stack:
+                    open_stack.pop()
+                    result.append(c)
+                else:
+                    result.append(c)
             else:
-                texte = pat.sub(repl, texte)
-        return texte
+                result.append(c)
+        return ''.join(result)
 
     def ajouter_formule_dans_run(p, texte, bold=False, size=11, color=None):
         """
-        Crée des runs Word avec superscript/subscript réels, Unicode et gras.
-        Syntaxe reconnue dans le texte :
-          ^{expr}  ou  ^x   → exposant Word (superscript)
-          _{expr}  ou  _x   → indice Word (subscript)
-          **texte**          → gras
-          Tous symboles Unicode (α β γ √ ≤ ≥ × → ⇌ ∫ …) → passent directement
+        Crée des runs Word avec vrais exposants/indices, symboles Unicode, gras.
+
+        Syntaxe reconnue :
+          ^{expr}       → exposant Word (superscript)
+          ^x            → exposant 1 char
+          _{expr}       → indice Word (subscript)
+          _x            → indice 1 char
+          **texte**     → gras
+          √(expr)       → symbole racine + texte
+          (a)/(b)       → fraction affichée avec barre / centrée
+          Tous Unicode (α β γ Σ ∫ ∞ ≤ ≥ × → ⇌ ∂ ∇ …) passent directement
+
+        Note : les fractions (a)/(b) issues de \frac sont rendues en ligne
+        avec les parenthèses pour la lisibilité.
         """
         FORMULE_RE = _re.compile(
-            r'(\*\*[^*]+\*\*)'          # **gras**
-            r'|\^{([^}]+)}'             # exposant long  ^{abc}
-            r'|\^([^\s{_^*/+\-=(),\[\]])' # exposant court ^x (1 car)
-            r'|_{([^}]+)}'              # indice long    _{abc}
-            r'|_([^\s{_^*/+\-=(),\[\]])'  # indice court   _x (1 car)
+            r'(\*\*[^*]+\*\*)'                      # **gras**
+            r'|\^{([^}]+)}'                          # exposant long  ^{abc}
+            r'|\^([^\s{_^*/+\-=(),\[\]])'            # exposant court ^x (1 car non-espace)
+            r'|_{([^}]+)}'                           # indice long    _{abc}
+            r'|_([^\s{_^*/+\-=(),\[\]])'             # indice court   _x (1 car non-espace)
         )
-        def _run(text, sup=False, sub=False, bd=False):
+
+        def _run(text, sup=False, sub=False, bd=False, sz=None):
             r = p.add_run(text)
-            r.font.name = "Arial"
-            r.font.size = Pt(max(7, size - 2)) if (sup or sub) else Pt(size)
-            r.bold = bd
+            r.font.name  = "Arial"
+            r.font.size  = Pt(sz if sz else (max(7, size - 2) if (sup or sub) else size))
+            r.bold       = bd
             if sup: r.font.superscript = True
             if sub: r.font.subscript   = True
             if color: r.font.color.rgb = RC(*color)
@@ -1787,17 +1939,16 @@ def creer_docx(contenu, service, client_nom):
         for m in FORMULE_RE.finditer(texte):
             if m.start() > last:
                 _run(texte[last:m.start()], bd=bold)
-            if m.group(1):                          # **gras**
+            if m.group(1):                        # **gras**
                 _run(m.group(1)[2:-2], bd=True)
-            elif m.group(2) or m.group(3):          # exposant
+            elif m.group(2) or m.group(3):        # exposant
                 _run(m.group(2) or m.group(3), sup=True, bd=bold)
-            elif m.group(4) or m.group(5):          # indice
+            elif m.group(4) or m.group(5):        # indice
                 _run(m.group(4) or m.group(5), sub=True, bd=bold)
             last = m.end()
         if last < len(texte):
             _run(texte[last:], bd=bold)
 
-    contenu = nettoyer_latex_complet(contenu)
 
     lignes = contenu.split("\n")
     i = 0
@@ -1842,6 +1993,65 @@ def creer_docx(contenu, service, client_nom):
             p_esp.paragraph_format.space_after  = Pt(0)
             p_esp.paragraph_format.line_spacing = Pt(36)  # ~1.2cm d'espace
             i += 1
+            continue
+
+        # ── BLOC FORMULE NOVA — Formule centrée sur fond bleu clair ──
+        # Syntaxe : ###FORMULE### F = m × a   ou   ###FORMULE### E = mc^{2}
+        if l.strip().startswith("###FORMULE###"):
+            texte_f = l.strip().replace("###FORMULE###", "").strip()
+            texte_f = nettoyer_latex_complet(texte_f)
+            from docx.oxml import OxmlElement as _OEf
+            from docx.oxml.ns import qn as _qnf
+            p_f = doc.add_paragraph()
+            p_f.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_f.paragraph_format.space_before = Pt(6)
+            p_f.paragraph_format.space_after  = Pt(6)
+            # Fond bleu très clair
+            pPr_f = p_f._p.get_or_add_pPr()
+            shd_f = _OEf("w:shd")
+            shd_f.set(_qnf("w:val"), "clear")
+            shd_f.set(_qnf("w:color"), "auto")
+            shd_f.set(_qnf("w:fill"), "D6E4F0")  # bleu clair
+            pPr_f.append(shd_f)
+            # Bordure fine bleue autour
+            pBdr_f = _OEf("w:pBdr")
+            for side_name in ["top", "bottom", "left", "right"]:
+                side_el = _OEf(f"w:{side_name}")
+                side_el.set(_qnf("w:val"), "single")
+                side_el.set(_qnf("w:sz"), "6")
+                side_el.set(_qnf("w:space"), "4")
+                side_el.set(_qnf("w:color"), "2E75B6")
+                pBdr_f.append(side_el)
+            pPr_f.append(pBdr_f)
+            # Texte formule en Arial 13pt gras bleu foncé avec exposants réels
+            ajouter_formule_dans_run(p_f, texte_f, bold=True, size=13,
+                                     color=(0x1F, 0x4E, 0x79))
+            i += 1
+            continue
+
+        # ── BLOC FORMULE MULTILIGNE — ###DEBUT_FORMULES### ... ###FIN_FORMULES###
+        if l.strip() == "###DEBUT_FORMULES###":
+            i += 1
+            while i < len(lignes) and lignes[i].strip() != "###FIN_FORMULES###":
+                lf = lignes[i].strip()
+                if lf:
+                    lf_clean = nettoyer_latex_complet(lf)
+                    from docx.oxml import OxmlElement as _OEml
+                    from docx.oxml.ns import qn as _qnml
+                    p_ml = doc.add_paragraph()
+                    p_ml.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    p_ml.paragraph_format.space_before = Pt(2)
+                    p_ml.paragraph_format.space_after  = Pt(2)
+                    pPr_ml = p_ml._p.get_or_add_pPr()
+                    shd_ml = _OEml("w:shd")
+                    shd_ml.set(_qnml("w:val"), "clear")
+                    shd_ml.set(_qnml("w:color"), "auto")
+                    shd_ml.set(_qnml("w:fill"), "EEF3FA")
+                    pPr_ml.append(shd_ml)
+                    ajouter_formule_dans_run(p_ml, lf_clean, bold=True, size=12,
+                                             color=(0x1F, 0x4E, 0x79))
+                i += 1
+            i += 1  # sauter ###FIN_FORMULES###
             continue
 
         # ── LIGNES DE SÉPARATION ════ ET ──── ─────────────────────
