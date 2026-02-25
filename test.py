@@ -1230,7 +1230,7 @@ RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
 
 Crée un sujet d\'examen PROFESSIONNEL, COMPLET et IMMÉDIATEMENT UTILISABLE basé sur :
 
-{{description}}
+{description}
 
 === STRUCTURE DU DOCUMENT À PRODUIRE ===
 
