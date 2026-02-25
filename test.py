@@ -1570,6 +1570,10 @@ def creer_docx(contenu, service, client_nom):
         p = doc.paragraphs[0]._element
         p.getparent().remove(p)
 
+    # Neutraliser le start_type NEW_PAGE de la 1re section (cause réelle de la page blanche)
+    from docx.enum.section import WD_SECTION
+    doc.sections[0].start_type = WD_SECTION.CONTINUOUS
+
     for section in doc.sections:
         section.top_margin    = Cm(2)
         section.bottom_margin = Cm(2)
