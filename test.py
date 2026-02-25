@@ -2301,12 +2301,24 @@ if st.session_state["current_user"] is None:
     else:
         components.html("""
             <script>
-            var uid = localStorage.getItem('nova_user_id');
-            if (uid) {
-                var url = new URL(window.location.href);
-                url.searchParams.set('user_id', uid);
-                window.location.href = url.toString();
-            }
+            (function() {
+                function getStorage(key) {
+                    try { return localStorage.getItem(key); } catch(e) { return null; }
+                }
+                var uid = getStorage('nova_user_id');
+                if (uid) {
+                    try {
+                        var target = window.parent !== window ? window.parent : window;
+                        var url = new URL(target.location.href);
+                        url.searchParams.set('user_id', uid);
+                        target.location.replace(url.toString());
+                    } catch(e) {
+                        var url2 = new URL(window.location.href);
+                        url2.searchParams.set('user_id', uid);
+                        window.location.replace(url2.toString());
+                    }
+                }
+            })();
             </script>
         """, height=0)
 
@@ -2314,7 +2326,11 @@ if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
     components.html(f"""
         <script>
-        localStorage.setItem('nova_user_id', '{uid_connecte}');
+        (function() {{
+            try {{
+                localStorage.setItem('nova_user_id', '{uid_connecte}');
+            }} catch(e) {{}}
+        }})();
         </script>
     """, height=0)
 
@@ -3316,7 +3332,7 @@ def main_dashboard():
     with st.sidebar:
         st.markdown(f"### 👤 {user if user else 'Visiteur'}")
         if user:
-            st.markdown(f"📱 **{db['users'][user]['whatsapp']}**")
+            st.markdown(f"📱 **{user_data.get('whatsapp', 'Non renseigné')}**")
             if premium_actif and premium_info:
                 st.markdown(f"""
                 <div style="margin:10px 0;">
