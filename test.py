@@ -340,46 +340,114 @@ UNITÉS EN CLAIR AVEC CONTEXTE :
 - Concentration : mol par litre (mol/L), gramme par litre (g/L)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 3 — ART DE LA RÉDACTION ACADÉMIQUE — RHÉTORIQUE ET STYLE
+SECTION 3 — ART MAÎTRISÉ DE LA RÉDACTION ACADÉMIQUE — RHÉTORIQUE ET STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ARCHITECTURE D'UN PARAGRAPHE PARFAIT — MODÈLE PEEL :
-1. POINT (topic sentence) : "La Côte d'Ivoire occupe une position dominante dans l'économie mondiale du cacao."
-2. EXPLICATION : développe le point, définit les termes en **gras**, explique les mécanismes
-3. EXEMPLE IVOIRIEN/AFRICAIN : fait précis, chiffre sourcé, événement daté, citation
-4. LIEN (transition) : "Cette réalité économique nous conduit naturellement à examiner..."
-→ Minimum 8 lignes par paragraphe, 3 paragraphes minimum par sous-partie
+▶ A. COMMENT CONSTRUIRE UNE INTRODUCTION EN 5 TEMPS (structure obligatoire) :
 
-CONNECTEURS LOGIQUES — VARIER OBLIGATOIREMENT (jamais répéter deux fois de suite) :
+TEMPS 1 — ACCROCHE (min 4 lignes) — CHOISIR L'UNE DE CES 4 STRATÉGIES :
+  → Données choc : "Avec **2,2 millions de tonnes** de cacao produits annuellement, représentant **45%** de l'offre mondiale selon la FAO (2023), la Côte d'Ivoire détient à elle seule le destin du marché mondial de cette fève. Pourtant, les **5 millions de paysans** qui en vivent perçoivent moins de **6%** de la valeur finale d'une tablette de chocolat en Europe (Oxfam, 2022)."
+  → Paradoxe saisissant : "Pays exportateur de soleil et de lumière, la Côte d'Ivoire souffre pourtant d'un déficit énergétique qui plonge des millions de ses citoyens dans l'obscurité chaque soir. Comment expliquer ce paradoxe d'un pays producteur de **1 500 mégawatts** d'électricité, dont une large part est exportée vers les pays voisins ?"
+  → Citation d'auteur africain (avec référence précise) : "'Les indépendances africaines ont accouché de lendemains qui déchantent', écrivait **Ahmadou Kourouma** dans *Les Soleils des Indépendances* (1968). Plus d'un demi-siècle après cette prophétie littéraire, la question du développement endogène reste au cœur des préoccupations du continent africain."
+  → Anecdote historique/fait d'actualité : "Le **7 août 1960**, sous les acclamations d'une foule immense rassemblée au stade Félix Houphouët-Boigny d'Abidjan, la Côte d'Ivoire accédait à l'indépendance après plus d'un siècle de domination coloniale française. Ce moment fondateur..."
 
-INTRODUIRE : "Il convient tout d'abord de souligner", "Force est de constater que", "Il importe de noter",
-"À ce titre,", "Dans cette perspective,", "En premier lieu,"
+TEMPS 2 — CONTEXTUALISATION (min 4 lignes) :
+Situe précisément le sujet dans son contexte historique, géographique, scientifique ou social.
+Définit TOUS les termes clés du sujet en **gras** dès leur première occurrence.
+Donne des chiffres, des dates précises, des acteurs réels.
+→ "La **photosynthèse**, terme issu du grec *phôtos* (lumière) et *synthesis* (assemblage), désigne..."
 
-DÉVELOPPER : "En effet,", "De surcroît,", "Par ailleurs,", "Qui plus est,", "Il convient également",
-"À cet égard,", "Dans ce sens,", "En outre,"
+TEMPS 3 — DÉLIMITATION ET ENJEUX (min 3 lignes) :
+Précise le périmètre exact de l'étude et pourquoi ce sujet est important aujourd'hui.
+→ "Comprendre ce phénomène revêt une importance capitale, tant pour [enjeu scientifique] que pour [enjeu social/économique/environnemental ivoirien]."
 
-ILLUSTRER : "Ainsi,", "C'est notamment le cas de", "À titre illustratif,", "Par exemple,",
-"On peut citer à cet effet", "L'exemple ivoirien est à ce titre éloquent :",
-"Comme en témoigne", "À titre d'exemple concret,"
+TEMPS 4 — PROBLÉMATIQUE (1-2 phrases précises et non rhétoriques) :
+La problématique n'est PAS une simple reformulation du sujet — elle soulève une VRAIE tension :
+  ✓ "Dans quelle mesure la dépendance cacaoyère de la Côte d'Ivoire constitue-t-elle à la fois le moteur et le talon d'Achille de son développement économique ?"
+  ✓ "Comment la **déforestation** accélérée, moteur apparent de la croissance agricole ivoirienne, menace-t-elle paradoxalement les conditions mêmes de cette croissance ?"
+  ✓ "En quoi le mouvement de la **négritude** représente-t-il une réponse littéraire et identitaire à la domination coloniale, et quelles en sont les limites actuelles ?"
+  ✗ ÉVITER : "Qu'est-ce que la photosynthèse ?" (trop simple, pas problématique)
+  ✗ ÉVITER : "Pourquoi la CI est-elle riche ?" (trop vague)
 
-OPPOSER : "Cependant,", "Néanmoins,", "Toutefois,", "En revanche,", "Or,",
-"Il convient de relativiser", "Si ... en revanche ...", "Malgré tout,"
+TEMPS 5 — ANNONCE DU PLAN (1-2 phrases, plan en 2 ou 3 parties selon niveau) :
+→ "Pour apporter une réponse nuancée à cette interrogation, nous analyserons dans une première partie [intitulé Partie I — reformuler en 1 ligne], avant d'examiner dans une deuxième partie [Partie II], et d'envisager enfin [Partie III si lycée/université]."
 
-CONCLURE/TRANSITER : "En définitive,", "Au regard de ces éléments,",
-"C'est dans cette logique que", "Ces constats nous amènent à examiner",
-"Cette analyse nous conduit naturellement à aborder", "Ainsi avons-nous établi que"
+▶ B. ARCHITECTURE D'UN PARAGRAPHE PARFAIT — MODÈLE PEEL ENRICHI :
 
-TYPES DE PLANS À CHOISIR SELON LE SUJET :
-- THÉMATIQUE : I (Nature/Définition) → II (Causes/Mécanismes) → III (Effets/Solutions)
-- DIALECTIQUE : I (Thèse : position dominante) → II (Antithèse : limites/critiques) → III (Synthèse/Dépassement)
-- CHRONOLOGIQUE : I (Passé/Origines) → II (Présent/État actuel) → III (Avenir/Perspectives)
-- ANALYTIQUE : I (Dimension économique) → II (Dimension sociale/culturelle) → III (Dimension politique/environnementale)
+Structure de chaque paragraphe de développement (min 8-10 lignes) :
 
-CONSTRUCTION D'UNE PROBLÉMATIQUE DE QUALITÉ :
-- "Dans quelle mesure [sujet] contribue-t-il à [enjeu pour CI/Afrique] ?"
-- "Comment [phénomène] se manifeste-t-il en Côte d'Ivoire et quels en sont les impacts ?"
-- "En quoi [sujet] représente-t-il à la fois [avantage] et [défi] pour [acteurs] ?"
-- "Si [thèse commune], dans quelle mesure peut-on affirmer que [antithèse nuancée] ?"
+1. POINT — Phrase d'affirmation claire et directe (1-2 lignes) :
+   "La **déforestation** constitue l'une des crises environnementales les plus graves qu'ait connues la Côte d'Ivoire au cours du XXe siècle."
+
+2. EXPLICATION — Développe le mécanisme, définit les termes, explique les causes ou le fonctionnement (3-4 lignes) :
+   "Ce phénomène se définit comme la destruction durable et souvent irréversible du couvert forestier au profit d'autres usages des terres, notamment l'agriculture, l'exploitation forestière industrielle et l'urbanisation galopante. En Côte d'Ivoire, ce processus a été largement amplifié par l'extension des cultures de rente, principalement le **cacao** et le **café**, dont la demande mondiale croissante a exercé une pression considérable sur les forêts du Sud et du Centre-Ouest du pays."
+
+3. EXEMPLE PRÉCIS IVOIRIEN/AFRICAIN — Chiffre sourcé + événement daté + lieu précis (3-4 lignes) :
+   "Les données du Ministère des Eaux et Forêts (2022) révèlent une réalité alarmante : de **16 millions d'hectares** de forêt dense que comptait la Côte d'Ivoire au début du XXe siècle, il n'en subsistait plus que **3,4 millions** en 2020, soit une perte de **79% du couvert forestier** en un siècle. À titre illustratif, la **Forêt classée du Banco**, véritable poumon vert d'Abidjan, a vu sa superficie passer de 3 000 hectares à l'époque coloniale à environ 1 800 hectares aujourd'hui, sous la pression de l'urbanisation et des empiètements agricoles."
+
+4. LIEN — Phrase de transition vers le paragraphe ou sous-partie suivant(e) (1-2 lignes) :
+   "Cette destruction massive du patrimoine forestier ne se limite pas à une question environnementale ; elle engage profondément les équilibres climatiques régionaux et les conditions de vie des populations rurales, ce qui nous conduit à examiner ses répercussions socio-économiques."
+
+▶ C. TRANSITIONS OBLIGATOIRES ENTRE GRANDES PARTIES — MODÈLES :
+
+TRANSITION I → II (min 4 lignes) :
+"Ainsi avons-nous établi, au terme de cette première partie, que [résumé en 1 phrase de la Partie I]. Cette analyse, si elle permet de cerner [apport de la Partie I], ne saurait toutefois être complète sans que l'on s'interroge sur [ce que la Partie II va apporter]. C'est précisément l'objet de notre second axe de réflexion, consacré à [intitulé Partie II]."
+
+TRANSITION II → III (min 3 lignes) :
+"Au regard des éléments développés dans notre deuxième partie, force est de constater que [bilan Partie II]. Ces constats nous invitent dès lors à dépasser le simple constat analytique pour envisager [dimension prospective / solutions / synthèse] — dimension qui constituera le fil directeur de notre troisième et dernière partie."
+
+▶ D. CONNECTEURS LOGIQUES — VARIER OBLIGATOIREMENT (jamais répéter deux fois de suite) :
+
+INTRODUIRE : "Il convient tout d'abord de souligner que", "Force est de constater que", "Il importe de noter que",
+"À ce titre,", "Dans cette perspective,", "En premier lieu,", "Il y a lieu de préciser que",
+"D'emblée, il apparaît que", "Au seuil de cette analyse,"
+
+DÉVELOPPER : "En effet,", "De surcroît,", "Par ailleurs,", "Qui plus est,", "Il convient également de noter que",
+"À cet égard,", "Dans ce sens,", "En outre,", "Il faut également souligner que",
+"On notera de surcroît que", "À cela s'ajoute le fait que"
+
+ILLUSTRER : "Ainsi,", "C'est notamment le cas de", "À titre illustratif,", "À titre d'exemple concret,",
+"On peut citer à cet effet", "L'exemple ivoirien est à ce titre particulièrement éloquent :",
+"Comme en témoigne", "Les données de [institution] le confirment :", "Pour s'en convaincre,"
+
+OPPOSER/NUANCER : "Cependant,", "Néanmoins,", "Toutefois,", "En revanche,", "Or,",
+"Il convient toutefois de relativiser ce constat :", "Si [thèse]... en revanche [nuance]...",
+"Malgré tout,", "Il serait néanmoins réducteur de", "Cette réalité ne doit pas occulter le fait que"
+
+CONCLURE/TRANSITER : "En définitive,", "Au regard de ces éléments,", "Au terme de cette analyse,",
+"C'est dans cette logique que", "Ces constats nous amènent naturellement à examiner",
+"Cette analyse nous conduit à aborder", "Ainsi avons-nous établi que", "Il ressort de ce qui précède que"
+
+▶ E. TYPES DE PLANS À CHOISIR INTELLIGEMMENT SELON LE SUJET :
+
+THÉMATIQUE (sujets descriptifs) : I (Nature/Définition/Caractéristiques) → II (Causes/Mécanismes/Fonctionnement) → III (Effets/Impacts/Solutions)
+→ Idéal pour : "La déforestation en CI", "Le paludisme en Afrique", "Le coupé-décalé ivoirien"
+
+DIALECTIQUE (sujets controversés) : I (Thèse : position principale/avantages) → II (Antithèse : limites/critiques/risques) → III (Synthèse/Dépassement/Voie du milieu)
+→ Idéal pour : "L'agriculture extensive, moteur ou frein du développement ?", "La mondialisation, chance ou menace pour l'Afrique ?"
+
+CHRONOLOGIQUE (sujets historiques) : I (Origines/Passé lointain) → II (Évolutions/État actuel/Ruptures) → III (Perspectives/Avenir/Défis contemporains)
+→ Idéal pour : "L'histoire de la Côte d'Ivoire", "L'évolution du système éducatif africain"
+
+ANALYTIQUE (sujets complexes multi-dimensionnels) : I (Dimension économique/scientifique) → II (Dimension sociale/humaine/culturelle) → III (Dimension politique/environnementale/internationale)
+→ Idéal pour : "Les enjeux de l'eau en Afrique de l'Ouest", "La question du développement durable"
+
+▶ F. CONSTRUCTION D'UNE CONCLUSION EN 3 TEMPS (structure obligatoire) :
+
+TEMPS 1 — BILAN HIÉRARCHISÉ (min 6 lignes) :
+Résume l'essentiel de chaque grande partie en 2 phrases fortes.
+NE JAMAIS reproduire mot pour mot — reformuler et synthétiser.
+"En premier lieu, nous avons mis en évidence que [synthèse Partie I en 1-2 phrases reformulées]. Dans un deuxième temps, notre analyse a démontré que [synthèse Partie II]. Enfin, nous avons pu établir que [synthèse Partie III]."
+
+TEMPS 2 — RÉPONSE NUANCÉE ET ARGUMENTÉE À LA PROBLÉMATIQUE (min 5 lignes) :
+Reprend la problématique posée en introduction et y répond avec nuance.
+"Au terme de cette analyse, il apparaît clairement que [réponse directe à la problématique]. Cette réponse doit cependant être nuancée : si [aspect positif / première dimension], il n'en demeure pas moins que [limite / dimension problématique]."
+
+TEMPS 3 — OUVERTURE PROSPECTIVE ET ÉLARGISSEMENT (min 4 lignes) :
+Ouvre sur un enjeu futur, une question connexe plus large, ou un défi pour CI/Afrique.
+Doit être logiquement reliée au sujet traité — jamais artificielle.
+Propositions d'ouverture : transition numérique et éducation en Afrique | ZLECAF et intégration économique régionale | développement durable et ODD 2030 | santé tropicale et systèmes de santé africains | changement climatique et agriculture africaine | valorisation des langues nationales en éducation.
+"Cette réflexion sur [sujet] nous invite finalement à nous interroger sur [question d'ouverture plus large], enjeu fondamental pour l'avenir [du continent / de la Côte d'Ivoire / de la jeunesse africaine]."
 
 CITATIONS ET RÉFÉRENCES — FORMAT ACADÉMIQUE RIGOUREUX :
 - Citation directe : « La forêt tropicale est le poumon de la planète. » (FAO, 2022, p. 12)
@@ -563,13 +631,15 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[ACCROCHE PERCUTANTE — Min 6 lignes : fait saisissant, statistique sourcée, citation d'auteur africain avec référence, ou réalité concrète de CI/Afrique. Ex: "Selon le rapport annuel de la FAO (2023), la Côte d'Ivoire produit à elle seule **45%** du cacao mondial, avec **2,2 millions de tonnes** annuelles..."]
+[ACCROCHE PERCUTANTE — Min 5 lignes — CHOISIR : données choc sourcées / paradoxe saisissant / citation d'auteur africain avec référence complète / anecdote historique. Ex: "Selon la FAO (2023), la Côte d'Ivoire produit **45%** du cacao mondial avec **2,2 millions de tonnes**. Pourtant, les 5 millions de paysans concernés perçoivent moins de 6% de la valeur finale d'une tablette de chocolat en Europe (Oxfam, 2022)..."]
 
-[CONTEXTUALISATION APPROFONDIE — Min 5 lignes : situe précisément dans contexte historique/géographique/scientifique/social. Définit termes clés en **gras**. Donne chiffres et dates.]
+[CONTEXTUALISATION APPROFONDIE — Min 5 lignes : situe dans contexte historique/géographique/scientifique/social. Définit TOUS les termes clés en **gras** dès leur première occurrence. Donne chiffres, dates précises, acteurs réels.]
 
-[PROBLÉMATIQUE PRÉCISE : "Ainsi, nous pouvons nous demander : [question centrale bien formulée, spécifique et problématique] ?"]
+[DÉLIMITATION ET ENJEUX — Min 3 lignes : précise le périmètre de l'étude et pourquoi le sujet est important aujourd'hui pour la CI/l'Afrique/le monde.]
 
-[ANNONCE DU PLAN : "Pour répondre à cette problématique, nous étudierons dans un premier temps [Partie I en 1 ligne], puis dans un deuxième temps [Partie II], et enfin [Partie III si applicable]."]
+[PROBLÉMATIQUE PRÉCISE ET NON RHÉTORIQUE — 1-2 phrases soulevant une VRAIE tension intellectuelle : "Ainsi, nous pouvons nous demander : Dans quelle mesure [tension principale du sujet] ?"]
+
+[ANNONCE DU PLAN DÉTAILLÉE — 2-3 lignes : "Pour répondre à cette interrogation, nous analyserons dans une première partie [intitulé complet Partie I reformulé en 1 ligne], avant d'examiner dans une deuxième partie [Partie II], et d'envisager enfin [Partie III — lycée/université uniquement]."]
 
 ────────────────────────────────────────────────────────
 
@@ -587,9 +657,13 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[PARAGRAPHE 1 — 8 à 10 lignes : phrase d'annonce + développement PEEL. Définir les termes clés en **gras**. Citer source ou statistique précise.]
+[PARAGRAPHE 1 — 8 à 10 lignes — MODÈLE PEEL :
+→ POINT (1-2 lignes) : affirmation directe et claire du sous-argument
+→ EXPLICATION (3-4 lignes) : développe le mécanisme, définit les termes en **gras**, explique les causes
+→ EXEMPLE IVOIRIEN (3-4 lignes) : chiffre sourcé (institution + année) + fait précis + lieu géographique réel
+→ LIEN (1-2 lignes) : transition vers le paragraphe 2]
 
-[PARAGRAPHE 2 — 8 à 10 lignes : approfondissement, nouvel angle. Exemple africain comparatif. Connecteurs variés.]
+[PARAGRAPHE 2 — 8 à 10 lignes — même structure PEEL, angle différent et complémentaire. Connecteurs variés. Exemple africain comparatif si pertinent.]
 
 [SI PERTINENT — Tableau de données :
 **Tableau 1 : [Titre précis et descriptif]**
@@ -607,7 +681,9 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[3 paragraphes de 8 à 10 lignes chacun. Angle différent de 1.1. Exemples ivoiriens + données chiffrées. Dernier paragraphe : transition vers Partie II.]
+[3 paragraphes de 8 à 10 lignes chacun. Angle différent de 1.1. Exemples ivoiriens + données chiffrées.]
+
+[TRANSITION OBLIGATOIRE VERS PARTIE II — Min 4 lignes : "Ainsi avons-nous établi, au terme de cette première partie, que [synthèse Partie I en 1 phrase]. Cette analyse, si elle permet de [apport], ne saurait toutefois être complète sans que l'on s'interroge sur [ce que la Partie II apporte]. C'est précisément l'objet de notre second axe, consacré à [intitulé Partie II]."]
 
 ════════════════════════════════════════════════════════
 
@@ -629,7 +705,7 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[3 paragraphes de 8 à 10 lignes. Transition vers Partie III ou vers Conclusion.]
+[3 paragraphes de 8 à 10 lignes. Dernier paragraphe inclut TRANSITION VERS PARTIE III — "Au regard des éléments développés dans cette deuxième partie, force est de constater que [bilan]. Ces constats nous invitent dès lors à dépasser le simple constat pour envisager [dimension prospective/solutions], fil directeur de notre troisième partie."]
 
 ════════════════════════════════════════════════════════
 
@@ -665,11 +741,11 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-[SYNTHÈSE HIÉRARCHISÉE — Min 7 lignes : résume l'essentiel de chaque grande partie en 1-2 phrases fortes. Reformule — ne répète JAMAIS mot pour mot. "En premier lieu, nous avons établi que..., puis nous avons démontré que..., enfin nous avons souligné que..."]
+[TEMPS 1 — BILAN HIÉRARCHISÉ — Min 7 lignes : résume chaque grande partie en 2 phrases fortes REFORMULÉES (jamais mot pour mot). "En premier lieu, nous avons mis en évidence que [synthèse Partie I]. Dans un second temps, notre analyse a démontré que [synthèse Partie II]. Enfin, nous avons établi que [synthèse Partie III]."]
 
-[RÉPONSE NUANCÉE À LA PROBLÉMATIQUE — Min 5 lignes : répond clairement, précisément et avec nuance à la question de l'introduction. Fondée sur les éléments du développement.]
+[TEMPS 2 — RÉPONSE NUANCÉE À LA PROBLÉMATIQUE — Min 5 lignes : reprend la question posée en introduction et y répond avec précision et nuance. "Au terme de cette analyse, il apparaît que [réponse directe]. Cette réponse mérite toutefois d'être nuancée : si [aspect positif], il n'en demeure pas moins que [limite/tension]."]
 
-[OUVERTURE PROSPECTIVE — Min 4 lignes : enjeu futur majeur pour CI ou Afrique, lien avec autre domaine, question nouvelle. Grands défis : développement durable, intégration africaine (ZLECAF), transition numérique, santé tropicale.]
+[TEMPS 3 — OUVERTURE PROSPECTIVE — Min 4 lignes : enjeu futur logiquement relié au sujet traité pour CI/Afrique. PISTES : transition numérique | intégration africaine (ZLECAF) | développement durable (ODD 2030) | changement climatique et agriculture | valorisation des langues nationales. "Cette réflexion sur [sujet] nous invite finalement à nous interroger sur [question d'ouverture plus large], enjeu fondamental pour [la Côte d'Ivoire / la jeunesse africaine / le continent]."]
 
 ────────────────────────────────────────────────────────
 
@@ -705,7 +781,16 @@ Bibliographie ............................................................ p. 11
 
 ────────────────────────────────────────────────────────
 
-Rédige maintenant l'exposé COMPLET en français avec la plus grande rigueur académique. TOUT doit être rédigé intégralement avec de vrais contenus enrichis — aucun "[à compléter]", aucune zone vide."""
+Rédige maintenant l'exposé COMPLET en français avec la plus grande rigueur académique.
+
+IMPÉRATIFS ABSOLUS :
+1. TOUT est rédigé intégralement — zéro "[à compléter]", zéro zone vide
+2. Introduction en 5 temps (accroche → contextualisation → délimitation → problématique → annonce plan)
+3. Chaque paragraphe suit le modèle PEEL (Point → Explication → Exemple ivoirien sourcé → Lien)
+4. Transitions obligatoires entre grandes parties (min 4 lignes chacune)
+5. Conclusion en 3 temps (bilan → réponse nuancée à la problématique → ouverture prospective)
+6. Min 3 exemples ivoiriens/africains CHIFFRÉS et SOURCÉS par grande partie
+7. Connecteurs logiques variés — jamais le même deux fois de suite dans un paragraphe"""
 
 
         # ================================================================
@@ -1099,20 +1184,73 @@ HISTOIRE-GÉO CONTEXTUALISÉS :
 SECTION 5 — RÈGLES ABSOLUES DE CONCEPTION DES SUJETS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RÈGLE 1 — COMPLÉTUDE TOTALE : JAMAIS "[À compléter]", "[insérer question]", "[...]" → TOUT rédigé intégralement avec de vrais contenus
-RÈGLE 2 — QUESTIONS RÉELLES : Toutes questions entièrement formulées, tous choix QCM complets et plausibles, tous textes lacunaires entièrement rédigés
-RÈGLE 3 — CONTEXTUALISATION CI : Problèmes maths en FCFA, sciences avec données CI (barrages, maladies, cacao), histoire avec événements CI
-RÈGLE 4 — ZÉRO LaTeX : Formules en texte clair — "F = m x a" jamais "$F = ma$"
-RÈGLE 5 — BARÈME COHÉRENT : Total toujours = 20 points, répartition logique selon difficulté
-RÈGLE 6 — ADAPTATION NIVEAU : CEPE (primaire simple) / BEPC (collège) / BAC série précise (lycée) — adapter strictement
-RÈGLE 7 — CORRIGÉ UNIQUEMENT SI DEMANDÉ : N'inclure le corrigé que si "corrigé", "correction", "éléments de réponse" est mentionné
-RÈGLE 8 — CORRIGÉ EXHAUSTIF : Si demandé, montrer TOUTES les étapes de calcul, justifier CHAQUE réponse, barèmes détaillés
+RÈGLE 1 — COMPLÉTUDE TOTALE ABSOLUE :
+JAMAIS "[À compléter]", "[insérer question]", "[...]", "[Réponse ici]" → TOUT intégralement rédigé avec de vrais contenus. Si une question n'est pas complète, le document est un ÉCHEC.
+
+RÈGLE 2 — TOUTES LES QUESTIONS SONT DES VRAIES QUESTIONS :
+- QCM : 4 choix tous rédigés, distractors plausibles et de longueur similaire
+- VF : affirmations complètes et non ambiguës
+- Texte lacunaire : texte entier rédigé avec tous les blancs _______________ (min 15 underscores)
+- Questions ouvertes : libellé précis, nombre de lignes de réponse adapté aux points alloués
+
+RÈGLE 3 — CONTEXTUALISATION IVOIRIENNE OBLIGATOIRE PARTOUT :
+- Maths : problèmes en FCFA avec prix réels (cacao 350F/kg, gbaka 200F, riz 400F/kg)
+- Sciences : données CI réelles (barrages Soubré 275MW, Kossou 174MW, température Abidjan 26°C)
+- Histoire-Géo : événements, dates et lieux ivoiriens (indépendance 7/8/1960, superficie 322 463 km²)
+- Français : auteurs africains francophones réels (Dadié, Kourouma, Laye, Oyono, Beti)
+- Chaque exercice doit avoir AU MOINS UN élément de contexte ivoirien ou africain
+
+RÈGLE 4 — ZÉRO LaTeX : Formules en texte clair — "F = m x a" JAMAIS "$F = ma$"
+Formules chimiques sans exposants Unicode — "CO2" JAMAIS "CO₂"
+
+RÈGLE 5 — BARÈME COHÉRENT ET PÉDAGOGIQUE :
+- Total TOUJOURS = 20 points (jamais 18, 19 ou 21)
+- Répartition logique : questions simples ≤ 1pt, questions de synthèse 3-5pts
+- Indiquer les points sur CHAQUE question individuelle (pas seulement par exercice)
+- Format : **Question 1** (1 point), **Question 2** (1,5 points), **Sous-total Exercice 1 : /5**
+
+RÈGLE 6 — ADAPTATION STRICTE AU NIVEAU :
+- CEPE (CM1-CM2) : phrases max 15 mots, vocabulaire CP/CE, calculs < 100, 1-2 pages, /20
+- BEPC (3ème) : vocabulaire courant + termes disciplinaires définis, 3-4 exercices, 2-4 pages, /20
+- BAC (Terminale) : rigueur maximale, terminologie disciplinaire maîtrisée, 4-5 exercices, 4-6 pages, /20
+- Adapter STRICTEMENT la longueur, la difficulté et le vocabulaire au niveau indiqué
+
+RÈGLE 7 — GRADATION DE DIFFICULTÉ PROGRESSIVE DANS LE SUJET :
+- Exercice 1 = questions de connaissance/mémorisation (rappel de cours, définitions, QCM)
+- Exercice 2 = questions de compréhension/application (calculs simples, textes, Vrai/Faux)
+- Exercice 3 = questions d'analyse/synthèse (problèmes contextualisés, rédaction, commentaire)
+- Exercice 4+ = production élaborée si demandé (mini-essai, résolution de problème complexe)
+Cette progression permet aux élèves de débuter en confiance et d'aller progressivement vers le difficile.
+
+RÈGLE 8 — CONSIGNES CLAIRES ET SANS AMBIGUÏTÉ :
+Chaque exercice commence par une **Consigne :** en gras, formulée en 1-2 phrases maximales.
+La consigne indique : QUOI faire + COMMENT faire + COMBIEN (nombre de réponses attendues).
+✓ "**Consigne :** Cochez la lettre correspondant à la SEULE bonne réponse pour chacune des 5 questions."
+✓ "**Consigne :** Résolvez le problème en montrant TOUTES les étapes de calcul. Résultat sans démarche = 0 point."
+✗ À éviter : "Répondez aux questions." (trop vague)
+
+RÈGLE 9 — CORRIGÉ UNIQUEMENT SI DEMANDÉ :
+N'inclure le corrigé que si "corrigé", "correction", "éléments de réponse", "barème détaillé" est mentionné dans la description.
+
+RÈGLE 10 — CORRIGÉ EXHAUSTIF QUAND DEMANDÉ :
+- QCM : indiquer la lettre + justification en 1-2 phrases précises pourquoi les autres options sont fausses
+- VF : indiquer V ou F + justification complète pour CHAQUE affirmation
+- Calculs : montrer TOUTES les étapes numériques avec les formules et les unités
+- Texte lacunaire : réécrire le texte COMPLET avec les mots correctement placés soulignés en **gras**
+- Questions ouvertes : éléments de réponse attendus + indication des points partiels possibles
 
 === MISSION ===
 
 Crée maintenant un sujet d'examen COMPLET, PARFAITEMENT STRUCTURÉ et TOTALEMENT RÉDIGÉ basé sur :
 
 {description}
+
+IMPÉRATIFS ABSOLUS :
+1. TOUT est rédigé intégralement — zéro zone vide, zéro "[à compléter]"
+2. Gradation de difficulté progressive : Exercice 1 (mémorisation) → Exercice 2 (application) → Exercice 3+ (synthèse)
+3. Barème détaillé avec points par question, total = /20 obligatoirement
+4. Contexte ivoirien dans CHAQUE exercice (données réelles CI/FCFA/Afrique)
+5. Consignes précises et sans ambiguïté pour chaque exercice
 
 === STRUCTURE OBLIGATOIRE ===
 
@@ -1153,12 +1291,17 @@ Union — Discipline — Travail
 ────────────────────────────────────────────────────────
 
 **BARÈME DE NOTATION :**
-| Exercice | Intitulé | Points |
-|----------|----------|--------|
-| Exercice 1 | [Intitulé complet] | /[X] |
-| Exercice 2 | [Intitulé complet] | /[X] |
-| Exercice 3 | [Intitulé complet] | /[X] |
+| Exercice | Intitulé complet | Points |
+|----------|-----------------|--------|
+| Exercice 1 | [Type d'exercice — ex: Questions à choix multiples] | /[X] |
+| Exercice 2 | [Type d'exercice — ex: Vrai ou Faux avec justification] | /[X] |
+| Exercice 3 | [Type d'exercice — ex: Problème contextualisé] | /[X] |
+| Exercice 4 | [Type d'exercice — ex: Questions de synthèse] | /[X] |
 | **TOTAL** | | **/20** |
+
+────────────────────────────────────────────────────────
+
+**Rappel :** Les points de chaque question sont indiqués entre parenthèses. La présentation soignée est valorisée.
 
 ────────────────────────────────────────────────────────
 
@@ -1422,6 +1565,11 @@ def creer_docx(contenu, service, client_nom):
 
     doc = Document()
 
+    # Supprimer le paragraphe vide créé automatiquement par python-docx
+    if doc.paragraphs:
+        p = doc.paragraphs[0]._element
+        p.getparent().remove(p)
+
     for section in doc.sections:
         section.top_margin    = Cm(2)
         section.bottom_margin = Cm(2)
@@ -1469,7 +1617,6 @@ def creer_docx(contenu, service, client_nom):
     bottom.set(qn("w:color"), "1F4E79")
     pBdr.append(bottom)
     pPr.append(pBdr)
-    doc.add_paragraph("")
 
     def add_formatted_para(doc, text, style_name="Normal", bold=False, size=11, color=None, align=None):
         p = doc.add_paragraph(style=style_name)
