@@ -48,16 +48,17 @@ def load_db():
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
         for r in demandes_rows:
+            champs_raw = r.get("champs_manquants")
             demandes.append({
-                "id": r["id"],
-                "user": r["uid"],
-                "service": r["service"],
-                "desc": r["description"],
-                "whatsapp": r["whatsapp"],
-                "status": r["status"],
-                "incomplet": r["incomplet"],
-                "champs_manquants": json.loads(r["champs_manquants"]) if r["champs_manquants"] else [],
-                "timestamp": r["timestamp"]
+                "id": r.get("id"),
+                "user": r.get("uid"),
+                "service": r.get("service"),
+                "desc": r.get("description", ""),
+                "whatsapp": r.get("whatsapp", ""),
+                "status": r.get("status", "en attente"),
+                "incomplet": r.get("incomplet", False),
+                "champs_manquants": json.loads(champs_raw) if champs_raw else [],
+                "timestamp": r.get("timestamp", "")
             })
         liens_rows = supabase.table("liens").select("*").execute().data
         liens = {}
@@ -2301,12 +2302,24 @@ if st.session_state["current_user"] is None:
     else:
         components.html("""
             <script>
-            var uid = localStorage.getItem('nova_user_id');
-            if (uid) {
-                var url = new URL(window.location.href);
-                url.searchParams.set('user_id', uid);
-                window.location.href = url.toString();
-            }
+            (function() {
+                function getStorage(key) {
+                    try { return localStorage.getItem(key); } catch(e) { return null; }
+                }
+                var uid = getStorage('nova_user_id');
+                if (uid) {
+                    try {
+                        var target = window.parent !== window ? window.parent : window;
+                        var url = new URL(target.location.href);
+                        url.searchParams.set('user_id', uid);
+                        target.location.replace(url.toString());
+                    } catch(e) {
+                        var url2 = new URL(window.location.href);
+                        url2.searchParams.set('user_id', uid);
+                        window.location.replace(url2.toString());
+                    }
+                }
+            })();
             </script>
         """, height=0)
 
@@ -2314,7 +2327,11 @@ if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
     components.html(f"""
         <script>
-        localStorage.setItem('nova_user_id', '{uid_connecte}');
+        (function() {{
+            try {{
+                localStorage.setItem('nova_user_id', '{uid_connecte}');
+            }} catch(e) {{}}
+        }})();
         </script>
     """, height=0)
 
@@ -3299,6 +3316,10 @@ def show_auth_page():
 
 
 def main_dashboard():
+    if "db" not in st.session_state:
+        st.session_state["db"] = load_db()
+    if "current_user" not in st.session_state:
+        st.session_state["current_user"] = None
     user = st.session_state["current_user"]
     db = st.session_state["db"]
 
@@ -3316,7 +3337,7 @@ def main_dashboard():
     with st.sidebar:
         st.markdown(f"### 👤 {user if user else 'Visiteur'}")
         if user:
-            st.markdown(f"📱 **{db['users'][user]['whatsapp']}**")
+            st.markdown(f"📱 **{user_data.get('whatsapp', 'Non renseigné')}**")
             if premium_actif and premium_info:
                 st.markdown(f"""
                 <div style="margin:10px 0;">
