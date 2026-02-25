@@ -1325,6 +1325,81 @@ SECTION 3 — ENCYCLOPÉDIE COMPLÈTE : TOUTES CLASSES × TOUTES MATIÈRES
 
 ╚═══════════════════════════════════════════════════════════════════════════════════╝
 
+╔══ BTS (Brevet de Technicien Supérieur) — 1ère et 2ème année ════════════════════════╗
+
+── BTS IDA — Informatique et Développement d'Applications ──────────────────────────
+  Matières : Algorithmique & Programmation, Bases de données, Réseaux, Systèmes d'exploitation, Anglais technique, Mathématiques appliquées, Gestion de projet, Stage
+  BTS1 : algorithmique (tableaux, tris, fonctions), SQL (SELECT/INSERT/UPDATE/DELETE), HTML/CSS, Python/C de base
+    Ex Algo : "Écrire un algorithme qui saisit 10 notes et affiche la moyenne, le max et le min."
+    Ex SQL : "Créez la table Étudiant(id INT, nom VARCHAR(50), filière VARCHAR(30), note FLOAT). Insérez 3 enregistrements et affichez les étudiants ayant une note > 12."
+  BTS2 : POO (classes, héritage, polymorphisme), merise/UML (MCD, MLD, MPD), sécurité réseau, projet de fin d'études
+    Ex POO : "Créez une classe Compte avec attributs (numéro, solde, titulaire) et méthodes (déposer, retirer, afficher). Instanciez 2 objets."
+    Ex UML : "Réalisez le diagramme de cas d'utilisation d'un système de gestion de bibliothèque scolaire."
+    Ex Merise : "À partir des règles de gestion suivantes, proposez le MCD : un étudiant peut s'inscrire à plusieurs modules ; un module est enseigné par un seul enseignant."
+
+── BTS CG — Comptabilité et Gestion ─────────────────────────────────────────────────
+  Matières : Comptabilité générale, Comptabilité analytique, Gestion financière, Fiscalité CI, Droit des affaires (OHADA), Informatique de gestion, Anglais des affaires
+  BTS1 : journal comptable (achats, ventes, règlements), TVA 18% CI, balance de vérification
+    Ex : "Enregistrez au journal les opérations suivantes : 01/03 Achat marchandises 400 000 FCFA HT (TVA 18%) à crédit fournisseur Konan & Fils ; 05/03 Vente 600 000 FCFA HT (TVA 18%) au comptant ; 10/03 Règlement fournisseur par virement 472 000 FCFA."
+  BTS2 : bilan, compte de résultat, SIG (soldes intermédiaires de gestion), analyse financière (ratios), coûts (complet, marginal, variable), budget de trésorerie
+    Ex : "À partir des données suivantes, calculez l'EBE, le résultat d'exploitation et le résultat net. Calculez les ratios de liquidité et d'autonomie financière."
+    Ex fiscalité : "Une entreprise ivoirienne réalise un CA de 85 000 000 FCFA. Calculez la TVA collectée (18%), la TVA déductible sur achats (42 000 000 FCFA HT) et la TVA à reverser à la DGI."
+
+── BTS MUC — Management des Unités Commerciales ─────────────────────────────────────
+  Matières : Techniques commerciales, Marketing, Mercatique, Gestion de la relation client (GRC/CRM), Management d'équipe, Communication commerciale, Droit commercial
+  BTS1 : segmentation, ciblage, positionnement, mix marketing (4P), techniques de vente, prospection, argumentation
+    Ex : "Réalisez une analyse SWOT de la filière cacao en Côte d'Ivoire et proposez une stratégie marketing export."
+    Ex : "Rédigez un argumentaire de vente pour un smartphone à 75 000 FCFA en utilisant la méthode CAP (Caractéristique, Avantage, Preuve)."
+  BTS2 : plan marketing, gestion de portefeuille clients, tableaux de bord commerciaux, e-commerce en Afrique
+    Ex : "Calculez le chiffre d'affaires prévisionnel sachant que : parc clients = 2 500, taux de transformation = 35%, panier moyen = 45 000 FCFA."
+
+── BTS AM — Assistance de Manager / Secrétariat ─────────────────────────────────────
+  Matières : Communication professionnelle, Bureautique avancée, Organisation de l'entreprise, Anglais professionnel, Gestion administrative, Comptabilité de base
+  BTS1 : rédaction professionnelle (lettre, note, compte rendu, rapport), classement, gestion agenda, accueil
+    Ex : "Rédigez une lettre de relance à un client (Société TRAORE & Fils) pour un impayé de 250 000 FCFA arrivant à échéance le 30/11/N. Ton professionnel et courtois."
+    Ex : "Rédigez le compte rendu de la réunion du service commercial du 15/01/N. Participants : DG, Chef des ventes, 3 commerciaux. Ordre du jour : résultats S2, objectifs S1 N+1."
+  BTS2 : organisation d'événements, gestion de projets, communication interne/externe, veille documentaire
+
+── BTS TC — Technico-Commercial ─────────────────────────────────────────────────────
+  Matières : Techniques de vente industrielle, Connaissance produit, Chiffrage/Devis, Négociation, Logistique commerciale
+    Ex : "Un client commande 500 unités à 12 500 FCFA/u avec remise 8% et escompte 2% si paiement sous 10 jours. Calculez le montant net à payer HT, la TVA (18%) et le TTC."
+
+── BTS GRH — Gestion des Ressources Humaines ────────────────────────────────────────
+  Matières : Droit du travail CI (Code du travail ivoirien), Paie et charges sociales, Recrutement, Formation, Évaluation, SIRH (Système d'Information RH)
+    Ex paie CI : "Calculez le bulletin de paie de M. BAMBA : salaire brut 350 000 FCFA, CNPS salarié 6,3%, CAMU salarié 0,75%, ITS (impôt selon barème). Calculez le net à payer."
+    Ex droit : "Quelles sont les conditions de validité d'un contrat de travail en Côte d'Ivoire selon le Code du travail ? Distinguez CDI et CDD."
+
+── BTS BANQUE / FINANCE ─────────────────────────────────────────────────────────────
+  Matières : Économie monétaire et bancaire, Crédit, Marchés financiers, Gestion des risques, BCEAO/UEMOA, SYSCOHADA révisé
+    Ex : "La BCEAO fixe son taux directeur à 3,5%. Comment cela influence-t-il les taux des crédits accordés par les banques commerciales ivoiriennes ?"
+    Ex : "Calculez la mensualité d'un crédit immobilier de 10 000 000 FCFA à 8%/an sur 10 ans (amortissement constant)."
+
+── BTS LOGISTIQUE / TRANSPORT ───────────────────────────────────────────────────────
+  Matières : Gestion des stocks, Supply chain, Transport multimodal, Incoterms, Douane, Entreposage, ERP/WMS
+    Ex Incoterms : "Expliquez la différence entre FOB, CIF et DDP. Dans quel cas le vendeur ivoirien (exportateur de cacao) utilise-t-il FOB Abidjan ?"
+    Ex gestion stocks : "Stock initial 5 000 kg de cacao. Entrées : 12 000 kg. Sorties : 14 500 kg. Calculez le stock final. Si le stock de sécurité est 2 000 kg, faut-il commander ?"
+
+── BTS GÉNIE CIVIL / BTP ────────────────────────────────────────────────────────────
+  Matières : Topographie, Résistance des matériaux, Béton armé, Dessin de bâtiment, Métrés, Devis estimatif, Économie de la construction
+    Ex : "Une dalle rectangulaire de 6m × 4m × 0,15m doit être coulée en béton (densité 2 400 kg/m³). Calculez le volume de béton et la masse totale."
+    ###FORMULE### V = L × l × h   |   m = ρ × V
+
+── BTS ÉLECTRONIQUE / ÉLECTROTECHNIQUE ──────────────────────────────────────────────
+  Matières : Circuits électroniques (amplificateurs, filtres, oscillateurs), Machines électriques (moteurs, transformateurs), Automatismes industriels (GRAFCET, API)
+    Ex : "Un transformateur monophasé a N1 = 2 000 spires, N2 = 400 spires, V1 = 220 V. Calculez V2 et le rapport de transformation m."
+    ###FORMULE### V1/V2 = N1/N2 = m    (rapport de transformation)
+
+── FORMAT GÉNÉRAL ÉPREUVES BTS CI ───────────────────────────────────────────────────
+  En-tête BTS obligatoire :
+    MINISTÈRE DE L'ENSEIGNEMENT TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE (METFP)
+    DIRECTION DE L'ENSEIGNEMENT TECHNIQUE (DET)
+    BTS — [FILIÈRE] — [ANNÉE : 1ère ou 2ème] — SESSION [ANNÉE]
+    Matière : [MATIÈRE]   Durée : [DURÉE]   Coefficient : [COEFF]   Barème : /20
+  Structure type BTS : Partie A Restitution des connaissances (/6) + Partie B Application (/8) + Partie C Étude de cas/Synthèse (/6)
+  Contexte professionnel ivoirien obligatoire : entreprises CI (SIFCA, Nestlé CI, MTN CI, Orange CI, BICICI, SIB, SGBCI, CFAO, ABIDJAN TERMINAL, Port d'Abidjan)
+
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
 ╔══ CONCOURS NATIONAUX CI ═══════════════════════════════════════════════════════════╗
 
 ── ENS (École Normale Supérieure) — Formation enseignants ───────────────────────────
@@ -1403,6 +1478,9 @@ COLLÈGE — 3ème/BEPC (15 ans) : format pré-examen, 3-4 exercices complets, 3
 LYCÉE — 2nde (16 ans) : terminologie disciplinaire assumée, concepts sans définitions de base, 4 exercices, 3h
 LYCÉE — 1ère (17 ans) : niveau intermédiaire BAC, exercices exigeants, liens interdisciplinaires, 3h30
 LYCÉE — Terminale/BAC (18 ans) : format examen officiel exact, programme annuel complet, 4h, sujets type BAC
+
+BTS 1ère année (18-20 ans) : post-BAC professionnel, exercices appliqués au monde du travail, contexte entreprise CI obligatoire, rédaction professionnelle, calculs avec données réelles
+BTS 2ème année (19-21 ans) : maîtrise complète de la filière, études de cas complexes, projets transversaux, préparation épreuve finale METFP, dossier professionnel
 
 UNIVERSITÉ — L1 (18-20 ans) : notions fondamentales du supérieur, rédaction structurée attendue
 UNIVERSITÉ — L2 (19-21 ans) : maîtrise des concepts, travaux appliqués, bibliographie
@@ -4286,7 +4364,7 @@ def main_dashboard():
             st.markdown("""
             <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Gemini s'appuie sur ces informations précises pour générer votre sujet</span>
+                <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre sujet</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -4313,6 +4391,23 @@ def main_dashboard():
                         "Concours ENS", "Concours CAFOP", "Concours INJS",
                         "Concours Fonction Publique", "Concours Douane / Police / Armée",
                         "Autre concours professionnel",
+                        "── BTS ──",
+                        "BTS 1ère année", "BTS 2ème année",
+                        "BTS IDA (Informatique et Développement d'Applications)",
+                        "BTS CG (Comptabilité et Gestion)",
+                        "BTS MUC (Management des Unités Commerciales)",
+                        "BTS AM (Assistance de Manager / Secrétariat)",
+                        "BTS TC (Technico-Commercial)",
+                        "BTS GRH (Gestion des Ressources Humaines)",
+                        "BTS Banque / Finance",
+                        "BTS Logistique / Transport",
+                        "BTS Hôtellerie / Tourisme",
+                        "BTS Génie Civil / BTP",
+                        "BTS Électronique / Électrotechnique",
+                        "BTS Maintenance Industrielle",
+                        "BTS Agriculture / Agronomie",
+                        "BTS Communication / Journalisme",
+                        "Autre BTS (préciser dans les notes)",
                     ],
                     index=0
                 )
