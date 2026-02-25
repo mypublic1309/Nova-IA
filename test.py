@@ -1226,12 +1226,6 @@ RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
   • Ouvertes → éléments de réponse attendus par niveau + points partiels accordables
   • Production écrite → exemple de réponse rédigée + grille d\'évaluation critère par critère
 
-=== MISSION MAINTENANT ===
-
-Crée un sujet d\'examen PROFESSIONNEL, COMPLET et IMMÉDIATEMENT UTILISABLE basé sur :
-
-{description}
-
 === STRUCTURE DU DOCUMENT À PRODUIRE ===
 
 ###TITRE_ROUGE### SUJET — [MATIÈRE EN MAJUSCULES] — [NIVEAU]
@@ -1278,7 +1272,11 @@ Union — Discipline — Travail
 ### ✦ Exercice 2 — [Titre] — Corrigé détaillé
 [Pour les calculs : toutes les étapes + formules + unités + résultat encadré]
 
-Rédige maintenant le sujet COMPLET. TOUT est rédigé intégralement. Total = /20. Contexte ivoirien dans chaque exercice. Zéro "[à compléter]"."""
+Rédige maintenant le sujet COMPLET en te basant STRICTEMENT sur cette demande client :
+
+{description}
+
+TOUT est rédigé intégralement. Total = /20. Adapte la matière, le niveau, le type d'examen et les exercices EXACTEMENT à la demande ci-dessus. Zéro "[à compléter]"."""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
