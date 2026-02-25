@@ -3925,3 +3925,4 @@ if st.session_state["view"] == "auth" and st.session_state["current_user"] is No
     show_auth_page()
 else:
     main_dashboard()
+
