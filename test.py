@@ -1570,7 +1570,7 @@ def creer_docx(contenu, service, client_nom):
         p = doc.paragraphs[0]._element
         p.getparent().remove(p)
 
-    # Neutraliser le start_type NEW_PAGE de la 1re section (cause réelle de la page blanche)
+    # Neutraliser le start_type NEW_PAGE de la 1re section
     from docx.enum.section import WD_SECTION
     doc.sections[0].start_type = WD_SECTION.CONTINUOUS
 
@@ -1583,6 +1583,41 @@ def creer_docx(contenu, service, client_nom):
     style = doc.styles["Normal"]
     style.font.name = "Arial"
     style.font.size = Pt(11)
+
+    # ── CORRECTION DÉFINITIVE DES STYLES HEADING ──────────────────
+    # Les styles Heading1/2/3/4 ont keepNext + keepLines + spacing before=480
+    # qui font que Word insère une page quasi-blanche après chaque saut de page.
+    # On les corrige tous à la source.
+    def fix_heading_style(style_name, font_size, color_rgb):
+        try:
+            st = doc.styles[style_name]
+            st.font.name  = "Arial"
+            st.font.size  = Pt(font_size)
+            st.font.bold  = True
+            st.font.color.rgb = RC(*color_rgb)
+            pPr = st.element.get_or_add_pPr()
+            # Supprimer keepNext (cause principale de la page blanche)
+            for child in list(pPr):
+                tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                if tag in ('keepNext', 'keepLines', 'pageBreakBefore'):
+                    pPr.remove(child)
+            # Forcer spacing before=0 after=6
+            from docx.oxml import OxmlElement as _OE2
+            from docx.oxml.ns import qn as _qn2
+            for child in list(pPr):
+                if child.tag.endswith('}spacing') or child.tag == 'spacing':
+                    pPr.remove(child)
+            spacing = _OE2("w:spacing")
+            spacing.set(_qn2("w:before"), "0")
+            spacing.set(_qn2("w:after"),  "60")
+            pPr.append(spacing)
+        except Exception:
+            pass
+
+    fix_heading_style("Heading 1", 16, (0x1F, 0x4E, 0x79))
+    fix_heading_style("Heading 2", 14, (0x2E, 0x75, 0xB6))
+    fix_heading_style("Heading 3", 12, (0x1F, 0x4E, 0x79))
+    fix_heading_style("Heading 4", 11, (0x40, 0x40, 0x40))
 
     from docx.oxml import OxmlElement
     def set_cell_bg(cell, hex_color):
