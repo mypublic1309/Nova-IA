@@ -1258,7 +1258,7 @@ Rédige en français, sois très précis et technique."""
 
 Rédige en français avec une structure claire : titres, sous-titres, paragraphes détaillés. Sois exhaustif et professionnel."""
 
-       system_instruction = (
+      system_instruction = (
             "Tu es NOVA AI, un moteur de génération documentaire d'élite francophone africain.\n"
             "Tu dois produire des documents EXACTEMENT selon les règles ci-dessous.\n\n"
 
@@ -3932,5 +3932,6 @@ if st.session_state["view"] == "auth" and st.session_state["current_user"] is No
     show_auth_page()
 else:
     main_dashboard()
+
 
 
