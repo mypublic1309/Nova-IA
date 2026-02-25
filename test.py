@@ -42,6 +42,8 @@ def load_db():
                 "premium": r.get("premium", False),
                 "premium_plan": r.get("premium_plan", None),
                 "premium_expiry": r.get("premium_expiry", None),
+                "gen_used": r.get("gen_used", 0),
+                "gen_date": r.get("gen_date", None),
             }
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
@@ -74,6 +76,7 @@ def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan
             "uid": uid, "whatsapp": whatsapp,
             "email": email, "joined": str(datetime.now()),
             "premium": premium, "premium_plan": premium_plan, "premium_expiry": premium_expiry,
+            "gen_used": 0, "gen_date": None,
         }).execute()
     except Exception as e:
         st.error(f"Erreur sauvegarde utilisateur : {e}")
@@ -145,11 +148,70 @@ Connectez-vous à la console admin pour traiter cette mission.
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
+def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
+    """Email envoyé quand Gemini a généré le doc automatiquement — pour info admin."""
+    try:
+        import resend
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        corps = f"""
+✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+
+👤 Client      : {client_nom}
+📱 WhatsApp    : {client_wa}
+🛠️ Service     : {service}
+📄 Fichier     : {nom_fichier}
+
+⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+
+Le document a été livré directement au client via l'interface Nova.
+Vous n'avez rien à faire pour cette commande.
+        """
+        resend.Emails.send({
+            "from": "Nova AI <onboarding@resend.dev>",
+            "to": [st.secrets["EMAIL_RECEIVER"]],
+            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
+            "text": corps
+        })
+    except Exception:
+        pass  # Silencieux — l'email d'info admin n'est pas critique
+
 PLANS_PREMIUM = {
-    "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 1},
-    "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 4},
-    "30 Jours":   {"jours": 30, "prix": "2500 FC", "emoji": "👑", "generations": 8},
+    "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 2},
+    "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 5},
+    "30 Jours":   {"jours": 30, "prix": "2500 FC", "emoji": "👑", "generations": 9},
 }
+
+def get_gen_quota(user_data):
+    """Retourne (gen_used_aujourd_hui, quota_max) selon le plan."""
+    plan = user_data.get("premium_plan")
+    quota = PLANS_PREMIUM.get(plan, {}).get("generations", 0) if plan else 0
+    gen_date = user_data.get("gen_date")
+    today = datetime.now().strftime("%Y-%m-%d")
+    if gen_date != today:
+        return 0, quota  # Nouveau jour → compteur remis à zéro
+    return user_data.get("gen_used", 0), quota
+
+def quota_restant(user_data):
+    used, quota = get_gen_quota(user_data)
+    return max(0, quota - used)
+
+def incrementer_gen(uid):
+    """Incrémente le compteur de générations du jour pour l'utilisateur."""
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        # Recharger pour avoir la valeur fraîche
+        row = supabase.table("users").select("gen_used, gen_date").eq("uid", uid).execute().data
+        if row:
+            gen_date = row[0].get("gen_date")
+            gen_used = row[0].get("gen_used", 0) if gen_date == today else 0
+        else:
+            gen_used = 0
+        supabase.table("users").update({
+            "gen_used": gen_used + 1,
+            "gen_date": today,
+        }).eq("uid", uid).execute()
+    except Exception as e:
+        pass  # Ne pas bloquer la génération si le compteur échoue
 
 def is_premium_actif(user_data):
     if not user_data.get("premium"):
@@ -567,55 +629,49 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQU
 
 === STRUCTURE OBLIGATOIRE DU DOCUMENT — RESPECTER CET ORDRE EXACT ===
 
-# ════════════════════════════════════════════════════════
-#                      PAGE DE GARDE
-# ════════════════════════════════════════════════════════
-
-**[NOM COMPLET DE L'ÉTABLISSEMENT EN MAJUSCULES — ex: LYCÉE SAINTE-MARIE DE COCODY]**
-[Ville], Côte d'Ivoire
-Année scolaire : 2025 - 2026
+⚠️ RÈGLE MISE EN PAGE CRITIQUE :
+- La PAGE DE GARDE doit tenir sur UNE SEULE PAGE : max 1 ligne vide entre chaque bloc, aucun titre # inutile
+- Le SOMMAIRE doit tenir sur UNE SEULE PAGE : entrées compactes, pas de ligne vide entre chaque entrée
+- JAMAIS de titre de section (# PAGE DE GARDE, # SOMMAIRE...) — commence directement avec le contenu
+- JAMAIS de lignes vides consécutives dans ces deux sections
 
 ────────────────────────────────────────────────────────
 
-                 EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
-
-    **[TITRE COMPLET, ACCROCHEUR ET ÉLABORÉ DE L'EXPOSÉ EN MAJUSCULES]**
+**[NOM COMPLET DE L'ÉTABLISSEMENT EN MAJUSCULES]**
+[Ville], Côte d'Ivoire — Année scolaire : 2025 - 2026
 
 ────────────────────────────────────────────────────────
 
-**Matière :**                    [Matière complète — ex: Sciences de la Vie et de la Terre]
-**Niveau / Série :**             [Niveau exact — ex: Terminale D]
-**Présenté par :**               [Noms complets — ex: KONÉ Aminata & BAMBA Issouf]
-**Sous la direction de :**       [Titre + Nom — ex: M. COULIBALY Jean-Baptiste, Prof. de SVT]
-**Date de présentation :**       [Date complète — ex: Lundi 10 mars 2025]
-**Année scolaire :**             2025 - 2026
+EXPOSÉ DE [MATIÈRE EN MAJUSCULES]
+**[TITRE COMPLET ET ACCROCHEUR DE L'EXPOSÉ EN MAJUSCULES]**
+
+────────────────────────────────────────────────────────
+
+**Matière :** [Matière complète]
+**Niveau / Série :** [Niveau — ex: Terminale D]
+**Présenté par :** [Noms complets]
+**Sous la direction de :** [Titre + Nom du professeur]
+**Date de présentation :** [Date complète]
+**Année scolaire :** 2025 - 2026
 
 ────────────────────────────────────────────────────────
 
 ---SAUT_DE_PAGE---
-
-# ════════════════════════════════════════════════════════
-#                SOMMAIRE / TABLE DES MATIÈRES
-# ════════════════════════════════════════════════════════
 
 **SOMMAIRE**
 
 ────────────────────────────────────────────────────────
 
 Introduction ............................................................. p. 3
-
-**I. [Titre accrocheur et précis de la 1re grande partie]** ............. p. 4
-   1.1 [Titre descriptif de la 1re sous-partie] .......................... p. 4
-   1.2 [Titre descriptif de la 2e sous-partie] ........................... p. 5
-
-**II. [Titre accrocheur et précis de la 2e grande partie]** ............. p. 6
-   2.1 [Titre descriptif de la 1re sous-partie] .......................... p. 6
-   2.2 [Titre descriptif de la 2e sous-partie] ........................... p. 7
-
-**III. [Titre de la 3e grande partie — si niveau le justifie]** ......... p. 8
+**I. [Titre 1re grande partie]** ........................................ p. 4
+   1.1 [Titre 1re sous-partie] ........................................... p. 4
+   1.2 [Titre 2e sous-partie] ............................................ p. 5
+**II. [Titre 2e grande partie]** ......................................... p. 6
+   2.1 [Titre 1re sous-partie] ........................................... p. 6
+   2.2 [Titre 2e sous-partie] ............................................ p. 7
+**III. [Titre 3e grande partie — lycée/université uniquement]** ......... p. 8
    3.1 [Titre sous-partie] ............................................... p. 8
    3.2 [Titre sous-partie] ............................................... p. 9
-
 Conclusion ............................................................... p. 10
 Bibliographie ............................................................ p. 11
 
@@ -1632,7 +1688,7 @@ def creer_docx(contenu, service, client_nom):
     from docx.shared import RGBColor as RC
     p_titre = doc.add_paragraph()
     p_titre.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_t = p_titre.add_run("⚡ NOVA AI  —  " + service.replace("📝","").replace("👔","").replace("📊","").replace("⚙️","").replace("🎨","").replace("📚","").replace("📄","").strip())
+    run_t = p_titre.add_run(service.replace("📝","").replace("👔","").replace("📊","").replace("⚙️","").replace("🎨","").replace("📚","").replace("📄","").strip())
     run_t.bold = True
     run_t.font.size = Pt(16)
     run_t.font.color.rgb = RC(0x1F, 0x4E, 0x79)
@@ -1706,6 +1762,8 @@ def creer_docx(contenu, service, client_nom):
 
     lignes = contenu.split("\n")
     i = 0
+    sauts_de_page_count = 0  # Compteur de sauts de page pour détecter page garde + sommaire
+
     while i < len(lignes):
         l = lignes[i].rstrip()
 
@@ -1713,7 +1771,7 @@ def creer_docx(contenu, service, client_nom):
         if l.strip() == "---SAUT_DE_PAGE---":
             from docx.oxml.ns import qn as _qn
             from docx.oxml import OxmlElement as _OE
-            # Paragraphe vide portant le saut de page réel
+            sauts_de_page_count += 1
             p_break = doc.add_paragraph()
             p_break.paragraph_format.space_before = Pt(0)
             p_break.paragraph_format.space_after  = Pt(0)
@@ -1886,7 +1944,12 @@ def creer_docx(contenu, service, client_nom):
             continue
 
         if not l.strip():
-            doc.add_paragraph("")
+            p_vide = doc.add_paragraph()
+            # Dans page de garde (avant 1er saut) et sommaire (avant 2e saut) : espacement réduit
+            if sauts_de_page_count < 2:
+                p_vide.paragraph_format.space_before = Pt(0)
+                p_vide.paragraph_format.space_after  = Pt(0)
+                p_vide.paragraph_format.line_spacing = Pt(6)
             i += 1
             continue
 
@@ -1901,7 +1964,11 @@ def creer_docx(contenu, service, client_nom):
             i += 1
             continue
 
-        add_formatted_para(doc, l.strip())
+        p = add_formatted_para(doc, l.strip())
+        # Mode compact pour page de garde et sommaire
+        if sauts_de_page_count < 2:
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after  = Pt(3)
         i += 1
 
     buf = BytesIO()
@@ -3598,12 +3665,22 @@ def main_dashboard():
             """, unsafe_allow_html=True)
 
         if premium_actif and service in SERVICES_GEMINI:
-            st.markdown("""
+            _udata_q = st.session_state["db"]["users"].get(user, {})
+            _restant  = quota_restant(_udata_q)
+            _plan_q   = _udata_q.get("premium_plan", "")
+            _quota_q  = PLANS_PREMIUM.get(_plan_q, {}).get("generations", 0)
+            _used_q, _ = get_gen_quota(_udata_q)
+            _couleur_quota = "#2ecc71" if _restant > 1 else ("#FFD700" if _restant == 1 else "#e74c3c")
+            st.markdown(f"""
             <div style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,140,0,.06));
                  border:1px solid rgba(255,215,0,.5);border-radius:12px;padding:12px 18px;margin:10px 0;">
                 <span style="color:#FFD700;font-weight:800;">⚡ PREMIUM — Génération IA automatique activée</span>
                 <span style="color:rgba(255,255,255,.5);font-size:.8rem;display:block;margin-top:3px;">
-                    Votre document sera généré et livré en moins d'1 minute après soumission.
+                    Votre document sera généré et livré en moins d'1 minute.
+                </span>
+                <span style="color:{_couleur_quota};font-size:.85rem;font-weight:700;display:block;margin-top:6px;">
+                    📊 Générations aujourd'hui : {_used_q}/{_quota_q} utilisées — 
+                    {'✅ ' + str(_restant) + ' restante(s)' if _restant > 0 else '🚫 Quota atteint — demande manuelle uniquement'}
                 </span>
             </div>""", unsafe_allow_html=True)
 
@@ -3616,80 +3693,99 @@ def main_dashboard():
             elif premium_actif and service in SERVICES_GEMINI and not champs_manquants:
                 import threading
 
-                processing_box = st.empty()
-                processing_box.markdown("""
-                <div class="nova-processing">
-                    <div class="nova-processing-title">⚡ NOVA IA EST EN COURS DE TRAITEMENT</div>
-                    <div class="nova-processing-sub">Génération automatique en cours · Merci de patienter (max 1 minute)</div>
-                </div>""", unsafe_allow_html=True)
+                # ── VÉRIFICATION DU QUOTA DE GÉNÉRATIONS ──────────────────
+                user_data_frais = st.session_state["db"]["users"].get(user, {})
+                restant = quota_restant(user_data_frais)
+                plan_actuel = user_data_frais.get("premium_plan", "")
+                quota_max = PLANS_PREMIUM.get(plan_actuel, {}).get("generations", 0)
+                used_auj, _ = get_gen_quota(user_data_frais)
 
-                barre = st.progress(0)
-                label_prog = st.empty()
-                t_start = time.time()
-                result_holder = {}
-
-                def generer():
-                    try:
-                        contenu = generer_avec_gemini(service, prompt, user)
-                        if contenu.startswith("❌"):
-                            result_holder["erreur"] = contenu
-                            return
-                        if service == "📊 Data & Excel Analytics":
-                            buf  = creer_xlsx(prompt, user)
-                            nom  = f"NovaAI_{user}_{service[:20].strip()}.xlsx".replace(" ", "_").replace("/", "-")
-                            mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        else:
-                            buf  = creer_docx(contenu, service, user)
-                            nom  = f"NovaAI_{user}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
-                            mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        result_holder["buf"]  = buf
-                        result_holder["nom"]  = nom
-                        result_holder["mime"] = mime
-                    except Exception as e:
-                        result_holder["erreur"] = f"❌ Erreur : {e}"
-
-                thread = threading.Thread(target=generer)
-                thread.start()
-
-                pct = 0
-                while thread.is_alive():
-                    elapsed = time.time() - t_start
-                    pct = min(int(elapsed / 60 * 90), 90)
-                    barre.progress(pct)
-                    label_prog.markdown(f"<p style='text-align:center;color:#FFD700;font-weight:bold;'>⚡ Nova IA traite votre demande... {pct}%</p>", unsafe_allow_html=True)
-                    time.sleep(0.5)
-                thread.join()
-
-                barre.progress(100)
-                label_prog.markdown("<p style='text-align:center;color:#2ecc71;font-weight:bold;'>✅ Traitement terminé !</p>", unsafe_allow_html=True)
-                time.sleep(0.8)
-                barre.empty(); label_prog.empty(); processing_box.empty()
-
-                duree = int(time.time() - t_start)
-
-                if "erreur" in result_holder:
-                    st.error(result_holder["erreur"])
-                    st.info("💡 Votre demande a été transmise à l'équipe Nova pour traitement manuel.")
-                    new_req = {
-                        "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
-                        "user": user, "service": service,
-                        "desc": prompt, "whatsapp": normalize_wa(wa_display),
-                        "status": "Traitement Nova en cours...", "incomplet": False,
-                        "champs_manquants": [], "timestamp": str(datetime.now()),
-                    }
-                    st.session_state["db"]["demandes"].append(new_req)
-                    save_demande(new_req)
-                else:
-                    save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
-                    st.session_state["premium_livrable"] = {
-                        "buf":     result_holder["buf"],
-                        "nom":     result_holder["nom"],
-                        "mime":    result_holder["mime"],
-                        "service": service,
-                        "duree":   duree,
-                    }
-                    st.session_state["db"] = load_db()
+                if restant <= 0:
+                    st.error(f"🚫 Limite de générations atteinte pour aujourd'hui ({used_auj}/{quota_max} utilisées).")
+                    st.info("💡 Votre quota se renouvelle demain, ou contactez Nova pour upgrader votre plan.")
+                    # Basculer en mode demande manuelle
+                    st.session_state["is_glowing"] = True
                     st.rerun()
+                else:
+                    processing_box = st.empty()
+                    processing_box.markdown(f"""
+                    <div class="nova-processing">
+                        <div class="nova-processing-title">⚡ GÉNÉRATION EN COURS</div>
+                        <div class="nova-processing-sub">Génération automatique · Quota restant après cette génération : {restant - 1}/{quota_max}</div>
+                    </div>""", unsafe_allow_html=True)
+
+                    barre = st.progress(0)
+                    label_prog = st.empty()
+                    t_start = time.time()
+                    result_holder = {}
+
+                    def generer():
+                        try:
+                            contenu = generer_avec_gemini(service, prompt, user)
+                            if contenu.startswith("❌"):
+                                result_holder["erreur"] = contenu
+                                return
+                            if service == "📊 Data & Excel Analytics":
+                                buf  = creer_xlsx(prompt, user)
+                                nom  = f"{user}_{service[:20].strip()}.xlsx".replace(" ", "_").replace("/", "-")
+                                mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            else:
+                                buf  = creer_docx(contenu, service, user)
+                                nom  = f"{user}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            result_holder["buf"]  = buf
+                            result_holder["nom"]  = nom
+                            result_holder["mime"] = mime
+                        except Exception as e:
+                            result_holder["erreur"] = f"❌ Erreur : {e}"
+
+                    thread = threading.Thread(target=generer)
+                    thread.start()
+
+                    pct = 0
+                    while thread.is_alive():
+                        elapsed = time.time() - t_start
+                        pct = min(int(elapsed / 60 * 90), 90)
+                        barre.progress(pct)
+                        label_prog.markdown(f"<p style='text-align:center;color:#FFD700;font-weight:bold;'>⚡ Génération en cours... {pct}%</p>", unsafe_allow_html=True)
+                        time.sleep(0.5)
+                    thread.join()
+
+                    barre.progress(100)
+                    label_prog.markdown("<p style='text-align:center;color:#2ecc71;font-weight:bold;'>✅ Document généré !</p>", unsafe_allow_html=True)
+                    time.sleep(0.8)
+                    barre.empty(); label_prog.empty(); processing_box.empty()
+
+                    duree = int(time.time() - t_start)
+
+                    if "erreur" in result_holder:
+                        st.error(result_holder["erreur"])
+                        st.info("💡 Votre demande a été transmise à l'équipe Nova pour traitement manuel.")
+                        new_req = {
+                            "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
+                            "user": user, "service": service,
+                            "desc": prompt, "whatsapp": normalize_wa(wa_display),
+                            "status": "Traitement Nova en cours...", "incomplet": False,
+                            "champs_manquants": [], "timestamp": str(datetime.now()),
+                        }
+                        st.session_state["db"]["demandes"].append(new_req)
+                        save_demande(new_req)
+                    else:
+                        # Incrémenter le compteur de générations
+                        incrementer_gen(user)
+                        save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
+                        # Email admin — Gemini a déjà répondu
+                        wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
+                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
+                        st.session_state["premium_livrable"] = {
+                            "buf":     result_holder["buf"],
+                            "nom":     result_holder["nom"],
+                            "mime":    result_holder["mime"],
+                            "service": service,
+                            "duree":   duree,
+                        }
+                        st.session_state["db"] = load_db()
+                        st.rerun()
 
             else:
                 st.session_state["is_glowing"] = True
@@ -3972,7 +4068,7 @@ def main_dashboard():
                                 SERVICE_EXCEL = "📊 Data & Excel Analytics"
                                 if result["service"] == SERVICE_EXCEL:
                                     buf = creer_xlsx(result.get("desc", ""), result["client"])
-                                    nom_fichier = f"NovaAI_{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
+                                    nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
                                     st.download_button(
                                         label="📥 TÉLÉCHARGER LE FICHIER EXCEL (.xlsx)",
                                         data=buf,
@@ -3984,7 +4080,7 @@ def main_dashboard():
                                     st.info("📊 Fichier Excel avec 3 feuilles : Saisie, Catégories, Tableau de Bord")
                                 else:
                                     buf = creer_docx(result["contenu"], result["service"], result["client"])
-                                    nom_fichier = f"NovaAI_{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                    nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
                                     st.download_button(
                                         label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
                                         data=buf,
