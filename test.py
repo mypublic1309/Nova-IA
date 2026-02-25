@@ -1808,6 +1808,9 @@ def creer_docx(contenu, service, client_nom):
         # ── LIGNES DE SÉPARATION ════ ET ──── ─────────────────────
         if l.strip().startswith("════") or l.strip().startswith("━━━━"):
             p_line = doc.add_paragraph()
+            p_line.paragraph_format.space_before = Pt(4)
+            p_line.paragraph_format.space_after  = Pt(4)
+            p_line.paragraph_format.line_spacing = Pt(1)
             pPr2 = p_line._p.get_or_add_pPr()
             pBdr2 = OxmlElement("w:pBdr")
             bot2 = OxmlElement("w:bottom")
@@ -1822,6 +1825,9 @@ def creer_docx(contenu, service, client_nom):
 
         if l.strip().startswith("────") or l.strip().startswith("----"):
             p_line = doc.add_paragraph()
+            p_line.paragraph_format.space_before = Pt(3)
+            p_line.paragraph_format.space_after  = Pt(3)
+            p_line.paragraph_format.line_spacing = Pt(1)
             pPr2 = p_line._p.get_or_add_pPr()
             pBdr2 = OxmlElement("w:pBdr")
             bot2 = OxmlElement("w:bottom")
