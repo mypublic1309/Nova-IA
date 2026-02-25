@@ -617,7 +617,8 @@ RÈGLE 2 — LONGUEUR SUBSTANTIELLE : Minimum 4 pages réelles (hors garde + som
 RÈGLE 3 — QUALITÉ LINGUISTIQUE : Orthographe et grammaire irréprochables, ponctuation soignée, style académique soutenu
 RÈGLE 4 — CONTEXTUALISATION OBLIGATOIRE : Min 3 exemples ivoiriens/africains concrets ET chiffrés par grande partie
 RÈGLE 5 — ZÉRO LaTeX : Toutes formules en texte clair élégant (voir Section 2) — jamais de $, \\, \frac
-RÈGLE 6 — STRUCTURE STRICTE : Séparateurs ════ et ──── et ---SAUT_DE_PAGE--- uniquement dans le corps du document (jamais dans la page de garde ni le sommaire)
+RÈGLE 6 — STRUCTURE STRICTE : Séparateurs ════ et ---SAUT_DE_PAGE--- uniquement dans le corps (jamais dans page de garde ni sommaire)
+RÈGLE 6b — ANTI-ORPHELINES : Ne JAMAIS terminer une partie par une phrase de transition — la transition appartient au DÉBUT de la partie suivante (après le saut de page). Évite ainsi les 2-3 lignes orphelines en haut d'une page vide.
 RÈGLE 7 — ADAPTATION NIVEAU : Vocabulaire + profondeur + longueur strictement adaptés au niveau détecté
 RÈGLE 8 — PROSE DANS LE DÉVELOPPEMENT : Corps du document = paragraphes continus — jamais de listes à puces
 RÈGLE 9 — DONNÉES PRÉCISES ET SOURCÉES : Chiffres réels, dates précises, institutions réelles — jamais de vague
@@ -740,15 +741,14 @@ Bibliographie ............................................................ p. 11
 
 [3 paragraphes de 8 à 10 lignes chacun. Angle différent de 1.1. Exemples ivoiriens + données chiffrées.]
 
-[TRANSITION OBLIGATOIRE VERS PARTIE II — Min 4 lignes : "Ainsi avons-nous établi, au terme de cette première partie, que [synthèse Partie I en 1 phrase]. Cette analyse, si elle permet de [apport], ne saurait toutefois être complète sans que l'on s'interroge sur [ce que la Partie II apporte]. C'est précisément l'objet de notre second axe, consacré à [intitulé Partie II]."]
-
-════════════════════════════════════════════════════════
-
 ---SAUT_DE_PAGE---
 
 ## II. [TITRE 2e GRANDE PARTIE EN MAJUSCULES — COMPLÉMENTAIRE À LA PARTIE I]
 
 ════════════════════════════════════════════════════════
+
+[TRANSITION OBLIGATOIRE VERS PARTIE II en DÉBUT de partie II — Min 4 lignes, placée APRÈS le titre de la partie II, JAMAIS avant le saut de page : "Ainsi avons-nous établi, au terme de cette première partie, que [synthèse Partie I en 1 phrase]. Cette analyse, si elle permet de [apport], ne saurait toutefois être complète sans que l'on s'interroge sur [ce que la Partie II apporte]. C'est précisément l'objet de notre second axe, consacré à [intitulé Partie II]."
+⚠️ Cette phrase de transition doit COMMENCER la Partie II — jamais finir la Partie I.]
 
 ### 2.1 [Titre précis de la 1re sous-partie]
 
@@ -759,9 +759,7 @@ Bibliographie ............................................................ p. 11
 ### 2.2 [Titre précis de la 2e sous-partie]
 
 
-[3 paragraphes de 8 à 10 lignes. Dernier paragraphe inclut TRANSITION VERS PARTIE III — "Au regard des éléments développés dans cette deuxième partie, force est de constater que [bilan]. Ces constats nous invitent dès lors à dépasser le simple constat pour envisager [dimension prospective/solutions], fil directeur de notre troisième partie."]
-
-════════════════════════════════════════════════════════
+[3 paragraphes de 8 à 10 lignes chacun.]
 
 ---SAUT_DE_PAGE---
 
@@ -1524,6 +1522,13 @@ def creer_docx(contenu, service, client_nom):
         p = doc.add_paragraph(style=style_name)
         if align:
             p.alignment = align
+        # Anti-lignes-orphelines : contrôle veuve/orpheline au niveau Word
+        pPr = p._p.get_or_add_pPr()
+        from docx.oxml import OxmlElement as _OEp
+        from docx.oxml.ns import qn as _qnp
+        wCtrl = _OEp("w:widowControl")
+        wCtrl.set(_qnp("w:val"), "1")
+        pPr.append(wCtrl)
         parts = re.split(r"(\*\*[^*]+\*\*)", text)
         for part in parts:
             if part.startswith("**") and part.endswith("**"):
@@ -1792,6 +1797,11 @@ def creer_docx(contenu, service, client_nom):
                 p_vide.paragraph_format.space_before = Pt(0)
                 p_vide.paragraph_format.space_after  = Pt(0)
                 p_vide.paragraph_format.line_spacing = Pt(6)
+            else:
+                # Corps : ligne vide réduite pour éviter les orphelines
+                p_vide.paragraph_format.space_before = Pt(0)
+                p_vide.paragraph_format.space_after  = Pt(0)
+                p_vide.paragraph_format.line_spacing = Pt(8)
             i += 1
             continue
 
@@ -1811,6 +1821,10 @@ def creer_docx(contenu, service, client_nom):
         if sauts_de_page_count < 2:
             p.paragraph_format.space_before = Pt(0)
             p.paragraph_format.space_after  = Pt(3)
+        else:
+            # Corps du document : espacement serré pour éviter les lignes orphelines
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after  = Pt(6)
         i += 1
 
     buf = BytesIO()
