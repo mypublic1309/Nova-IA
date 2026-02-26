@@ -161,8 +161,8 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
 🛠️ Service     : {service}
+📝 Demande     : {description if description else "(non renseignée)"}
 📄 Fichier     : {nom_fichier}
-📝 Demande     : {description}
 
 ⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
 
