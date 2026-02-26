@@ -150,25 +150,20 @@ Connectez-vous à la console admin pour traiter cette mission.
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
-def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, description=""):
-    """Email envoyé quand Nova IA a généré le doc automatiquement — pour info admin."""
+def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
+    """Email envoyé quand Gemini a généré le doc automatiquement — pour info admin."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
         corps = f"""
-✅ NOVA IA A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
 🛠️ Service     : {service}
 📄 Fichier     : {nom_fichier}
-⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 DÉTAIL COMPLET DE LA DEMANDE CLIENT :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{description if description else "(aucun détail fourni)"}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
 
 Le document a été livré directement au client via l'interface Nova.
 Vous n'avez rien à faire pour cette commande.
@@ -176,7 +171,7 @@ Vous n'avez rien à faire pour cette commande.
         resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"✅ Nova IA a répondu automatiquement — {service} ({client_nom})",
+            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
             "text": corps
         })
     except Exception:
@@ -4286,6 +4281,12 @@ def main_dashboard():
 
         st.markdown("#### 📝 Spécifications de la mission")
 
+        # Initialisations toujours présentes (Streamlit re-évalue à chaque run)
+        _niveau_val     = ""
+        _matiere_val    = ""
+        _exp_niveau_val = ""
+        _exp_matiere_val = ""
+
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
             st.markdown("""
@@ -4437,6 +4438,174 @@ INSTRUCTIONS NOVA EXAM :
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
+        elif "Exposé" in service:
+            # ── FORMULAIRE STRUCTURÉ POUR EXPOSÉ SCOLAIRE ─────────────────────
+            st.markdown("""
+            <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.3);
+                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+                <span style="color:#2ecc71;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre exposé</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                exp_niveau = st.selectbox(
+                    "🎓 Niveau scolaire *",
+                    [
+                        "── PRIMAIRE ──",
+                        "CP1", "CP2", "CE1", "CE2", "CM1", "CM2 / CEPE",
+                        "── COLLÈGE ──",
+                        "6ème", "5ème", "4ème", "3ème / BEPC",
+                        "── LYCÉE ──",
+                        "2nde", "1ère - Série A1", "1ère - Série A2", "1ère - Série B",
+                        "1ère - Série C", "1ère - Série D", "1ère - Série E",
+                        "Terminale - Série A1", "Terminale - Série A2", "Terminale - Série B",
+                        "Terminale - Série C", "Terminale - Série D", "Terminale - Série E",
+                        "── UNIVERSITÉ ──",
+                        "Licence 1 (L1)", "Licence 2 (L2)", "Licence 3 (L3)",
+                        "Master 1 (M1)", "Master 2 (M2)", "Doctorat",
+                        "── PROFESSIONNEL ──",
+                        "BTS", "Concours ENS", "Concours CAFOP",
+                        "Concours Fonction Publique", "Formation professionnelle",
+                    ],
+                    index=0,
+                    key="exp_niveau"
+                )
+                exp_matiere = st.selectbox(
+                    "📚 Matière / Discipline *",
+                    [
+                        "── TOUTES MATIÈRES ──",
+                        "Français / Lettres", "Mathématiques",
+                        "Sciences Physiques (PC)", "SVT / Biologie",
+                        "Histoire-Géographie", "Économie / Gestion",
+                        "Comptabilité", "Philosophie",
+                        "EDHC / Éducation Civique",
+                        "Anglais (LV1)", "Espagnol (LV2)", "Allemand (LV2)",
+                        "Informatique / TIC", "Technologie industrielle",
+                        "EPS (Éducation Physique)", "Arts Plastiques",
+                        "Agronomie / Agriculture", "Droit",
+                        "Économie politique", "Sciences Sociales",
+                        "── PRIMAIRE ──",
+                        "Lecture / Écriture (primaire)", "Calcul (primaire)",
+                        "Sciences d'Éveil (primaire)",
+                        "Histoire-Géo (primaire)", "ECM (primaire)",
+                        "Autre matière (préciser dans les notes)",
+                    ],
+                    index=0,
+                    key="exp_matiere"
+                )
+            with col_b:
+                exp_type = st.selectbox(
+                    "📄 Type d'exposé *",
+                    [
+                        "Exposé classique (introduction + développement + conclusion)",
+                        "Exposé scientifique (problématique + hypothèses + résultats)",
+                        "Exposé littéraire (analyse d'œuvre ou de texte)",
+                        "Exposé historique (faits + causes + conséquences)",
+                        "Exposé géographique (contexte + enjeux + analyse)",
+                        "Exposé économique (analyse + données + perspectives)",
+                        "Rapport de stage / de mission",
+                        "Commentaire de texte / document",
+                        "Dissertation (plan dialectique)",
+                        "Synthèse de documents",
+                        "Fiche de lecture",
+                    ],
+                    index=0,
+                    key="exp_type"
+                )
+                exp_longueur = st.selectbox(
+                    "📏 Longueur souhaitée *",
+                    [
+                        "Court (1-2 pages — primaire / interrogation rapide)",
+                        "Moyen (3-5 pages — collège / lycée standard)",
+                        "Long (6-8 pages — lycée / BAC / BTS)",
+                        "Très long (9-15 pages — université / mémoire)",
+                        "Adapté automatiquement au niveau",
+                    ],
+                    index=4,
+                    key="exp_longueur"
+                )
+
+            col_c, col_d = st.columns(2)
+            with col_c:
+                exp_plan = st.selectbox(
+                    "🗂️ Structure / Plan souhaité",
+                    [
+                        "Plan classique (I. II. III. avec sous-parties)",
+                        "Plan thématique (par thèmes)",
+                        "Plan chronologique (par dates / périodes)",
+                        "Plan comparatif (avantages / inconvénients)",
+                        "Plan dialectique (thèse / antithèse / synthèse)",
+                        "Plan libre (Nova choisit le meilleur plan)",
+                    ],
+                    index=5,
+                    key="exp_plan"
+                )
+            with col_d:
+                exp_extras = st.multiselect(
+                    "✨ Éléments à inclure",
+                    [
+                        "Introduction soignée",
+                        "Conclusion avec ouverture",
+                        "Bibliographie / Sources",
+                        "Page de garde",
+                        "Résumé / Abstract",
+                        "Exemples ivoiriens / africains",
+                        "Données chiffrées / statistiques",
+                        "Citations d'auteurs",
+                        "Tableau récapitulatif",
+                        "Glossaire des termes clés",
+                    ],
+                    default=["Introduction soignée", "Conclusion avec ouverture", "Exemples ivoiriens / africains"],
+                    key="exp_extras"
+                )
+
+            exp_sujet = st.text_input(
+                "🎯 Sujet / Thème exact de l'exposé *",
+                placeholder="Ex: L'impact du cacao sur l'économie ivoirienne, La photosynthèse, La Première Guerre Mondiale...",
+                key="exp_sujet"
+            )
+            exp_notes = st.text_area(
+                "💬 Consignes supplémentaires (optionnel)",
+                height=70,
+                placeholder="Ex: Insister sur le contexte africain, Utiliser un vocabulaire simple, Inclure des exemples concrets, Prof demande 3 parties...",
+                key="exp_notes"
+            )
+
+            # ── CONSTRUCTION DU PROMPT STRUCTURÉ ──────────────────────────────
+            _exp_niveau_val = exp_niveau if not exp_niveau.startswith("──") else ""
+            _exp_matiere_val = exp_matiere if not exp_matiere.startswith("──") else ""
+            _exp_extras_str = ", ".join(exp_extras) if exp_extras else "Aucun élément spécifique demandé"
+
+            prompt = f"""FICHE DE COMMANDE NOVA EXPOSÉ — INFORMATIONS STRUCTURÉES :
+
+🎓 NIVEAU SCOLAIRE    : {_exp_niveau_val if _exp_niveau_val else "Non précisé"}
+📚 MATIÈRE            : {_exp_matiere_val if _exp_matiere_val else "Non précisée"}
+🎯 SUJET / THÈME      : {exp_sujet.strip() if exp_sujet.strip() else "À définir selon la matière et le niveau"}
+📄 TYPE D'EXPOSÉ      : {exp_type}
+📏 LONGUEUR           : {exp_longueur}
+🗂️ PLAN / STRUCTURE   : {exp_plan}
+✨ ÉLÉMENTS INCLURE   : {_exp_extras_str}
+💬 CONSIGNES SUPP.    : {exp_notes.strip() if exp_notes.strip() else "Aucune"}
+
+INSTRUCTIONS NOVA EXPOSÉ :
+- Respecte EXACTEMENT le niveau "{_exp_niveau_val}" — adapte le vocabulaire, la complexité et la profondeur d'analyse
+- Contextualise avec des exemples ivoiriens et africains en priorité
+- Respecte le type d'exposé demandé et le plan sélectionné
+- Inclure TOUS les éléments cochés dans la liste
+- Si le sujet n'est pas précisé, choisir un sujet pertinent et cohérent avec la matière et le niveau
+"""
+            # Résumé de la commande
+            if _exp_niveau_val and _exp_matiere_val and exp_sujet.strip():
+                st.success(f"✅ Commande prête : **{exp_sujet.strip()[:40]}...** · **{_exp_matiere_val}** · **{_exp_niveau_val}**")
+            elif _exp_niveau_val and _exp_matiere_val:
+                st.info("💡 Commande valide — pensez à préciser le sujet/thème pour un meilleur résultat")
+            else:
+                if not _exp_niveau_val or exp_niveau.startswith("──"):
+                    st.warning("⚠️ Sélectionnez un niveau scolaire précis")
+                if not _exp_matiere_val or exp_matiere.startswith("──"):
+                    st.warning("⚠️ Sélectionnez une matière précise")
+
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
@@ -4494,15 +4663,20 @@ INSTRUCTIONS NOVA EXAM :
         champs_manquants = []
         if not wa_display:
             champs_manquants.append("WhatsApp de contact")
-        # Pour Sujets & Examens : le prompt est auto-construit via les selectbox
-        # On ne vérifie PAS "Cahier des charges" mais les champs structurés
         if "Sujets" in service or "Examens" in service:
+            # Formulaire structuré Sujets : vérifier niveau et matière
             if not _niveau_val or _niveau_val.startswith("──"):
                 champs_manquants.append("Niveau scolaire")
             if not _matiere_val or _matiere_val.startswith("──"):
                 champs_manquants.append("Matière")
+        elif "Exposé" in service:
+            # Formulaire structuré Exposé : vérifier niveau et matière
+            if not _exp_niveau_val or exp_niveau.startswith("──"):
+                champs_manquants.append("Niveau scolaire")
+            if not _exp_matiere_val or exp_matiere.startswith("──"):
+                champs_manquants.append("Matière")
         else:
-            # Pour les autres services : vérifier le champ texte libre
+            # Autres services : vérifier le champ texte libre
             if not prompt:
                 champs_manquants.append("Cahier des charges")
         if champs_manquants:
@@ -4616,10 +4790,9 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                                 type_suffix = f"_{type_sujet_selectionne}" if type_sujet_selectionne else ""
                                 nom  = f"{user}_{service[:20].strip()}{type_suffix}.docx".replace(" ", "_").replace("/", "-")
                                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                            result_holder["buf"]          = buf
-                            result_holder["nom"]          = nom
-                            result_holder["mime"]         = mime
-                            result_holder["prompt_enrichi"] = prompt_enrichi
+                            result_holder["buf"]  = buf
+                            result_holder["nom"]  = nom
+                            result_holder["mime"] = mime
                         except Exception as e:
                             result_holder["erreur"] = f"❌ Erreur : {e}"
 
@@ -4660,7 +4833,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
-                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], description=result_holder.get("prompt_enrichi", prompt))
+                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
