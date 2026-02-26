@@ -4286,7 +4286,7 @@ def main_dashboard():
             st.markdown("""
             <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Gemini s'appuie sur ces informations précises pour générer votre sujet</span>
+                <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre sujet</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -4489,14 +4489,17 @@ INSTRUCTIONS NOVA EXAM :
         champs_manquants = []
         if not wa_display:
             champs_manquants.append("WhatsApp de contact")
-        if not prompt:
-            champs_manquants.append("Cahier des charges")
-        # Validation spécifique Sujets & Examens
+        # Pour Sujets & Examens : le prompt est auto-construit via les selectbox
+        # On ne vérifie PAS "Cahier des charges" mais les champs structurés
         if "Sujets" in service or "Examens" in service:
-            if '_niveau_val' in dir() and (not _niveau_val or _niveau_val.startswith("──")):
+            if not _niveau_val or _niveau_val.startswith("──"):
                 champs_manquants.append("Niveau scolaire")
-            if '_matiere_val' in dir() and (not _matiere_val or _matiere_val.startswith("──")):
+            if not _matiere_val or _matiere_val.startswith("──"):
                 champs_manquants.append("Matière")
+        else:
+            # Pour les autres services : vérifier le champ texte libre
+            if not prompt:
+                champs_manquants.append("Cahier des charges")
         if champs_manquants:
             st.markdown(f"""
             <div style="
