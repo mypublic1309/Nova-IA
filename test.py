@@ -151,7 +151,7 @@ Connectez-vous à la console admin pour traiter cette mission.
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
 def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, description=""):
-    """Email envoyé quand Gemini a généré le doc automatiquement — pour info admin."""
+    """Email envoyé quand Nova IA a généré le doc automatiquement — pour info admin."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
@@ -4616,9 +4616,10 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                                 type_suffix = f"_{type_sujet_selectionne}" if type_sujet_selectionne else ""
                                 nom  = f"{user}_{service[:20].strip()}{type_suffix}.docx".replace(" ", "_").replace("/", "-")
                                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                            result_holder["buf"]  = buf
-                            result_holder["nom"]  = nom
-                            result_holder["mime"] = mime
+                            result_holder["buf"]          = buf
+                            result_holder["nom"]          = nom
+                            result_holder["mime"]         = mime
+                            result_holder["prompt_enrichi"] = prompt_enrichi
                         except Exception as e:
                             result_holder["erreur"] = f"❌ Erreur : {e}"
 
@@ -4659,7 +4660,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
-                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], description=prompt_enrichi)
+                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], description=result_holder.get("prompt_enrichi", prompt))
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
