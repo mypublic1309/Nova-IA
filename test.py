@@ -156,7 +156,7 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
         corps = f"""
-✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+✅ NOVA IA A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
@@ -171,7 +171,7 @@ Vous n'avez rien à faire pour cette commande.
         resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
+            "subject": f"✅ Nova IA a généré automatiquement — {service} ({client_nom})",
             "text": corps
         })
     except Exception:
@@ -1831,7 +1831,7 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
 
         modeles = get_modeles_disponibles(api_key)
         if not modeles:
-            return "❌ Aucun modèle Gemini disponible pour generateContent avec cette clé API."
+            return "❌ Service Nova IA : aucun modèle disponible pour cette clé API."
         erreurs = []
 
         for modele in modeles:
@@ -1856,16 +1856,16 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                 if e.code in [429, 503]:
                     time.sleep(2)
                     continue
-                return f"❌ Erreur Gemini ({modele}) HTTP {e.code} : {erreur_detail}"
+                return f"❌ Erreur Nova IA ({modele}) HTTP {e.code} : {erreur_detail}"
             except Exception as e:
                 erreurs.append(f"{modele} → {type(e).__name__}: {e}")
                 continue
 
         detail = " | ".join(erreurs)
-        return f"❌ Gemini indisponible. Détails : {detail}"
+        return f"❌ Nova IA indisponible. Détails : {detail}"
 
     except Exception as e:
-        return f"❌ Erreur Gemini : {e}"
+        return f"❌ Erreur Nova IA : {e}"
 
 
 def creer_docx(contenu, service, client_nom):
@@ -3324,7 +3324,7 @@ def inject_custom_css():
             background-image: linear-gradient(to right, #b8860b, #FFD700) !important;
         }
 
-        /* ── Gemini card ── */
+        /* ── Nova card ── */
         .gemini-card {
             background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.06)) !important;
             border: 2px solid rgba(255,215,0,0.5) !important;
@@ -4339,21 +4339,21 @@ def main_dashboard():
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
                 list(TYPES_SUJETS.keys()),
-                help="Sélectionnez précisément le type de sujet souhaité. Gemini adaptera 100% du contenu à ce format."
+                help="Sélectionnez précisément le type de sujet souhaité. Nova adaptera 100% du contenu à ce format."
             )
             type_sujet_selectionne = TYPES_SUJETS[type_sujet_label]
 
             TYPE_SUJET_DESCRIPTIONS = {
-                "QCM": "**QCM sélectionné** — Gemini générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
-                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Gemini générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
-                "TEXTE_TROU": "**Texte à trous sélectionné** — Gemini rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
-                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Gemini formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
-                "MIXTE": "**Format Mixte sélectionné** — Gemini combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
-                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Gemini rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
-                "CALCUL": "**Exercices de Calcul sélectionnés** — Gemini rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
-                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
-                "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "QCM": "**QCM sélectionné** — Nova générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
+                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Nova générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
+                "TEXTE_TROU": "**Texte à trous sélectionné** — Nova rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
+                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Nova formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
+                "MIXTE": "**Format Mixte sélectionné** — Nova combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
+                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Nova rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
+                "CALCUL": "**Exercices de Calcul sélectionnés** — Nova rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
+                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Nova créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
+                "SCHEMA": "**Schéma à légender sélectionné** — Nova décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
+                "DISSERTATION": "**Dissertation guidée sélectionnée** — Nova formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
@@ -4998,7 +4998,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         """, unsafe_allow_html=True)
 
                         if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
-                            with st.spinner("Interrogation de l'API Gemini..."):
+                            with st.spinner("Nova génère votre document..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                             if modeles_dispo:
                                 st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
@@ -5007,14 +5007,14 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             else:
                                 st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
 
-                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
+                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC NOVA IA", key=f"gemini_{req_id}", use_container_width=True):
                             with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                                 if modeles_dispo:
                                     st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
                                 else:
-                                    st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
-                            with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
+                                    st.error("❌ Service Nova IA temporairement indisponible.")
+                            with st.spinner("⚡ Nova génère le document... (30-60 secondes)"):
                                 contenu = generer_avec_gemini(service, description, client_nom)
 
                             if contenu.startswith("❌"):
