@@ -156,7 +156,7 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
         corps = f"""
-✅ NOVA IA A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
@@ -171,7 +171,7 @@ Vous n'avez rien à faire pour cette commande.
         resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"✅ Nova IA a généré automatiquement — {service} ({client_nom})",
+            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
             "text": corps
         })
     except Exception:
@@ -831,42 +831,6 @@ IMPÉRATIFS ABSOLUS :
         # PROMPT — SUJETS & EXAMENS (Système scolaire ivoirien & africain)
         # ================================================================
         elif "Examens" in service or "Sujets" in service:
-            # ── INJECTION DU TYPE DE SUJET dans la description si renseigné ──
-            type_sujet_inject = ""
-            if "type_sujet_selectionne" in dir() and type_sujet_selectionne:
-                TYPE_SUJET_LABELS_FR = {
-                    "QCM": "QCM (Questions à Choix Multiple — 4 options A/B/C/D, cases □, un seul type d'exercice)",
-                    "VRAI_FAUX": "VRAI ou FAUX UNIQUEMENT (affirmations à évaluer V/F + justification si faux, UN SEUL TYPE d'exercice)",
-                    "TEXTE_TROU": "TEXTE À TROUS UNIQUEMENT (texte lacunaire + liste de mots à placer, UN SEUL TYPE d'exercice)",
-                    "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES UNIQUEMENT (questions de réflexion rédigées avec lignes de réponse, UN SEUL TYPE)",
-                    "MIXTE": "FORMAT MIXTE (Partie 1 QCM + Partie 2 Vrai/Faux + Partie 3 Question ouverte, barème équilibré)",
-                    "CAS_PRATIQUE": "CAS PRATIQUE / ÉTUDE DE CAS (texte contextualisé Côte d'Ivoire + questions d'analyse progressives)",
-                    "CALCUL": "EXERCICES DE CALCUL / PROBLÈMES (chiffrés, contextualisés CI, formules rappelées, démarche guidée)",
-                    "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support : texte/tableau/carte + questions d'identification, analyse, interprétation)",
-                    "SCHEMA": "SCHÉMA À LÉGENDER (schéma décrit textuellement avec numéros + termes à placer + corrigé légendes)",
-                    "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet formulé + consignes de méthode + plan détaillé guidé)",
-                }
-                label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
-                type_sujet_inject = f"""
-
-⚠️ TYPE DE SUJET IMPOSÉ PAR L'UTILISATEUR — RESPECTER ABSOLUMENT :
-TYPE UNIQUE SÉLECTIONNÉ : {label_fr}
-
-RÈGLE ABSOLUE : Tu dois générer UN SEUL TYPE D'EXERCICE correspondant EXACTEMENT au type ci-dessus.
-- Si QCM → QCM UNIQUEMENT (pas de Vrai/Faux, pas de texte à trous, pas de questions ouvertes)
-- Si VRAI_FAUX → Vrai/Faux UNIQUEMENT
-- Si TEXTE_TROU → Texte à trous UNIQUEMENT
-- Si QUESTIONS_OUVERTES → Questions ouvertes UNIQUEMENT
-- Si MIXTE → Les 3 parties indiquées (QCM + Vrai/Faux + Question ouverte)
-- Si CAS_PRATIQUE → Un texte de mise en contexte + questions d'analyse
-- Si CALCUL → Exercices de calcul/problèmes chiffrés UNIQUEMENT
-- Si ETUDE_DOCUMENT → Document support + questions d'exploitation UNIQUEMENT
-- Si SCHEMA → Description du schéma numéroté + légendes UNIQUEMENT
-- Si DISSERTATION → Sujet + consignes de méthode + plan guidé UNIQUEMENT
-
-NE PAS MÉLANGER LES TYPES sauf si MIXTE est explicitement sélectionné.
-"""
-
             prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d\'examens numéro 1 du système scolaire ivoirien.
 Tu maîtrises tous les programmes officiels MENET-FP/DECO, tous les formats CEPE, BEPC, BAC et concours, et tu es expert en mise en page Word professionnelle via python-docx.
 Chaque sujet que tu produis est ENTIÈREMENT rédigé, rigoureusement structuré, et immédiatement utilisable en classe.
@@ -973,520 +937,217 @@ FORMULAIRE CHIMIE (prêt à l'emploi) :
 
 INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
 
-SECTION 2 — MOTEUR DE DÉTECTION AUTOMATIQUE NOVA EXAM
+SECTION 2 — ANALYSE AUTOMATIQUE DE LA DEMANDE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚙️ NOVA EXAM se comporte comme un professeur expert qui connaît PAR CŒUR :
-   → tous les programmes officiels MENET-FP de CP1 à Terminale
-   → tous les programmes universitaires des grandes écoles CI
-   → les notions précises vues à chaque niveau de chaque matière
-
-ÉTAPE 1 — DÉTECTION AUTOMATIQUE (lit la demande et détermine sans poser de question) :
-
-① CLASSE / NIVEAU détecté :
-   Primaire  → CP1 | CP2 | CE1 | CE2 | CM1 | CM2/CEPE
-   Collège   → 6ème | 5ème | 4ème | 3ème/BEPC
-   Lycée     → 2nde | 1ère | Terminale (+ série : A1, A2, B, C, D, E, F, G1, G2, G3, H)
-   Université→ L1 | L2 | L3 | M1 | M2 | Doctorat
-   Concours  → ENS | CAFOP | INJS | Fonction publique | Douane | Police | Armée
-
-② MATIÈRE détectée → voir Section 3 pour le plan d\'exercices adapté :
-   Français/Lettres | Mathématiques | Sciences Physiques (PC) | SVT/Biologie
-   Histoire-Géographie | Économie/Gestion/Comptabilité | Philosophie | EDHC/EC
-   Anglais | Espagnol | Allemand | Informatique/TIC | EPS | Arts Plastiques
-   Lecture/Calcul/Sciences d\'Éveil (primaire) | Technologie (F) | Agronomie
-
-③ TYPE D\'ÉPREUVE détecté → voir Section 4 pour format et durée :
-   IE (30 min) | DS (1h-2h) | DM | Devoir trimestriel | Examen blanc / Blanc BAC/BEPC/CEPE
-   Concours | Épreuve de passage | Rattrapage
-
-④ CHAPITRE/NOTION détecté → générer des exercices STRICTEMENT sur ce chapitre
-   Si non précisé → choisir un chapitre cohérent avec le niveau et la période scolaire courante
-
-⑤ CORRIGÉ demandé ? → inclure SEULEMENT si "corrigé/correction/éléments de réponse/barème prof" présent
-
-ÉTAPE 2 — APPLICATION DU PROGRAMME OFFICIEL CI :
-
-Tu connais EXACTEMENT ce qui est au programme à chaque niveau. Tu NE génères JAMAIS :
-✗ une notion hors-programme pour la classe (ex: dérivées en 5ème, radioactivité en 4ème)
-✗ un vocabulaire trop complexe pour l\'âge (ex: "épistémologie" en CE2)
-✗ des calculs hors de portée (ex: équations du 2nd degré en 6ème)
-
-Tu ADAPTES TOUJOURS :
-✓ le vocabulaire à l\'âge exact de l\'élève
-✓ la complexité des calculs au niveau officiel
-✓ la longueur des productions écrites au niveau
-✓ les thèmes aux programmes officiels MENET-FP
-
-EXEMPLES DE CORRESPONDANCES PROGRAMME → EXERCICE :
-   "SVT 6ème" → cellule vivante, nutrition végétale, digestion (PAS génétique ni ADN)
-   "Maths 3ème" → fonctions affines, statistiques, Pythagore, probabilités (PAS intégrales)
-   "PC Tle D" → photosynthèse biochimique, radioactivité, mécanique ondulatoire avancée
-   "Français CM2" → dictée 15 mots, texte 100 mots, production 12-15 lignes simple
-   "Éco Tle B" → PIB, croissance, échanges internationaux, ZLECAF, bilan/CR comptable
-   "Anglais 3ème" → present perfect, voix passive, conditional II, texte 120 mots + rédaction 60 mots
+Avant de rédiger, analyse la demande et détermine :
+① MATIÈRE détectée → choisir les formats d\'exercices adaptés (voir Section 3)
+② NIVEAU détecté → adapter vocabulaire, longueur, difficulté (voir Section 5)
+③ TYPE D\'ÉPREUVE → adapter structure et durée (voir Section 4)
+④ CORRIGÉ demandé ? → OUI si "corrigé/correction/éléments de réponse" est mentionné
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 3 — ENCYCLOPÉDIE COMPLÈTE : TOUTES CLASSES × TOUTES MATIÈRES
+SECTION 3 — PLANS D\'EXERCICES PAR MATIÈRE (avec exemples complets)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-╔══ PRIMAIRE — CP1, CP2, CE1, CE2, CM1, CM2 ══════════════════════════════════════════╗
+══ FRANÇAIS / LETTRES ══════════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — COMPRÉHENSION DE TEXTE (texte rédigé 150-250 mots + 4 questions progressives)
+    Q1. Compréhension explicite : "Relevez dans le texte deux indices montrant que..."
+    Q2. Vocabulaire en contexte : "Expliquez le sens du mot '...' tel qu\'il est employé au ligne X."
+    Q3. Analyse : "Quel procédé stylistique l\'auteur utilise-t-il pour décrire... ? Justifiez."
+    Q4. Réaction / ouverture : "En vous appuyant sur le texte et vos connaissances, expliquez..."
+  Exercice 2 — ÉTUDE DE LANGUE (grammaire, conjugaison, figures de style, vocabulaire)
+    • Nature et fonction des mots — "Donnez la nature et la fonction du groupe souligné"
+    • Conjugaison : "Mettez le verbe entre parenthèses au temps et mode indiqués"
+    • Figures de style : "Identifiez et nommez la figure de style dans cette phrase"
+    • Vocabulaire : "Donnez un synonyme et un antonyme de..." / "Formez une famille de mots"
+  Exercice 3 — PRODUCTION ÉCRITE (sujet précis, consignes structurées, grille d\'évaluation)
+    • CEPE : rédaction d\'un récit (15-20 lignes), lettre à un ami, description
+    • BEPC : récit autobiographique, lettre formelle, dialogue argumentatif (25-35 lignes)
+    • BAC A1/A2 : commentaire composé ou dissertation (plan détaillé obligatoire)
 
-── LECTURE / FRANÇAIS PRIMAIRE ──────────────────────────────────────────────────────
-  CP1/CP2 : syllabes, lettres, copie de mots simples, lecture de phrases de 5-8 mots
-    Ex: "Entoure les syllabes : ba-na-ne | pa-pa | ma-ma | ca-ca-o"
-    Ex: "Lis et copie : Le coq chante. La vache broute."
-  CE1/CE2 : dictée de mots (10 mots), texte court 30-50 mots + 3 questions simples
-    Ex: "Dictée : soleil, école, champ, maman, marché, cacao, pluie, route, pain, eau"
-    Ex: "Lis le texte puis réponds : Qui est Konan ? Que fait-il ? Où habite-t-il ?"
-  CM1/CM2 CEPE : texte 80-120 mots, 4 questions, production écrite 10-15 lignes
-    Types de questions : "Donne un titre au texte. Relève 2 mots de la même famille que..."
-    Production CEPE : "Raconte en 12 lignes une journée au marché avec ta maman."
-  Conjugaison progressive : être/avoir (CP) → présent réguliers (CE1) → passé composé (CE2) → tous temps (CM)
-  Grammaire : nature des mots (CM1), fonction (CM2), accord GN (CE2)
+EXEMPLE DE TEXTE POUR ÉTUDE (adaptatif) :
+  Pour un texte sur l\'environnement CI : "La forêt ivoirienne était autrefois le poumon vert de l\'Afrique de l\'Ouest. Avec ses **16 millions d\'hectares** de forêts denses en 1900, la Côte d\'Ivoire abritait une biodiversité exceptionnelle : éléphants de forêt, chimpanzés de Taï, léopards et des milliers d\'espèces végétales endémiques. Aujourd\'hui, il ne reste que **3,4 millions d\'hectares**, soit une réduction de 80% en un siècle. Cette déforestation galopante est principalement due à l\'expansion des cultures de cacao et de palmier à huile, qui représentent pourtant le moteur économique du pays. Le paradoxe ivoirien est saisissant : la richesse économique s\'est construite sur la destruction progressive de l\'écosystème qui la rendait possible. Face à ce constat, le gouvernement ivoirien a lancé en 2018 le programme REDD+ avec un objectif ambitieux : zéro déforestation nette d\'ici 2030."
+  Source : Ministère des Eaux et Forêts de Côte d\'Ivoire, Rapport annuel 2022
 
-── CALCUL / MATHÉMATIQUES PRIMAIRE ─────────────────────────────────────────────────
-  CP1/CP2 : additions soustractions ≤ 20, comptage, suite de nombres
-    Ex: "4 + 5 = ___ | 10 - 3 = ___ | Continue : 2, 4, 6, ___, ___"
-  CE1/CE2 : tables multiplication 1-5 (CE1), 1-10 (CE2), division simple, mesures longueur
-    Ex: "Calcule : 6 × 7 = ___ | 35 ÷ 5 = ___ | Convertis : 2 km = ___ m"
-  CM1/CM2 CEPE : fractions simples, périmètre/aire, problèmes en FCFA (marchés CI)
-    Ex: "Un sac de riz coûte 8 500 FCFA. Koffi en achète 3. Combien paie-t-il ?"
-    Ex: "Calcule l\'aire du rectangle : longueur = 12 m, largeur = 8 m"
-    Démarche obligatoire : Données → Calcul → Résultat avec unité → Phrase-réponse
+══ MATHÉMATIQUES ═══════════════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — CALCUL/QCM RAPIDE (révision des formules et notions fondamentales, /4 ou /5)
+    • Calcul direct : "Calculez : 3/4 + 5/6 = ..." / "Développez : (2x-3)² = ..."
+    • QCM formules : "La solution de l\'équation 2x + 6 = 0 est : □ A) x=3  □ B) x=-3  □ C) x=6  □ D) x=-6"
+  Exercice 2 — GÉOMÉTRIE OU ALGÈBRE (démonstration guidée, /5 ou /6)
+    • "Dans le triangle ABC rectangle en A, AB = 6 cm, AC = 8 cm.
+       ###FORMULE### BC^{{2}} = AB^{{2}} + AC^{{2}}  (théorème de Pythagore)
+       a) Calculez BC. b) Calculez sin(B̂) et cos(B̂). c) Déduisez la mesure de l\'angle B̂."
+    • "Résolvez dans ℝ le système : 3x + 2y = 14 et x - y = 1. Vérifiez votre réponse."
+    • Pour les équations du second degré :
+       ###FORMULE### Δ = b^{{2}} - 4ac   puis   x_{{1,2}} = (-b ± √Δ) / (2a)
+  Exercice 3 — PROBLÈME CONTEXTUALISÉ CI (/6 ou /8)
+    • Données réalistes : marchés ivoiriens, agriculture, construction, transport en FCFA
+    • Sous-questions numérotées guidant l\'élève étape par étape
+    • Mention obligatoire : "Résultat sans démarche = 0 point"
+  Exercice 4 BAC C/D — ÉTUDE DE FONCTION ou STATISTIQUES (/5 ou /6)
+    • "Soit f(x) = 2x² - 8x + 6. Calculez f\'(x), les extrema et dressez le tableau de variation."
 
-── SCIENCES D\'ÉVEIL / EPS PRIMAIRE ─────────────────────────────────────────────────
-  Sciences d\'Éveil CP-CE : animaux domestiques/sauvages CI, plantes, corps humain simple
-    Ex: "Entoure les animaux de la ferme : lion, poule, éléphant, chèvre, vache, panthère"
-    Ex: "Complète le schéma du corps humain : tête, bras, jambe, pied, main"
-  Sciences CE2-CM CEPE : nutrition, photosynthèse simple, cycle de l\'eau, hygiène
-    Ex: "Nomme les 3 parties d\'une plante. À quoi sert chacune ?"
-    Ex: "Pourquoi faut-il se laver les mains avant de manger ? Explique en 3 lignes."
-  EPS : activités sportives, règles de jeu, hygiène corporelle, santé
+══ SCIENCES PHYSIQUES (PC) ══════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — RESTITUTION (définitions + formules + lois, /5 ou /6)
+    • "Définissez la résistance électrique et donnez son unité."
+    • "Énoncez la loi d\'Ohm et écrivez sa relation mathématique."
+    • "Schéma à légender : circuit électrique avec 5 composants numérotés"
+  Exercice 2 — APPLICATION NUMÉRIQUE (calcul avec unités, /6 ou /7)
+    • Rappeler la formule avec ###FORMULE### AVANT chaque calcul puis appliquer numériquement
+    • "Le barrage de Soubré (275 MW, 2017) fonctionne 24h :
+       ###FORMULE### E = P × t
+       a) Calculez E en MJ. b) Convertissez en kWh. c) Calculez le nombre de foyers alimentés (1 foyer = 300 kWh/mois)."
+    • "R = 50 Ω alimentée sous U = 220 V :
+       ###FORMULE### U = R × I   (loi d\'Ohm)
+       ###FORMULE### P = U × I = U^{{2}} / R
+       a) Calculez I. b) Calculez P. c) Énergie consommée en 2h."
+  Exercice 3 — EXPLOITATION DOCUMENTAIRE (/5 ou /7)
+    • Tableau de mesures expérimentales → tracé de courbe décrit → questions d\'interprétation
+    • "Décrivez l\'évolution observée... Quelle loi physique illustre ce phénomène ?"
 
-── HISTOIRE-GÉOGRAPHIE PRIMAIRE ─────────────────────────────────────────────────────
-  CE1/CE2 : famille, école, quartier, village, région
-    Ex: "Dessine et légende : ta maison, l\'école, le marché, la route"
-  CM1/CM2 CEPE : carte CI, régions, fleuves, villes, fêtes nationales
-    Ex: "Cite 3 villes importantes de Côte d\'Ivoire et leur région."
-    Ex: "Quelle fête célèbre-t-on le 7 août en Côte d\'Ivoire ? Pourquoi ?"
-    Ex: "Nomme 2 fleuves qui coulent en Côte d\'Ivoire."
+══ SVT / BIOLOGIE ═══════════════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — QCM + VRAI/FAUX (connaissances fondamentales, /4 ou /5)
+    • 5 QCM + 4 Vrai/Faux avec justification des fausses
+  Exercice 2 — SCHÉMA À LÉGENDER (/3 ou /4)
+    • Cellule végétale, cellule animale, neurone, appareil digestif, fleur, graine
+    • "Légendez le schéma ci-dessous en plaçant les termes suivants aux numéros correspondants :"
+    • 1 → _______________  2 → _______________  3 → _______________ ...
+  Exercice 3 — ÉTUDE DE DOCUMENT SCIENTIFIQUE (/6 ou /7)
+    • Tableau de résultats expérimentaux (vraies valeurs CI si possible)
+    • Q1 Description → Q2 Interprétation → Q3 Conclusion → Q4 Application CI
+  Exercice 4 — RÉDACTION SCIENTIFIQUE (/3 ou /4)
+    • "Rédigez un texte de 10 à 15 lignes expliquant le mécanisme de la photosynthèse."
 
-── ÉDUCATION CIVIQUE ET MORALE (ECM) PRIMAIRE ───────────────────────────────────────
-  Thèmes : respect, honnêteté, solidarité, famille, école, drapeau CI, hymne national
-    Ex: "Que signifient les 3 couleurs du drapeau ivoirien ?"
-    Ex: "Cite 3 règles de politesse à respecter à l\'école."
-    Ex: "Qu\'est-ce que la solidarité ? Donne un exemple dans ta classe."
+══ HISTOIRE-GÉOGRAPHIE ══════════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — QUESTIONS DE COURS (/5 ou /6)
+    • Définitions : "Définissez les termes : colonisation / indépendance / CEDEAO"
+    • Chronologie : "Classez ces événements par ordre chronologique + donnez la date précise"
+    • Identification : "Qui est Félix Houphouët-Boigny ? Citez deux de ses réalisations majeures."
+  Exercice 2 — ÉTUDE DE DOCUMENT (/6 ou /7)
+    • Texte historique (discours, traité, extrait de source primaire) OU carte géographique
+    • "Identifiez la nature et la source du document. De quoi s\'agit-il ?"
+    • "Relevez deux informations importantes contenues dans ce document."
+    • "En vous appuyant sur le document et vos connaissances, expliquez..."
+  Exercice 3 — CROQUIS / CARTE (/3 ou /4)
+    • Carte muette de la CI ou de l\'Afrique de l\'Ouest décrite textuellement
+    • "Sur le croquis ci-dessous, placez et légendez : 1) Les villes principales 2) Les fleuves..."
+    • Alternative : tableau de localisation avec 3 colonnes (Élément / Localisation / Caractéristique)
+  Exercice 4 — DISSERTATION / COMPOSITION (/5 ou /6)
+    • "En vous appuyant sur vos connaissances, rédigez une composition de 25 à 30 lignes sur..."
 
-╚═══════════════════════════════════════════════════════════════════════════════════╝
+══ ÉCONOMIE-GESTION / BAC B ════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — CONCEPTS ET DÉFINITIONS (/4)
+    • "Définissez : PIB, inflation, balance commerciale, taux de chômage"
+    • "Distinguez économie formelle et économie informelle. Donnez un exemple CI pour chacune."
+  Exercice 2 — ANALYSE DE SITUATION ÉCONOMIQUE (/6)
+    • Texte ou tableau de données économiques CI (PIB, exportations cacao, taux de croissance)
+    • Questions d\'analyse : causes, conséquences, solutions
+  Exercice 3 — CAS PRATIQUE COMPTABLE (/6)
+    • Journal comptable : enregistrer 5-6 opérations (achat, vente, règlement, emprunt)
+    • "Présentez le bilan simplifié au 31/12/N à partir des éléments suivants..."
+  Exercice 4 — CALCULS FINANCIERS (/4)
+    • Amortissement linéaire, calcul de TVA, taux d\'intérêt simple/composé BCEAO
 
-╔══ COLLÈGE 1er CYCLE — 6ème, 5ème, 4ème, 3ème — Examen : BEPC ══════════════════════╗
+══ PHILOSOPHIE / BAC A1 ════════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — EXPLICATION DE TEXTE (/8)
+    • Texte philosophique 150-200 mots (philosophe classique ou africain)
+    • Q1 : "Dégagez la thèse principale du texte." (2 pts)
+    • Q2 : "Expliquez et analysez l\'argument central de l\'auteur." (3 pts)
+    • Q3 : "Discutez la position de l\'auteur en vous appuyant sur d\'autres penseurs." (3 pts)
+  Exercice 2 — DISSERTATION PHILOSOPHIQUE (/12)
+    • Sujet clair avec notion au programme : liberté, vérité, conscience, justice, travail, bonheur
+    • Consigne : "Dans une dissertation structurée de 3 à 4 pages, traitez le sujet suivant :"
+    • Rappel de méthode : intro + thèse + antithèse + synthèse + conclusion
 
-── FRANÇAIS / COLLÈGE ───────────────────────────────────────────────────────────────
-  6ème : texte 80-100 mots, 4 questions simples, grammaire (nature des mots), rédaction 15 lignes
-  5ème : texte 100-130 mots, vocabulaire (champ lexical, synonymes), conjugaison (tous temps), rédaction 20 lignes
-  4ème : texte littéraire 130-170 mots, figures de style (métaphore, comparaison, personnification), lecture analytique, lettre formelle 25 lignes
-  3ème/BEPC : texte 150-200 mots, commentaire guidé, étude de la langue approfondie, rédaction (récit, argumentation) 30-40 lignes
-  Auteurs au programme collège CI : B. Dadié (Climbié, Le Pagne Noir), A. Kourouma (Soleils des Indépendances), C. Laye (L\'Enfant Noir), F. Oyono (Une vie de boy), M. Beti (Mission Terminée)
-  Types de questions BEPC Français : "Relevez... Expliquez... Analysez... Quelle est la visée de l\'auteur..."
+══ EDHC (Éducation aux Droits de l\'Homme et à la Citoyenneté) ═
+Séquence recommandée :
+  Exercice 1 — CONNAISSANCES CIVIQUES (/5)
+    • "Quels sont les droits fondamentaux garantis par la Constitution ivoirienne de 2016 ?"
+    • "Définissez : citoyenneté, démocratie, État de droit, droits de l\'Homme"
+  Exercice 2 — ÉTUDE DE CAS (/8)
+    • Situation concrète : conflit foncier, inégalités scolaires, violence en milieu scolaire, corruption
+    • Q1 : Identification du problème / Q2 : Droits violés / Q3 : Solutions citoyennes
+  Exercice 3 — PRODUCTION ÉCRITE CITOYENNE (/7)
+    • "Rédigez un discours de 20 lignes appelant vos camarades à lutter contre..."
 
-── MATHÉMATIQUES / COLLÈGE ──────────────────────────────────────────────────────────
-  6ème : opérations sur entiers et décimaux, fractions, géométrie plane (triangle, quadrilatère), périmètre/aire
-    Ex: "Calculez : (3/4 + 1/6) × 2. Simplifiez le résultat."
-    Ex: "Un champ rectangulaire mesure 45 m × 32 m. Calculez son périmètre et son aire."
-  5ème : fractions, proportionnalité, pourcentages, angles, théorème de Thalès (intro)
-    Ex: "Un commerçant achète 50 kg d\'anacarde à 320 FCFA/kg et revend à 450 FCFA/kg. Calculez son bénéfice et son taux de bénéfice."
-  4ème : équations du 1er degré, systèmes 2×2, Pythagore, cercle, statistiques descriptives
-    ###FORMULE### BC^{{2}} = AB^{{2}} + AC^{{2}}   (Pythagore — angle droit en A)
-    Ex: "Résolvez : 2x - 5 = 3x + 7 et vérifiez votre solution."
-  3ème/BEPC : équations 2nd degré (intro), fonctions affines, statistiques (moyenne, médiane, mode)
-    ###FORMULE### Δ = b^{{2}} - 4ac
-    Ex: "Un taxi Abidjan–Bouaké parcourt 382 km à 85 km/h. À quelle heure arrive-t-il s\'il part à 6h30 ?"
-
-── SCIENCES DE LA VIE ET DE LA TERRE (SVT) / COLLÈGE ───────────────────────────────
-  6ème : cellule vivante (végétale/animale), nutrition des plantes, digestion, squelette
-    Ex SVT 6ème : "Légendez la cellule végétale : noyau, vacuole, chloroplaste, paroi, membrane, cytoplasme (6 numéros)"
-  5ème : respiration, circulation sanguine, reproduction végétale, écosystèmes CI (forêt de Taï, savane)
-    Ex: "Schéma du cœur — 4 cavités. Tracez le trajet du sang de la veine cave à l\'aorte."
-  4ème : système nerveux, immunité, microbes et maladies CI (paludisme, choléra, typhoïde), puberté
-    Ex: "Le paludisme est causé par _______. Il est transmis par _______. Le traitement au CI est _______."
-  3ème/BEPC : génétique (hérédité, ADN intro), reproduction humaine, environnement et développement durable
-    Ex: "Expliquez pourquoi la drépanocytose (1ère maladie génétique en CI, 20-25% porteurs) est une maladie héréditaire récessive."
-
-── SCIENCES PHYSIQUES (PC) / COLLÈGE ────────────────────────────────────────────────
-  6ème : états de la matière (solide, liquide, gaz), changements d\'état, eau pure et mélanges
-    Ex: "À quelle température l\'eau bout-elle ? Quel nom donne-t-on à ce changement d\'état ?"
-  5ème : solutions, dissolution, densité, lumière (propagation, ombres, miroir plan)
-    Ex: "On dissout 25 g de sel dans 475 g d\'eau. Calculez la concentration massique en g/L."
-  4ème : électricité (circuit, loi d\'Ohm, résistances série/parallèle), forces mécanique
-    ###FORMULE### U = R × I    (loi d\'Ohm)
-    Ex: "Un dipôle de résistance R = 100 Ω est traversé par I = 0,5 A. Calculez U et P."
-  3ème/BEPC : mécanique (vitesse, forces, pression), optique géométrique, chimie (réactions, pH)
-    Ex: "Un mobile parcourt 180 km en 2h30 min. Calculez sa vitesse moyenne en km/h et en m/s."
-
-── HISTOIRE-GÉOGRAPHIE / COLLÈGE ────────────────────────────────────────────────────
-  6ème : Préhistoire, Antiquité africaine (Égypte, Nubie, Kush), premières civilisations
-  5ème : Moyen Âge africain (royaumes Mandé, Songhaï, Mali), traite négrière, arrivée islam en Afrique
-  4ème : colonisation de l\'Afrique, résistances africaines (Samory Touré 1898), impérialisme
-    Ex: "Citez 2 formes de résistance à la colonisation française en Côte d\'Ivoire."
-  3ème/BEPC : décolonisation, indépendances africaines (7 août 1960 pour CI), guerres mondiales, ONU
-    Ex: "Expliquez en 5 lignes les causes de la 2e Guerre mondiale et ses conséquences pour l\'Afrique."
-  Géographie collège : milieux naturels CI et Afrique, démographie, activités économiques, villes
-    Ex: "Complétez le tableau : Fleuve Comoé — longueur — régions traversées — utilités"
-
-── ANGLAIS / COLLÈGE ────────────────────────────────────────────────────────────────
-  6ème/5ème : alphabet phonétique, vocabulaire famille/école/couleurs/chiffres, présent simple, "to be"
-    Ex: "Translate into English: J\'ai 12 ans. Mon père est agriculteur. J\'aime le football."
-  4ème : present/past simple, there is/are, comparatifs/superlatifs, texte 60-80 mots
-    Ex: "Put in the correct tense: Yesterday, Aya (go)___ to the market and (buy)___ mangoes."
-  3ème/BEPC : présent perfect, conditionnel, voix passive, texte 100-120 mots + 4 questions + rédaction 50 mots
-    Ex: "Côte d\'Ivoire Text : 'Abidjan is the economic capital of Côte d\'Ivoire...'"
-    Ex: "Write 50 words about the importance of cocoa for Côte d\'Ivoire\'s economy."
-
-── ÉDUCATION CIVIQUE (EC) / COLLÈGE / EDHC ─────────────────────────────────────────
-  6ème/5ème : famille, droits/devoirs de l\'enfant, école, santé, État CI
-  4ème/3ème : Constitution ivoirienne 2016, institutions (Président, AN, Sénat, gouvernement), droits de l\'Homme
-    Ex: "Quels sont les 3 pouvoirs de l\'État ? Donnez le nom de l\'institution qui exerce chacun d\'eux en CI."
-    Ex: "Rédigez en 10 lignes : pourquoi est-il important de voter aux élections ?"
-
-── INFORMATIQUE / TIC COLLÈGE ───────────────────────────────────────────────────────
-  Notions : matériel informatique, système d\'exploitation, traitement de texte, tableur, internet
-    Ex: "Citez et définissez 4 composants d\'un ordinateur."
-    Ex: "Quelle formule Excel permet de calculer la somme des cellules A1 à A10 ?"
-
-╚═══════════════════════════════════════════════════════════════════════════════════╝
-
-╔══ LYCÉE 2nd CYCLE — 2nde, 1ère, Terminale — Examen : BAC ivoirien ═════════════════╗
-
-── TOUTES SÉRIES : FRANÇAIS LYCÉE ───────────────────────────────────────────────────
-  2nde : texte 200-250 mots, commentaire guidé (3-4 axes), vocabulaire stylistique, expression écrite 30 lignes
-  1ère : commentaire composé (plan en 2-3 axes), lecture analytique poussée, registres littéraires
-  Tle A1/A2 BAC : commentaire composé OU dissertation (sujet de réflexion littéraire)
-    Ex commentaire : "Analysez le texte de Bernard Dadié extrait de 'Climbié' (p.XX). Vous montrerez comment l\'auteur..."
-    Ex dissertation : "La littérature africaine francophone n\'est-elle qu\'un témoignage de la colonisation ?"
-    Œuvres au programme lycée CI : Les Soleils des Indépendances (Kourouma), Reine Pokou (Tadjo), La Carte d\'identité (Adiaffi)
-
-── MATHÉMATIQUES — BAC C, D, E ──────────────────────────────────────────────────────
-  2nde : fonctions numériques (affine, carré, valeur absolue), statistiques (moyenne pondérée, variance, σ), probabilités discrètes
-    ###FORMULE### σ^{{2}} = (1/n)×Σ(x_{{i}} - x̄)^{{2}}
-    Ex: "Étude de la fonction f(x) = x² - 4x + 3 : signe, variations, extremum, représentation graphique."
-  1ère BAC C/D : dérivées (règles, tableaux de variations), suites arithmétiques/géométriques, trigonométrie
-    ###FORMULE### u_{{n}} = u_{{0}} × q^{{n}}   (suite géométrique)
-    ###FORMULE### S_{{n}} = u_{{0}} × (1 - q^{{n+1}}) / (1 - q)
-    Ex: "Un capital de 500 000 FCFA est placé à 6%/an. Calculez sa valeur après 5 ans."
-  Tle BAC C : intégration, limites, logarithme/exponentielle, dénombrement, statistiques inférentielles
-    ###FORMULE### ∫_{{a}}^{{b}} f(x)dx = [F(x)]_{{a}}^{{b}} = F(b) - F(a)
-    ###FORMULE### ln(ab) = ln(a) + ln(b) | (e^{{x}})\'= e^{{x}} | (ln x)\'= 1/x
-  Tle BAC D : programme identique à C avec accent sur applications biologiques et agronomiques
-    Ex: "Une population de bactéries double toutes les 3 heures. Modélisez et calculez..."
-
-── SCIENCES PHYSIQUES — BAC C, D, E ─────────────────────────────────────────────────
-  2nde : mécanique (cinématique, dynamique, forces), électricité (lois de Kirchhoff), optique (lentilles convergentes)
-    ###FORMULE### ΣF = m×a    (2e loi de Newton)
-    ###FORMULE### 1/f\' = 1/OA\' - 1/OA    (lentilles)
-  1ère BAC C/D/E : oscillations (pendule simple, oscillateur masse-ressort), optique ondulatoire (Young), électromagnétisme (induction)
-    ###FORMULE### T = 2π×√(L/g)    (pendule simple — petites oscillations)
-    ###FORMULE### Δx = λ×D/a       (interfranges — fentes de Young)
-    Ex: "Un pendule simple de longueur L = 0,5 m oscille. Calculez T. Que se passe-t-il si L double ?"
-  Tle BAC C : physique nucléaire, radioactivité, mécanique quantique (intro), chimie organique complète
-    ###FORMULE### N(t) = N_{{0}} × e^{{-λt}}    |    t_{{1/2}} = ln(2)/λ
-    ###FORMULE### E = Δm × c^{{2}}    (énergie de masse — Einstein)
-    Ex: "Le carbone 14 a une demi-vie de 5730 ans. Après 11460 ans, quelle fraction de l\'échantillon reste ?"
-  Tle BAC D : chimie biologique (photosynthèse biochimique, respiration cellulaire, fermentation)
-    Ex: "Équation globale de la photosynthèse : 6CO_{{2}} + 6H_{{2}}O + énergie lumineuse → C_{{6}}H_{{12}}O_{{6}} + 6O_{{2}}. Expliquez chaque étape."
-
-── SVT (Sciences de la Vie et de la Terre) — BAC D ─────────────────────────────────
-  2nde : reproduction sexuée/asexuée, génétique mendélienne (mono/dihybridisme), physiologie cellulaire
-    Ex: "Des parents AA × aa donnent F1. F1 × F1 donne F2. Faites les carrés de Punnett et dressez le tableau des phénotypes."
-  1ère BAC D : génétique avancée (linkage, crossing-over), système nerveux (SNC, SNP), réflexes, hormones
-    Ex: "Un neurone reçoit une dépolarisation. Décrivez le potentiel d\'action et sa propagation."
-  Tle BAC D : immunologie (immunité innée/adaptative, vaccins, SIDA), évolution des espèces, écologie
-    Ex: "Expliquez le mécanisme d\'action d\'un vaccin contre le paludisme (Plasmodium falciparum). Pourquoi la mise au point est-elle difficile ?"
-    Ex: "Qu\'est-ce que la déforestation en CI (16M ha → 3,4M ha) implique pour la biodiversité et le climat ?"
-
-── PHILOSOPHIE — BAC A1, A2, et toutes séries en option ─────────────────────────────
-  Notions au programme BAC CI : la conscience, la perception, l\'inconscient, le désir, le bonheur, le travail, la technique, l\'art, la vérité, la justice, la liberté, le droit, l\'État, la religion, l\'histoire
-  2nde/1ère : introduction à la philosophie, les grandes écoles (Platon, Aristote, Descartes, Kant, Hegel, Marx, Sartre, Camus)
-  Tle A1 BAC : explication de texte (8 pts) + dissertation philosophique (12 pts)
-    Ex dissertation : "La liberté est-elle compatible avec l\'existence des lois ?"
-    Ex texte : Extrait de Kant, *Critique de la raison pure* — "Qu\'est-ce que les Lumières ?"
-    Philosophes africains : Kwame Nkrumah, Cheikh Anta Diop, Marcien Towa, Fabien Eboussi Boulaga
-
-── HISTOIRE-GÉOGRAPHIE — Toutes séries lycée ───────────────────────────────────────
-  2nde : monde contemporain (1945-2000), décolonisation, guerre froide, ONU, CI indépendante
-    Ex: "Montrez comment la Côte d\'Ivoire a accédé à l\'indépendance le 7 août 1960 en 3 étapes."
-  1ère : 1ère Guerre Mondiale, Révolution russe 1917, entre-deux-guerres, 2e GM, Afrique dans les conflits mondiaux
-    Ex: "Analysez les causes de la 1ère Guerre Mondiale selon le schéma MAIN (Militarisme, Alliances, Impérialisme, Nationalisme)."
-  Tle : monde actuel (mondialisation, terrorisme, ODD, CEDEAO, UA, émergence CI 2030), géopolitique africaine
-    Ex: "Dans quelle mesure la CEDEAO contribue-t-elle à l\'intégration économique et politique de l\'Afrique de l\'Ouest ?"
-  Géographie lycée : espaces mondiaux, flux migratoires, développement durable, villes mondiales
-
-── ÉCONOMIE / GESTION — BAC B, G1, G2, G3 ──────────────────────────────────────────
-  2nde BAC B : notions d\'économie (offre, demande, marché, prix), entreprise, circuit économique
-    Ex: "Définissez la loi de l\'offre et de la demande. Illustrez avec le marché ivoirien du cacao (2,2 M t, prix 350 FCFA/kg paysan)."
-  1ère BAC B : macroéconomie (PIB, croissance, inflation, chômage, BCEAO), politique économique
-    ###FORMULE### PIB = C + I + G + (X - M)
-    Ex: "Le PIB de la CI est d\'environ 70 Mds USD en 2023 avec une croissance de 6,7%. Calculez la valeur absolue de cette croissance."
-  Tle BAC B : échanges internationaux, ZLECAF, développement durable, économie informelle en Afrique
-    Ex: "L\'économie informelle représente ~40% du PIB en Côte d\'Ivoire. Analysez ses avantages et inconvénients."
-  Comptabilité BAC G1/G2 : journal comptable, grand livre, balance, bilan, compte de résultat, TVA (18% CI)
-    Ex: "Enregistrez au journal : achat de marchandises 250 000 FCFA HT (TVA 18%) au comptant."
-    Ex: "Présentez le bilan au 31/12/N sachant que : capital 2M FCFA, emprunts 500K, stocks 300K, caisse 200K..."
-
-── ANGLAIS — Toutes séries lycée ────────────────────────────────────────────────────
-  2nde : conditionnels (0,1,2), voix passive, reported speech, texte 150 mots, rédaction 80 mots
-    Ex: "Write a 80-word paragraph: describe Abidjan, the economic capital of Côte d\'Ivoire."
-  1ère : modal verbs, clauses (relative, adverbial, nominal), texte 180 mots, rédaction 100 mots
-    Ex: "Transform to passive: 'Farmers harvest 2.2 million tons of cocoa every year in Côte d\'Ivoire.'"
-  Tle BAC : comprehension approfonddie, essay writing (argumentative/discursive), texte 200 mots, rédaction 120 mots
-    Ex essay: "Is globalization beneficial for African countries? Discuss with examples from Côte d\'Ivoire."
-    Vocabulaire thématique lycée : development, agriculture, environment, technology, governance, trade
-
-── ESPAGNOL / ALLEMAND (langues vivantes 2) ─────────────────────────────────────────
-  Espagnol 2nde : présent indicatif, ser/estar, hay, articles, vocabulaire base, texte 80 mots
-    Ex: "Traduis : Je m\'appelle Aya, j\'ai 16 ans et j\'habite à Abidjan en Côte d\'Ivoire."
-  Espagnol Terminale : temps du passé (pretérito indefinido/imperfecto/perfecto), subjonctif, texte 150 mots
-    Ex: "Lee el texto y contesta : ¿Cuál es el principal cultivo de Costa de Marfil?"
-
-── ÉDUCATION PHYSIQUE ET SPORTIVE (EPS) ─────────────────────────────────────────────
-  Théorie EPS lycée : muscles, articulations, physiologie de l\'effort (VO2max, FC, lactates)
-    Ex: "Définissez la fréquence cardiaque maximale. Donnez la formule d\'Astrand."
-    ###FORMULE### FC_{{max}} = 220 - âge   (formule approximative)
-  Règles sportives : football, basketball, volleyball, athlétisme, arts martiaux (judo taekwondo)
-
-── ARTS PLASTIQUES / MUSIQUE (si applicable) ────────────────────────────────────────
-  Éléments du langage plastique : couleurs primaires/secondaires/complémentaires, formes, composition
-  Musique ivoirienne : coupé-décalé (DJ Arafat, Magic System), zouglou (Les Garagistes), reggae CI
-
-╚═══════════════════════════════════════════════════════════════════════════════════╝
-
-╔══ LYCÉE TECHNIQUE — Séries F, G1, G2, G3, H ═══════════════════════════════════════╗
-
-── SÉRIE F (Maths-Technologie Industrielle) ─────────────────────────────────────────
-  Technologie : résistance des matériaux, dessin technique, électrotechnique, mécanique appliquée
-    Ex: "Un poutre en acier de section rectangulaire (b=10cm, h=20cm) supporte une charge P=50 kN. Calculez la contrainte normale σ."
-    ###FORMULE### σ = F / A    (contrainte normale)
-  STI (Sciences et Technologies Industrielles) : circuits électriques complexes, moteurs, automatismes
-
-── SÉRIE G (Commerce-Gestion-Secrétariat) ───────────────────────────────────────────
-  G1 (Comptabilité) : comptabilité générale, analytique, consolidation, fiscalité (TVA, IS)
-  G2 (Secrétariat) : dactylographie, communication professionnelle, organisation du travail
-  G3 (Commerce) : techniques commerciales, marketing, négociation, gestion des stocks
-    Ex G2: "Rédigez une lettre de relance professionnelle à un client n\'ayant pas payé sa facture du 01/10/N."
-
-── SÉRIE H (Informatique) ───────────────────────────────────────────────────────────
-  Algorithmique, programmation (Python, C), bases de données (SQL), réseaux
-    Ex: "Écrivez l\'algorithme en pseudo-code qui calcule la moyenne de 10 notes."
-    Ex SQL: "Écrivez la requête qui affiche le nom et le salaire de tous les employés gagnant plus de 500 000 FCFA."
-
-╚═══════════════════════════════════════════════════════════════════════════════════╝
-
-╔══ UNIVERSITÉ — L1, L2, L3, M1, M2, Doctorat ═══════════════════════════════════════╗
-
-── INSTITUTIONS UNIVERSITAIRES CI ───────────────────────────────────────────────────
-  UFHB Cocody (Abidjan), UAO Bouaké, UJLOG Daloa, INP-HB Yamoussoukro, ESATIC, INPHB, ENSEA
-  Système LMD (Licence 3 ans, Master 2 ans, Doctorat 3+ ans)
-
-── MATHÉMATIQUES SUPÉRIEURES (L1-L3) ────────────────────────────────────────────────
-  Analyse : limites formelles (ε-δ), développements limités, séries entières, intégrales impropres
-    ###FORMULE### lim_{{x→0}} (sin x)/x = 1   |   lim_{{x→+∞}} (1+1/x)^{{x}} = e
-  Algèbre linéaire : espaces vectoriels, matrices (déterminant, inverse, rang, valeurs propres, diagonalisation)
-    Ex: "Diagonalisez la matrice A = [[3,1],[0,2]]. Vérifiez que A = PDP^{{-1}}."
-  Probabilités-Statistiques : loi normale, loi de Poisson, test du chi², régression linéaire
-    ###FORMULE### f(x) = (1/σ√(2π)) × e^{{-(x-μ)^{{2}}/(2σ^{{2}})}}   (densité normale)
-
-── DROIT / SES (Sciences Économiques et Sociales) ───────────────────────────────────
-  Droit privé : contrats (formation, validité, exécution, résiliation), droit des personnes, droit des affaires OHADA
-  Droit public : droit constitutionnel, droit administratif, institutions de la CI
-    Ex: "Définissez et distinguez : personne physique / personne morale. Exemples tirés du droit ivoirien."
-    Ex: "Rédigez en 15 lignes : l\'acte OHADA et son impact sur le commerce en Afrique de l\'Ouest."
-  Économie universitaire : microéconomie (fonctions d\'utilité, équilibre, élasticités), macroéconomie (modèles IS-LM, Keynésianisme, monétarisme)
-    ###FORMULE### I.S. : Y = C + I + G   |   L.M. : M/P = L(Y,r)
-
-── MÉDECINE / SANTÉ / PHARMACIE (UFHB, INP-HB) ─────────────────────────────────────
-  Anatomie : systèmes cardiovasculaire, nerveux, digestif, endocrinien, locomoteur
-  Biochimie : protéines (structure, enzymes), glucides (glycolyse, cycle de Krebs), lipides, acides nucléiques (ADN/ARN, transcription, traduction)
-    ###FORMULE### ATP = ADP + Pi + énergie (≈ 30,5 kJ/mol)
-  Pathologies tropicales prioritaires CI : paludisme (Plasmodium falciparum, Coartem), drépanocytose (HbS), VIH/SIDA, tuberculose, bilharziose, trypanosomiase
-    Ex: "Décrivez le cycle de vie de Plasmodium falciparum. Expliquez pourquoi il est difficile d\'éliminer ce parasite."
-
-── AGRONOMIE / AGRICULTURE (INP-HB, ENSA) ───────────────────────────────────────────
-  Cultures tropicales CI : cacao (Theobroma cacao — fermentation, séchage, commercialisation), café, anacarde, palmier à huile, hévéa, coton, banane, ananas
-  Pédologie : types de sols CI (ferrallitique, hydromorphe), fertilité, érosion, agriculture durable
-    Ex: "Quelles pratiques agro-écologiques peut-on mettre en place pour lutter contre la déforestation liée à la cacaoculture en CI ?"
-  Zootechnie : élevage bovin/porcin/avicole, races locales CI (N\'Dama, trypanotolérante)
-
-── INFORMATIQUE / RÉSEAUX (ESATIC, ENS) ─────────────────────────────────────────────
-  Algorithmique avancée (complexité O, structures de données : pile, file, arbre, graphe)
-  Programmation Python : fonctions, classes, exceptions, fichiers, bibliothèques (NumPy, Pandas, Matplotlib)
-  Bases de données : modèle E/A, normalisation (1NF, 2NF, 3NF, BCNF), SQL avancé (jointures, vues, procédures stockées)
-  Réseaux : modèle OSI, TCP/IP, adressage IPv4/IPv6, routage, sécurité réseau
-    Ex SQL: "Créez les tables Étudiant(id, nom, filière_id) et Filière(id, libellé, département). Insérez 3 étudiants et affichez leurs filières par jointure."
-
-╚═══════════════════════════════════════════════════════════════════════════════════╝
-
-╔══ BTS (Brevet de Technicien Supérieur) — 1ère et 2ème année ════════════════════════╗
-
-── BTS IDA — Informatique et Développement d'Applications ──────────────────────────
-  Matières : Algorithmique & Programmation, Bases de données, Réseaux, Systèmes d'exploitation, Anglais technique, Mathématiques appliquées, Gestion de projet, Stage
-  BTS1 : algorithmique (tableaux, tris, fonctions), SQL (SELECT/INSERT/UPDATE/DELETE), HTML/CSS, Python/C de base
-    Ex Algo : "Écrire un algorithme qui saisit 10 notes et affiche la moyenne, le max et le min."
-    Ex SQL : "Créez la table Étudiant(id INT, nom VARCHAR(50), filière VARCHAR(30), note FLOAT). Insérez 3 enregistrements et affichez les étudiants ayant une note > 12."
-  BTS2 : POO (classes, héritage, polymorphisme), merise/UML (MCD, MLD, MPD), sécurité réseau, projet de fin d'études
-    Ex POO : "Créez une classe Compte avec attributs (numéro, solde, titulaire) et méthodes (déposer, retirer, afficher). Instanciez 2 objets."
-    Ex UML : "Réalisez le diagramme de cas d'utilisation d'un système de gestion de bibliothèque scolaire."
-    Ex Merise : "À partir des règles de gestion suivantes, proposez le MCD : un étudiant peut s'inscrire à plusieurs modules ; un module est enseigné par un seul enseignant."
-
-── BTS CG — Comptabilité et Gestion ─────────────────────────────────────────────────
-  Matières : Comptabilité générale, Comptabilité analytique, Gestion financière, Fiscalité CI, Droit des affaires (OHADA), Informatique de gestion, Anglais des affaires
-  BTS1 : journal comptable (achats, ventes, règlements), TVA 18% CI, balance de vérification
-    Ex : "Enregistrez au journal les opérations suivantes : 01/03 Achat marchandises 400 000 FCFA HT (TVA 18%) à crédit fournisseur Konan & Fils ; 05/03 Vente 600 000 FCFA HT (TVA 18%) au comptant ; 10/03 Règlement fournisseur par virement 472 000 FCFA."
-  BTS2 : bilan, compte de résultat, SIG (soldes intermédiaires de gestion), analyse financière (ratios), coûts (complet, marginal, variable), budget de trésorerie
-    Ex : "À partir des données suivantes, calculez l'EBE, le résultat d'exploitation et le résultat net. Calculez les ratios de liquidité et d'autonomie financière."
-    Ex fiscalité : "Une entreprise ivoirienne réalise un CA de 85 000 000 FCFA. Calculez la TVA collectée (18%), la TVA déductible sur achats (42 000 000 FCFA HT) et la TVA à reverser à la DGI."
-
-── BTS MUC — Management des Unités Commerciales ─────────────────────────────────────
-  Matières : Techniques commerciales, Marketing, Mercatique, Gestion de la relation client (GRC/CRM), Management d'équipe, Communication commerciale, Droit commercial
-  BTS1 : segmentation, ciblage, positionnement, mix marketing (4P), techniques de vente, prospection, argumentation
-    Ex : "Réalisez une analyse SWOT de la filière cacao en Côte d'Ivoire et proposez une stratégie marketing export."
-    Ex : "Rédigez un argumentaire de vente pour un smartphone à 75 000 FCFA en utilisant la méthode CAP (Caractéristique, Avantage, Preuve)."
-  BTS2 : plan marketing, gestion de portefeuille clients, tableaux de bord commerciaux, e-commerce en Afrique
-    Ex : "Calculez le chiffre d'affaires prévisionnel sachant que : parc clients = 2 500, taux de transformation = 35%, panier moyen = 45 000 FCFA."
-
-── BTS AM — Assistance de Manager / Secrétariat ─────────────────────────────────────
-  Matières : Communication professionnelle, Bureautique avancée, Organisation de l'entreprise, Anglais professionnel, Gestion administrative, Comptabilité de base
-  BTS1 : rédaction professionnelle (lettre, note, compte rendu, rapport), classement, gestion agenda, accueil
-    Ex : "Rédigez une lettre de relance à un client (Société TRAORE & Fils) pour un impayé de 250 000 FCFA arrivant à échéance le 30/11/N. Ton professionnel et courtois."
-    Ex : "Rédigez le compte rendu de la réunion du service commercial du 15/01/N. Participants : DG, Chef des ventes, 3 commerciaux. Ordre du jour : résultats S2, objectifs S1 N+1."
-  BTS2 : organisation d'événements, gestion de projets, communication interne/externe, veille documentaire
-
-── BTS TC — Technico-Commercial ─────────────────────────────────────────────────────
-  Matières : Techniques de vente industrielle, Connaissance produit, Chiffrage/Devis, Négociation, Logistique commerciale
-    Ex : "Un client commande 500 unités à 12 500 FCFA/u avec remise 8% et escompte 2% si paiement sous 10 jours. Calculez le montant net à payer HT, la TVA (18%) et le TTC."
-
-── BTS GRH — Gestion des Ressources Humaines ────────────────────────────────────────
-  Matières : Droit du travail CI (Code du travail ivoirien), Paie et charges sociales, Recrutement, Formation, Évaluation, SIRH (Système d'Information RH)
-    Ex paie CI : "Calculez le bulletin de paie de M. BAMBA : salaire brut 350 000 FCFA, CNPS salarié 6,3%, CAMU salarié 0,75%, ITS (impôt selon barème). Calculez le net à payer."
-    Ex droit : "Quelles sont les conditions de validité d'un contrat de travail en Côte d'Ivoire selon le Code du travail ? Distinguez CDI et CDD."
-
-── BTS BANQUE / FINANCE ─────────────────────────────────────────────────────────────
-  Matières : Économie monétaire et bancaire, Crédit, Marchés financiers, Gestion des risques, BCEAO/UEMOA, SYSCOHADA révisé
-    Ex : "La BCEAO fixe son taux directeur à 3,5%. Comment cela influence-t-il les taux des crédits accordés par les banques commerciales ivoiriennes ?"
-    Ex : "Calculez la mensualité d'un crédit immobilier de 10 000 000 FCFA à 8%/an sur 10 ans (amortissement constant)."
-
-── BTS LOGISTIQUE / TRANSPORT ───────────────────────────────────────────────────────
-  Matières : Gestion des stocks, Supply chain, Transport multimodal, Incoterms, Douane, Entreposage, ERP/WMS
-    Ex Incoterms : "Expliquez la différence entre FOB, CIF et DDP. Dans quel cas le vendeur ivoirien (exportateur de cacao) utilise-t-il FOB Abidjan ?"
-    Ex gestion stocks : "Stock initial 5 000 kg de cacao. Entrées : 12 000 kg. Sorties : 14 500 kg. Calculez le stock final. Si le stock de sécurité est 2 000 kg, faut-il commander ?"
-
-── BTS GÉNIE CIVIL / BTP ────────────────────────────────────────────────────────────
-  Matières : Topographie, Résistance des matériaux, Béton armé, Dessin de bâtiment, Métrés, Devis estimatif, Économie de la construction
-    Ex : "Une dalle rectangulaire de 6m × 4m × 0,15m doit être coulée en béton (densité 2 400 kg/m³). Calculez le volume de béton et la masse totale."
-    ###FORMULE### V = L × l × h   |   m = ρ × V
-
-── BTS ÉLECTRONIQUE / ÉLECTROTECHNIQUE ──────────────────────────────────────────────
-  Matières : Circuits électroniques (amplificateurs, filtres, oscillateurs), Machines électriques (moteurs, transformateurs), Automatismes industriels (GRAFCET, API)
-    Ex : "Un transformateur monophasé a N1 = 2 000 spires, N2 = 400 spires, V1 = 220 V. Calculez V2 et le rapport de transformation m."
-    ###FORMULE### V1/V2 = N1/N2 = m    (rapport de transformation)
-
-── FORMAT GÉNÉRAL ÉPREUVES BTS CI ───────────────────────────────────────────────────
-  En-tête BTS obligatoire :
-    MINISTÈRE DE L'ENSEIGNEMENT TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE (METFP)
-    DIRECTION DE L'ENSEIGNEMENT TECHNIQUE (DET)
-    BTS — [FILIÈRE] — [ANNÉE : 1ère ou 2ème] — SESSION [ANNÉE]
-    Matière : [MATIÈRE]   Durée : [DURÉE]   Coefficient : [COEFF]   Barème : /20
-  Structure type BTS : Partie A Restitution des connaissances (/6) + Partie B Application (/8) + Partie C Étude de cas/Synthèse (/6)
-  Contexte professionnel ivoirien obligatoire : entreprises CI (SIFCA, Nestlé CI, MTN CI, Orange CI, BICICI, SIB, SGBCI, CFAO, ABIDJAN TERMINAL, Port d'Abidjan)
-
-╚═══════════════════════════════════════════════════════════════════════════════════╝
-
-╔══ CONCOURS NATIONAUX CI ═══════════════════════════════════════════════════════════╗
-
-── ENS (École Normale Supérieure) — Formation enseignants ───────────────────────────
-  Culture générale CI + Afrique + Monde (30%), discipline enseignée (50%), pédagogie (20%)
-  Mention obligatoire en-tête : "CONCOURS D\'ENTRÉE À L\'ENS — SESSION [ANNÉE]"
-  Ex culture générale : "Expliquez en 15 lignes le rôle de l\'éducation dans le développement de la Côte d\'Ivoire."
-
-── CAFOP (Centre d\'Animation et de Formation Pédagogique) — Instituteurs ────────────
-  Français (dictée, grammaire, production écrite), Maths (arithmétique, géométrie), Éveil (sciences, histoire-géo)
-  Niveau : CM2 à 3ème — test de culture générale CI + matières primaire
-
-── INJS (Institut National de la Jeunesse et des Sports) ────────────────────────────
-  Éducation physique théorique + pratique, biologie appliquée au sport, psychologie de l\'adolescent
-
-── FONCTION PUBLIQUE / DOUANE / POLICE / ARMÉE ──────────────────────────────────────
-  Culture générale (institutions CI, histoire, géographie, actualité), logique, rédaction administrative
-  Ex: "Qu\'est-ce que l\'UEMOA ? Citez ses 8 pays membres et ses missions principales."
-  Ex: "Rédigez un compte rendu professionnel de 200 mots sur une mission fictive."
-
-╚═══════════════════════════════════════════════════════════════════════════════════╝
+══ ANGLAIS ═════════════════════════════════════════════════════
+Séquence recommandée :
+  Exercice 1 — READING COMPREHENSION (/6)
+    • Texte en anglais 150 mots (thème CI/Afrique) + 4 questions (True/False + short answers)
+    • EXEMPLE DE TEXTE : "Côte d\'Ivoire, known as the \'Ivory Coast\', is the world\'s largest producer of cocoa beans, supplying nearly 45% of the global demand. With a population of about 28 million people, it is one of the most economically dynamic countries in West Africa. The country gained independence from France on August 7, 1960, and has since developed a diversified economy based on agriculture, manufacturing, and services. Abidjan, the economic capital, is a modern city with skyscrapers and a busy international port."
+    • Q1 True/False: "Côte d\'Ivoire produces 45% of world cocoa." → True / False
+    • Q2 Short answer: "When did Côte d\'Ivoire become independent?" → _______________
+  Exercice 2 — GRAMMAR AND VOCABULARY (/6)
+    • Tenses (past simple, present perfect, conditional), articles, prepositions
+    • "Put the verbs in brackets in the correct tense:"
+    • Word transformation : "Use the word \'produce\' to complete these sentences"
+  Exercice 3 — WRITTEN EXPRESSION (/8)
+    • "Write a paragraph of 80 to 100 words about [topic related to Côte d\'Ivoire or Africa]"
+    • Grille : Content /4 + Language accuracy /2 + Organisation /2
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 4 — TYPES D\'ÉPREUVES ET COEFFICIENTS OFFICIELS CI
+SECTION 4 — TYPES D\'ÉPREUVES : CARACTÉRISTIQUES PRÉCISES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-INTERROGATION ÉCRITE (IE) — 20-30 min, /10 ou /20 :
-  → 1-2 exercices, chapitre en cours uniquement
-  → Primaire : format simple, sans numéro de table
-  → Collège/Lycée : en-tête allégée (nom, prénom, date, classe)
+INTERROGATION ÉCRITE (IE) — 30 min, /10 ou /20 :
+  → 1-2 exercices, chapitre en cours uniquement, pas de problème complexe
+  → Formule d\'en-tête allégée : sans numéro de table ni salle
+  → Maximum 1 page
 
-DEVOIR SURVEILLÉ (DS) — 1h à 3h, /20 :
-  → 3-4 exercices progressifs (facile → difficile)
+DEVOIR SURVEILLÉ (DS) — 1h à 2h, /20 :
+  → 3-4 exercices, progression facile → difficile
   → Programme récent (1 à 3 chapitres), barème équilibré
+  → Mention : "Aucun document autorisé sauf si précisé"
 
 DEVOIR DE MAISON (DM) — sans limite, /20 :
-  → "Travail individuel exigé — copie identique = note 0 pour les deux élèves"
-  → Documents autorisés, recherche personnelle encouragée
+  → Problèmes plus longs, documents riches, recherche personnelle attendue
+  → Mention obligatoire : "Travail individuel exigé — copie identique = note 0 pour les deux élèves"
+  → Tolérer les recherches documentaires et les réponses développées
 
-DEVOIR DU 1er/2e/3e TRIMESTRE — format DS, noté sur /20 :
-  → Programme du trimestre complet, coefficient double du DS ordinaire
+EXAMEN BLANC / BREVET BLANC / BAC BLANC — durée officielle, /20 :
+  → Format identique à l\'examen officiel, programme annuel complet
+  → En-tête : "DOCUMENT À USAGE INTERNE — Ne pas diffuser"
+  → BEPC : 3 à 4h selon matière — BAC : 4h pour matières principales
+  → Coefficient selon série (ex : Maths coef 5 série C, Français coef 3 série D)
 
-EXAMEN BLANC / BLANC CEPE / BREVET BLANC / BAC BLANC :
-  → Format identique à l\'examen officiel, durée officielle complète
-  → CEPE : Français 2h + Calcul 2h + Sciences d\'Éveil 1h30
-  → BEPC : chaque matière 2h à 4h selon coefficient
-  → BAC : Français 4h | Maths 4h (C/D/E) | PC 3h30 | SVT 3h30 | Philo 4h | HG 3h | Anglais 2h
-
-COEFFICIENTS BAC ivoirien (MENET-FP) :
-  BAC A1 (Lettres-Philo) : Philo×4, Français×4, HG×3, Anglais×2, Maths×2, Allemand/Espagnol×2
-  BAC A2 (Lettres-SH) : Français×4, HG×4, EDHC×3, Anglais×2, Maths×2
-  BAC B (Économie) : Économie×4, Maths×4, Gestion×3, Français×2, Anglais×2
-  BAC C (Maths-PC) : Maths×7, PC×5, Français×3, Anglais×2, Philo×2, SVT×2
-  BAC D (Maths-SVT) : Maths×5, SVT×5, PC×4, Français×3, Anglais×2, Philo×2
-  BAC E (Maths-Techno) : Maths×6, Techno×5, PC×4, Français×2, Anglais×2
-
-CONCOURS NATIONAUX : 
-  → Mention en-tête : "DOCUMENT À USAGE INTERNE — Ne pas diffuser avant l\'épreuve"
-  → Partie A cours/définitions (/6) + Partie B application (/8) + Partie C rédaction/dissertation (/6)
+CONCOURS D\'ENTRÉE (ENS, ENSET, CAFOP, Grandes Écoles, Fonction publique) :
+  → Niveau supérieur au BAC, culture générale + spécialité disciplinaire
+  → Mention : "Le candidat traitera les sujets dans l\'ordre de son choix"
+  → Intégrer : connaissance de la CI (institutions, économie, histoire récente)
+  → Format : Partie A (cours/définitions) + Partie B (application/problème) + Partie C (dissertation)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 5 — ADAPTATION PAR NIVEAU ET PAR CLASSE : GUIDE PRÉCIS
+SECTION 5 — ADAPTATION PAR NIVEAU : RÈGLES STRICTES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PRIMAIRE — CP1 (6 ans) : mots de 1-2 syllabes, images mentales, phrases ≤ 6 mots, chiffres 0-20
-PRIMAIRE — CP2 (7 ans) : phrases ≤ 8 mots, calculs ≤ 50, lecture de textes de 3-4 lignes
-PRIMAIRE — CE1 (8 ans) : phrases ≤ 10 mots, calculs ≤ 100, textes 5-8 lignes, dictées 6-8 mots
-PRIMAIRE — CE2 (9 ans) : phrases ≤ 12 mots, calculs ≤ 1000, tables de multiplication 1-5, textes 10-15 lignes
-PRIMAIRE — CM1 (10 ans) : vocabulaire courant, fractions simples, problèmes en 2 étapes, productions 10 lignes
-PRIMAIRE — CM2/CEPE (11-12 ans) : programme CEPE complet, 3-4 exercices, productions 12-15 lignes
+CEPE (CM2, 12 ans) :
+  • Phrases ≤ 15 mots, vocabulaire quotidien, calculs < 1000 FCFA, 1-2 pages
+  • Exercices : dictée simulée, calcul rapide, problème du marché, production écrite 10-15 lignes
+  • Contexte : école, famille, village, marché de quartier, animaux de la ferme
 
-COLLÈGE — 6ème (12 ans) : termes disciplinaires définis systématiquement, 2-3 exercices guidés, 15-20 lignes
-COLLÈGE — 5ème (13 ans) : vocabulaire élargi, 3 exercices semi-guidés, 20-25 lignes
-COLLÈGE — 4ème (14 ans) : autonomie croissante, abstraction introduite, 3-4 exercices, 25-30 lignes
-COLLÈGE — 3ème/BEPC (15 ans) : format pré-examen, 3-4 exercices complets, 30-40 lignes, durée 2h-3h
+COLLÈGE (6ème → 3ème / BEPC) :
+  • 3ème/BEPC : vocabulaire courant + termes disciplinaires définis, 3-4 exercices, 3-4 pages
+  • Progression : 6ème (très guidé) → 5ème (semi-guidé) → 4ème (autonomie croissante) → 3ème (BAC-ready)
+  • Calculs FCFA jusqu\'à 1 million, textes 150-200 mots, rédactions 20-30 lignes
 
-LYCÉE — 2nde (16 ans) : terminologie disciplinaire assumée, concepts sans définitions de base, 4 exercices, 3h
-LYCÉE — 1ère (17 ans) : niveau intermédiaire BAC, exercices exigeants, liens interdisciplinaires, 3h30
-LYCÉE — Terminale/BAC (18 ans) : format examen officiel exact, programme annuel complet, 4h, sujets type BAC
+LYCÉE (2nde → Terminale / BAC) :
+  • Terminologie disciplinaire maîtrisée, sans définir les notions fondamentales
+  • 4-5 exercices, 4-6 pages, durée 3h-4h
+  • BAC C/D/E : rigueur maximale, démonstrations rigoureuses, étude de fonctions
+  • BAC A1/A2 : commentaire composé, dissertation, analyse stylistique poussée
+  • BAC B : cas comptable, calculs financiers BCEAO, analyse macro-économique
 
-BTS 1ère année (18-20 ans) : post-BAC professionnel, exercices appliqués au monde du travail, contexte entreprise CI obligatoire, rédaction professionnelle, calculs avec données réelles
-BTS 2ème année (19-21 ans) : maîtrise complète de la filière, études de cas complexes, projets transversaux, préparation épreuve finale METFP, dossier professionnel
-
-UNIVERSITÉ — L1 (18-20 ans) : notions fondamentales du supérieur, rédaction structurée attendue
-UNIVERSITÉ — L2 (19-21 ans) : maîtrise des concepts, travaux appliqués, bibliographie
-UNIVERSITÉ — L3 (20-22 ans) : synthèse disciplinaire, approche critique, méthodologie de recherche
-UNIVERSITÉ — M1/M2 (21-24 ans) : spécialisation, hypothèses, cadre théorique, rédaction académique dense
-UNIVERSITÉ — Doctorat (23+ ans) : contribution originale, état de l\'art exhaustif, rigueur absolue
+UNIVERSITÉ / CONCOURS :
+  • Niveau post-BAC, problèmes complexes multi-étapes, rédaction argumentée dense
+  • Bibliographie attendue, références théoriques, 5-8 pages minimum
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SECTION 6 — BANQUE DE DONNÉES CONTEXTUELLES IVOIRIENNES
@@ -1613,7 +1274,7 @@ Union — Discipline — Travail
 
 Rédige maintenant le sujet COMPLET en te basant STRICTEMENT sur cette demande client :
 
-{description}{type_sujet_inject}
+{description}
 
 TOUT est rédigé intégralement. Total = /20. Adapte la matière, le niveau, le type d'examen et les exercices EXACTEMENT à la demande ci-dessus. Zéro "[à compléter]"."""
 
@@ -1831,7 +1492,7 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
 
         modeles = get_modeles_disponibles(api_key)
         if not modeles:
-            return "❌ Service Nova IA : aucun modèle disponible pour cette clé API."
+            return "❌ Aucun modèle Gemini disponible pour generateContent avec cette clé API."
         erreurs = []
 
         for modele in modeles:
@@ -1856,16 +1517,16 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                 if e.code in [429, 503]:
                     time.sleep(2)
                     continue
-                return f"❌ Erreur Nova IA ({modele}) HTTP {e.code} : {erreur_detail}"
+                return f"❌ Erreur Gemini ({modele}) HTTP {e.code} : {erreur_detail}"
             except Exception as e:
                 erreurs.append(f"{modele} → {type(e).__name__}: {e}")
                 continue
 
         detail = " | ".join(erreurs)
-        return f"❌ Nova IA indisponible. Détails : {detail}"
+        return f"❌ Gemini indisponible. Détails : {detail}"
 
     except Exception as e:
-        return f"❌ Erreur Nova IA : {e}"
+        return f"❌ Erreur Gemini : {e}"
 
 
 def creer_docx(contenu, service, client_nom):
@@ -3324,7 +2985,7 @@ def inject_custom_css():
             background-image: linear-gradient(to right, #b8860b, #FFD700) !important;
         }
 
-        /* ── Nova card ── */
+        /* ── Gemini card ── */
         .gemini-card {
             background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.06)) !important;
             border: 2px solid rgba(255,215,0,0.5) !important;
@@ -4120,7 +3781,6 @@ def main_dashboard():
     ]
 
     with tab1:
-        type_sujet_selectionne = None  # Initialisé ici, redéfini si service Sujets/Examens
         if st.session_state["premium_livrable"]:
             lv = st.session_state["premium_livrable"]
             st.markdown(f"""
@@ -4320,216 +3980,8 @@ def main_dashboard():
                     components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
                     st.rerun()
 
-        # ── SÉLECTION DU TYPE DE SUJET (uniquement pour le service Sujets/Examens) ──
-        type_sujet_selectionne = None
-        if "Sujets" in service or "Examens" in service:
-            st.markdown("#### 🎯 Type de sujet")
-            TYPES_SUJETS = {
-                "🔵 QCM — Questions à Choix Multiple": "QCM",
-                "✅ Vrai ou Faux (avec justification)": "VRAI_FAUX",
-                "🔤 Texte à Trous (lacunaire)": "TEXTE_TROU",
-                "✍️ Questions Ouvertes (rédigées)": "QUESTIONS_OUVERTES",
-                "🔀 Mixte (QCM + Vrai/Faux + Question ouverte)": "MIXTE",
-                "📋 Cas Pratique / Étude de Cas": "CAS_PRATIQUE",
-                "📐 Exercices de Calcul / Problèmes": "CALCUL",
-                "🗺️ Étude de Document (texte, tableau, carte)": "ETUDE_DOCUMENT",
-                "🔬 Schéma à Légender / Identification": "SCHEMA",
-                "📝 Composition / Dissertation guidée": "DISSERTATION",
-            }
-            type_sujet_label = st.selectbox(
-                "Choisissez le type d'exercice que vous voulez dans votre sujet",
-                list(TYPES_SUJETS.keys()),
-                help="Sélectionnez précisément le type de sujet souhaité. Nova adaptera 100% du contenu à ce format."
-            )
-            type_sujet_selectionne = TYPES_SUJETS[type_sujet_label]
-
-            TYPE_SUJET_DESCRIPTIONS = {
-                "QCM": "**QCM sélectionné** — Nova générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
-                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Nova générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
-                "TEXTE_TROU": "**Texte à trous sélectionné** — Nova rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
-                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Nova formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
-                "MIXTE": "**Format Mixte sélectionné** — Nova combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
-                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Nova rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
-                "CALCUL": "**Exercices de Calcul sélectionnés** — Nova rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
-                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Nova créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
-                "SCHEMA": "**Schéma à légender sélectionné** — Nova décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Nova formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
-            }
-            st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
-
         st.markdown("#### 📝 Spécifications de la mission")
-
-        # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
-        if "Sujets" in service or "Examens" in service:
-            st.markdown("""
-            <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);
-                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre sujet</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            col_a, col_b = st.columns(2)
-            with col_a:
-                exam_niveau = st.selectbox(
-                    "🎓 Niveau scolaire *",
-                    [
-                        "── PRIMAIRE ──",
-                        "CP1", "CP2", "CE1", "CE2", "CM1", "CM2 / CEPE",
-                        "── COLLÈGE ──",
-                        "6ème", "5ème", "4ème", "3ème / BEPC",
-                        "── LYCÉE ──",
-                        "2nde", "1ère - Série A1", "1ère - Série A2", "1ère - Série B",
-                        "1ère - Série C", "1ère - Série D", "1ère - Série E",
-                        "Terminale - Série A1", "Terminale - Série A2", "Terminale - Série B",
-                        "Terminale - Série C", "Terminale - Série D", "Terminale - Série E",
-                        "Terminale - Série F", "Terminale - Série G1", "Terminale - Série G2",
-                        "Terminale - Série G3", "Terminale - Série H",
-                        "── UNIVERSITÉ ──",
-                        "Licence 1 (L1)", "Licence 2 (L2)", "Licence 3 (L3)",
-                        "Master 1 (M1)", "Master 2 (M2)", "Doctorat",
-                        "── CONCOURS ──",
-                        "Concours ENS", "Concours CAFOP", "Concours INJS",
-                        "Concours Fonction Publique", "Concours Douane / Police / Armée",
-                        "Autre concours professionnel",
-                        "── BTS ──",
-                        "BTS 1ère année", "BTS 2ème année",
-                        "BTS IDA (Informatique et Développement d'Applications)",
-                        "BTS CG (Comptabilité et Gestion)",
-                        "BTS MUC (Management des Unités Commerciales)",
-                        "BTS AM (Assistance de Manager / Secrétariat)",
-                        "BTS TC (Technico-Commercial)",
-                        "BTS GRH (Gestion des Ressources Humaines)",
-                        "BTS Banque / Finance",
-                        "BTS Logistique / Transport",
-                        "BTS Hôtellerie / Tourisme",
-                        "BTS Génie Civil / BTP",
-                        "BTS Électronique / Électrotechnique",
-                        "BTS Maintenance Industrielle",
-                        "BTS Agriculture / Agronomie",
-                        "BTS Communication / Journalisme",
-                        "Autre BTS (préciser dans les notes)",
-                    ],
-                    index=0
-                )
-                exam_matiere = st.selectbox(
-                    "📚 Matière / Discipline *",
-                    [
-                        "── TOUTES MATIÈRES ──",
-                        "Français / Lettres", "Mathématiques",
-                        "Sciences Physiques (PC)", "SVT / Biologie",
-                        "Histoire-Géographie", "Économie / Gestion",
-                        "Comptabilité", "Philosophie",
-                        "EDHC / Éducation Civique",
-                        "Anglais (LV1)", "Espagnol (LV2)", "Allemand (LV2)",
-                        "Informatique / TIC",
-                        "Technologie industrielle",
-                        "EPS (Éducation Physique)",
-                        "Arts Plastiques",
-                        "Agronomie / Agriculture",
-                        "Droit", "Économie politique",
-                        "── PRIMAIRE ──",
-                        "Lecture / Écriture (primaire)", "Calcul (primaire)",
-                        "Sciences d'Éveil (primaire)",
-                        "Histoire-Géo (primaire)", "ECM (primaire)",
-                        "Autre matière (préciser dans les notes)",
-                    ],
-                    index=0
-                )
-            with col_b:
-                exam_type_epreuve = st.selectbox(
-                    "🎯 Type d'épreuve *",
-                    [
-                        "Devoir Surveillé (DS)",
-                        "Interrogation Écrite (IE)",
-                        "Devoir de Maison (DM)",
-                        "Devoir du 1er Trimestre",
-                        "Devoir du 2ème Trimestre",
-                        "Devoir du 3ème Trimestre",
-                        "Examen Blanc / Blanc CEPE",
-                        "Examen Blanc / Brevet Blanc (BEPC)",
-                        "Examen Blanc / BAC Blanc",
-                        "Épreuve de Rattrapage",
-                        "Sujet de Concours",
-                        "Épreuve de Passage",
-                        "Exercice de classe (rapide)",
-                    ],
-                    index=0
-                )
-                exam_duree = st.selectbox(
-                    "⏱️ Durée prévue *",
-                    [
-                        "15 minutes", "30 minutes", "1 heure",
-                        "1 heure 30", "2 heures", "2 heures 30",
-                        "3 heures", "3 heures 30", "4 heures",
-                        "Durée libre (DM / à domicile)",
-                    ],
-                    index=2
-                )
-
-            col_c, col_d = st.columns(2)
-            with col_c:
-                exam_nb_exercices = st.selectbox(
-                    "📏 Nombre d'exercices / questions *",
-                    [
-                        "1 exercice", "2 exercices", "3 exercices",
-                        "4 exercices", "5 exercices",
-                        "10 questions", "15 questions", "20 questions",
-                        "25 questions", "30 questions",
-                        "Adapté automatiquement au niveau et à la durée",
-                    ],
-                    index=10
-                )
-            with col_d:
-                exam_etablissement = st.text_input(
-                    "🏢 Établissement / Institution",
-                    placeholder="Ex: Lycée Moderne de Cocody, CEG Treichville, UFHB..."
-                )
-
-            exam_chapitre = st.text_input(
-                "📖 Chapitre / Notion spécifique (optionnel)",
-                placeholder="Ex: Les fractions, La cellule, La colonisation, La dérivation, La loi d'Ohm..."
-            )
-            exam_notes = st.text_area(
-                "💬 Informations complémentaires (optionnel)",
-                height=80,
-                placeholder="Ex: Avec corrigé, thème ivoirien, niveau difficile, chapitres 1 et 2, 4 QCM + 2 ouvertes..."
-            )
-
-            # ── CONSTRUCTION AUTOMATIQUE DU PROMPT STRUCTURÉ ──────────────────
-            _niveau_val = exam_niveau if not exam_niveau.startswith("──") else ""
-            _matiere_val = exam_matiere if not exam_matiere.startswith("──") else ""
-
-            prompt = f"""FICHE DE COMMANDE NOVA EXAM — INFORMATIONS STRUCTURÉES :
-
-🎓 NIVEAU SCOLAIRE    : {_niveau_val if _niveau_val else "Non précisé"}
-📚 MATIÈRE            : {_matiere_val if _matiere_val else "Non précisée"}
-🎯 TYPE D'ÉPREUVE     : {exam_type_epreuve}
-📏 EXERCICES/QUESTIONS : {exam_nb_exercices}
-⏱️ DURÉE               : {exam_duree}
-🏢 ÉTABLISSEMENT      : {exam_etablissement if exam_etablissement.strip() else "Établissement non précisé"}
-📖 CHAPITRE/NOTION    : {exam_chapitre if exam_chapitre.strip() else "Choisir un chapitre cohérent avec le programme officiel du niveau"}
-💬 NOTES SUPP.        : {exam_notes.strip() if exam_notes.strip() else "Aucune"}
-
-INSTRUCTIONS NOVA EXAM :
-- Respecte EXACTEMENT le niveau "{_niveau_val}" — applique le programme officiel MENET-FP de cette classe
-- Génère UNIQUEMENT des notions au programme de ce niveau — rien hors-programme
-- Adapte le vocabulaire, la complexité et la longueur à l'âge de l'élève de ce niveau
-- Si l'établissement est précisé, l'indiquer dans l'en-tête officiel du document
-- Si un chapitre/notion est précisé, le sujet porte EXCLUSIVEMENT sur ce chapitre
-- Si "avec corrigé" dans les notes, inclure le corrigé complet après ---SAUT_DE_PAGE---
-"""
-            # Afficher un résumé de la commande
-            if _niveau_val and _matiere_val and not _niveau_val.startswith("──") and not _matiere_val.startswith("──"):
-                st.success(f"✅ Commande prête : **{_matiere_val}** · **{_niveau_val}** · **{exam_type_epreuve}** · **{exam_duree}**")
-            else:
-                if not _niveau_val or _niveau_val.startswith("──"):
-                    st.warning("⚠️ Sélectionnez un niveau scolaire précis (pas le titre de catégorie)")
-                if not _matiere_val or _matiere_val.startswith("──"):
-                    st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
-
-        else:
-            # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
-            prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
+        prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
 
         if service == SERVICE_SAISIE and service in SERVICE_PREREQUIS:
             if prompt and not st.session_state["warning_triggered"]:
@@ -4586,12 +4038,6 @@ INSTRUCTIONS NOVA EXAM :
             champs_manquants.append("WhatsApp de contact")
         if not prompt:
             champs_manquants.append("Cahier des charges")
-        # Validation spécifique Sujets & Examens
-        if "Sujets" in service or "Examens" in service:
-            if '_niveau_val' in dir() and (not _niveau_val or _niveau_val.startswith("──")):
-                champs_manquants.append("Niveau scolaire")
-            if '_matiere_val' in dir() and (not _matiere_val or _matiere_val.startswith("──")):
-                champs_manquants.append("Matière")
         if champs_manquants:
             st.markdown(f"""
             <div style="
@@ -4664,44 +4110,17 @@ INSTRUCTIONS NOVA EXAM :
 
                     def generer():
                         try:
-                            # Enrichir le prompt avec le type de sujet sélectionné (pour Sujets/Examens)
-                            prompt_enrichi = prompt
-                            if type_sujet_selectionne and ("Sujets" in service or "Examens" in service):
-                                TYPE_SUJET_LABELS_FR = {
-                                    "QCM": "QCM (Questions à Choix Multiple — 4 options A/B/C/D, cases □, UN SEUL TYPE)",
-                                    "VRAI_FAUX": "VRAI ou FAUX UNIQUEMENT (V/F + justification si faux, UN SEUL TYPE)",
-                                    "TEXTE_TROU": "TEXTE À TROUS UNIQUEMENT (lacunaire + liste de mots, UN SEUL TYPE)",
-                                    "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES UNIQUEMENT (rédigées + lignes de réponse, UN SEUL TYPE)",
-                                    "MIXTE": "FORMAT MIXTE (Partie 1 QCM + Partie 2 Vrai/Faux + Partie 3 Question ouverte)",
-                                    "CAS_PRATIQUE": "CAS PRATIQUE / ÉTUDE DE CAS (texte CI contextualisé + questions d'analyse)",
-                                    "CALCUL": "EXERCICES DE CALCUL / PROBLÈMES (chiffrés, contextualisés CI, formules rappelées)",
-                                    "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support + questions d'exploitation)",
-                                    "SCHEMA": "SCHÉMA À LÉGENDER (description numérotée + termes à placer + corrigé)",
-                                    "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet + méthode + plan guidé)",
-                                }
-                                label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
-                                prompt_enrichi = f"""{prompt}
-
-⚠️ TYPE DE SUJET IMPOSÉ PAR L'UTILISATEUR — RESPECTER ABSOLUMENT :
-TYPE UNIQUE SÉLECTIONNÉ : {label_fr}
-
-RÈGLE ABSOLUE : Génère UNIQUEMENT ce type d'exercice. Ne pas mélanger avec d'autres types sauf si MIXTE est sélectionné.
-Si QCM → QCM seulement. Si VRAI_FAUX → Vrai/Faux seulement. Si TEXTE_TROU → Texte à trous seulement.
-Si QUESTIONS_OUVERTES → Questions ouvertes seulement. Si CALCUL → Calculs seulement.
-Si ETUDE_DOCUMENT → Étude de document seulement. Si SCHEMA → Schéma à légender seulement.
-Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas pratique seulement."""
-                            contenu = generer_avec_gemini(service, prompt_enrichi, user)
+                            contenu = generer_avec_gemini(service, prompt, user)
                             if contenu.startswith("❌"):
                                 result_holder["erreur"] = contenu
                                 return
                             if service == "📊 Data & Excel Analytics":
-                                buf  = creer_xlsx(prompt_enrichi, user)
+                                buf  = creer_xlsx(prompt, user)
                                 nom  = f"{user}_{service[:20].strip()}.xlsx".replace(" ", "_").replace("/", "-")
                                 mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             else:
                                 buf  = creer_docx(contenu, service, user)
-                                type_suffix = f"_{type_sujet_selectionne}" if type_sujet_selectionne else ""
-                                nom  = f"{user}_{service[:20].strip()}{type_suffix}.docx".replace(" ", "_").replace("/", "-")
+                                nom  = f"{user}_{service[:20].strip()}.docx".replace(" ", "_").replace("/", "-")
                                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                             result_holder["buf"]  = buf
                             result_holder["nom"]  = nom
@@ -4998,7 +4417,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         """, unsafe_allow_html=True)
 
                         if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
-                            with st.spinner("Nova génère votre document..."):
+                            with st.spinner("Interrogation de l'API Gemini..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                             if modeles_dispo:
                                 st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
@@ -5007,14 +4426,14 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             else:
                                 st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
 
-                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC NOVA IA", key=f"gemini_{req_id}", use_container_width=True):
+                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
                             with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                                 if modeles_dispo:
                                     st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
                                 else:
-                                    st.error("❌ Service Nova IA temporairement indisponible.")
-                            with st.spinner("⚡ Nova génère le document... (30-60 secondes)"):
+                                    st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
+                            with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
                                 contenu = generer_avec_gemini(service, description, client_nom)
 
                             if contenu.startswith("❌"):
