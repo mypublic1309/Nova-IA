@@ -150,7 +150,7 @@ Connectez-vous à la console admin pour traiter cette mission.
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
-def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, description=""):
+def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
     """Email envoyé quand Gemini a généré le doc automatiquement — pour info admin."""
     try:
         import resend
@@ -161,7 +161,6 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
 🛠️ Service     : {service}
-📝 Demande     : {description if description else "(non renseignée)"}
 📄 Fichier     : {nom_fichier}
 
 ⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
@@ -4747,7 +4746,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
-                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], description=prompt)
+                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
