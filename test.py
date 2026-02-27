@@ -121,6 +121,24 @@ def save_lien(uid, name, url, date):
     except Exception as e:
         st.error(f"Erreur sauvegarde lien : {e}")
 
+def delete_all_liens(uid):
+    try:
+        supabase.table("liens").delete().eq("uid", uid).execute()
+    except Exception as e:
+        st.error(f"Erreur suppression historique : {e}")
+
+def save_refus(uid, service, message):
+    """Sauvegarde un refus de mission dans les livrables du client."""
+    try:
+        supabase.table("liens").insert({
+            "uid": uid,
+            "name": service,
+            "url": f"__refus__{message}",
+            "date": datetime.now().strftime("%d/%m/%Y")
+        }).execute()
+    except Exception as e:
+        st.error(f"Erreur sauvegarde refus : {e}")
+
 def sanitize_nom_fichier(nom):
     """Nettoie un nom de fichier pour le rendre compatible avec Supabase Storage.
     - Supprime les accents (é→e, ç→c, etc.)
@@ -5097,8 +5115,29 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                 st.divider()
 
             if user_links:
+                col_titre, col_vider = st.columns([3, 1])
+                with col_titre:
+                    st.markdown("#### 📁 Mes livrables")
+                with col_vider:
+                    if st.button("🗑️ Vider l'historique", key="vider_historique", use_container_width=True):
+                        delete_all_liens(user)
+                        st.success("Historique vidé !")
+                        st.rerun()
+
                 for link in user_links:
-                    if link["url"].startswith("__local__"):
+                    if link["url"].startswith("__refus__"):
+                        msg_refus = link["url"].replace("__refus__", "")
+                        st.markdown(f"""
+                        <div class="file-card" style="border-color:rgba(231,76,60,0.5); background:rgba(231,76,60,0.05);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <h3 style="color:#e74c3c;margin:0;">❌ Mission refusée — {link['name']}</h3>
+                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Le {link.get('date','')}</p>
+                                    <p style="color:#eee;font-size:.9rem;margin-top:8px;">{msg_refus}</p>
+                                </div>
+                            </div>
+                        </div>""", unsafe_allow_html=True)
+                    elif link["url"].startswith("__local__"):
                         st.markdown(f"""
                         <div class="file-card" style="border-color:rgba(255,215,0,.5);">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -5240,7 +5279,12 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
 
                     col_rejet, col_recu, col_succes = st.columns(3)
                     with col_rejet:
-                        st.markdown(f'<a href="{wa_url(client_wa, msg_rejet)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.5); color:#e74c3c; font-weight:700; text-decoration:none;">❌ Rejeter</a>', unsafe_allow_html=True)
+                        if st.button("❌ Rejeter", key=f"rej_{i}", use_container_width=True):
+                            save_refus(client_nom, service, msg_rejet)
+                            delete_demande(req["id"])
+                            st.session_state["db"] = load_db()
+                            st.success(f"Mission refusée — notification envoyée dans les livrables de {client_nom}.")
+                            st.rerun()
                     with col_recu:
                         st.markdown(f'<a href="{wa_url(client_wa, msg_recu)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
                     with col_succes:
@@ -5292,39 +5336,37 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             with st.expander("👁️ Aperçu du contenu généré", expanded=False):
                                 st.markdown(result["contenu"])
 
-                            try:
-                                SERVICE_EXCEL = "📊 Data & Excel Analytics"
-                                if result["service"] == SERVICE_EXCEL:
-                                    buf = creer_xlsx(result.get("desc", ""), result["client"])
-                                    nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
-                                    st.download_button(
-                                        label="📥 TÉLÉCHARGER LE FICHIER EXCEL (.xlsx)",
-                                        data=buf,
-                                        file_name=nom_fichier,
-                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                        key=f"dl_{req_id}",
-                                        use_container_width=True
-                                    )
-                                    st.info("📊 Fichier Excel avec 3 feuilles : Saisie, Catégories, Tableau de Bord")
-                                else:
-                                    buf = creer_docx(result["contenu"], result["service"], result["client"])
-                                    nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
-                                    st.download_button(
-                                        label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
-                                        data=buf,
-                                        file_name=nom_fichier,
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key=f"dl_{req_id}",
-                                        use_container_width=True
-                                    )
-                            except Exception as e:
-                                st.error(f"Erreur génération fichier : {e}")
+                            if st.button("🚀 LIVRER DIRECTEMENT AU CLIENT", key=f"livrer_auto_{req_id}", use_container_width=True):
+                                try:
+                                    SERVICE_EXCEL = "📊 Data & Excel Analytics"
+                                    if result["service"] == SERVICE_EXCEL:
+                                        buf = creer_xlsx(result.get("desc", ""), result["client"])
+                                        nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
+                                        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    else:
+                                        buf = creer_docx(result["contenu"], result["service"], result["client"])
+                                        nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                        mime_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-                            st.info("💡 Télécharge → upload sur Google Drive → colle le lien ci-dessous pour livrer au client.")
+                                    with st.spinner("⬆️ Upload du fichier vers Supabase..."):
+                                        url_fichier = upload_fichier_client(client_nom, req_id, buf, nom_fichier)
+
+                                    if url_fichier.startswith("ERREUR"):
+                                        st.error(f"❌ Upload échoué : {url_fichier}")
+                                    else:
+                                        save_lien(client_nom, service, url_fichier, datetime.now().strftime("%d/%m/%Y"))
+                                        delete_demande(req["id"])
+                                        if req_id in st.session_state["gemini_results"]:
+                                            del st.session_state["gemini_results"][req_id]
+                                        st.session_state["db"] = load_db()
+                                        st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
+                                        st.rerun()
+                                except Exception as e:
+                                    st.error(f"Erreur livraison : {e}")
 
                     st.markdown("<br>", unsafe_allow_html=True)
-                    url_dl = st.text_input("🔗 Lien de livraison (Google Drive...)", key=f"url_{i}", placeholder="https://drive.google.com/...")
-                    if st.button("📦 LIVRER LA MISSION AU CLIENT", key=f"btn_{i}", use_container_width=True):
+                    url_dl = st.text_input("🔗 Lien de livraison manuel (optionnel)", key=f"url_{i}", placeholder="https://drive.google.com/...")
+                    if st.button("📦 LIVRER AVEC LIEN MANUEL", key=f"btn_{i}", use_container_width=True):
                         if url_dl:
                             save_lien(req['user'], req['service'], url_dl, datetime.now().strftime("%d/%m/%Y"))
                             delete_demande(req['id'])
