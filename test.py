@@ -5053,22 +5053,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                     else:
                         # Incrémenter le compteur de générations
                         incrementer_gen(user)
-
-                        # ── Upload vers Supabase Storage pour que le client puisse télécharger ──
-                        req_id_gen = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
-                        url_supabase = upload_fichier_client(
-                            user, req_id_gen,
-                            result_holder["buf"],
-                            result_holder["nom"]
-                        )
-
-                        if url_supabase.startswith("ERREUR"):
-                            # Upload échoué → fallback session_state uniquement (téléchargement immédiat)
-                            save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
-                        else:
-                            # ✅ URL réelle → bouton téléchargement permanent
-                            save_lien(user, service, url_supabase, datetime.now().strftime("%d/%m/%Y"))
-
+                        save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
                         envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
@@ -5157,8 +5142,6 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         </script>
                     """, height=0)
 
-                st.balloons()
-                time.sleep(20)
                 st.rerun()
             else:
                 st.session_state["view"] = "auth"
@@ -5217,27 +5200,16 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             </div>
                         </div>""", unsafe_allow_html=True)
                     elif link["url"].startswith("__local__"):
-                        nom_local = link["url"].replace("__local__", "")
                         st.markdown(f"""
                         <div class="file-card" style="border-color:rgba(255,215,0,.5);">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <div>
                                     <h3 style="color:#FFD700;margin:0;">⭐ {link['name']}</h3>
-                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Généré le {link.get('date',"Aujourd'hui")}</p>
+                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Généré le {link.get('date',"Aujourd'hui")} · Téléchargez depuis l'onglet Déployer</p>
                                 </div>
                                 <span class="badge-premium">IA AUTO</span>
                             </div>
                         </div>""", unsafe_allow_html=True)
-                        lv = st.session_state.get("premium_livrable")
-                        if lv and lv.get("nom") == nom_local:
-                            st.download_button(
-                                "📥 Télécharger maintenant",
-                                data=lv["buf"], file_name=lv["nom"], mime=lv["mime"],
-                                key=f"dl_local_{nom_local}",
-                                use_container_width=True
-                            )
-                        else:
-                            st.warning("⚠️ Fichier temporaire expiré. Reconnecte-toi ou contacte le support Nova.", icon="⚠️")
                     else:
                         st.markdown(f"""
                         <div class="file-card">
