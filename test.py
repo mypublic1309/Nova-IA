@@ -2793,93 +2793,6 @@ SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
 whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.replace(' ', '%20')}"
 
-def _connecter_utilisateur_google(email: str) -> bool:
-    """Connecte ou crée un utilisateur Nova à partir de son email Google."""
-    db = st.session_state["db"]
-    uid_trouve = None
-    for uid, udata in db["users"].items():
-        if udata.get("email", "").lower() == email.lower():
-            uid_trouve = uid
-            break
-
-    if uid_trouve:
-        st.session_state["current_user"] = uid_trouve
-        st.session_state["view"] = "home"
-        st.query_params["user_id"] = uid_trouve
-        st.toast(f"✅ Connecté : {uid_trouve} !", icon="⚡")
-        return True
-    else:
-        base_uid = email.split("@")[0].replace(".", "_").lower()
-        uid_final = base_uid
-        suffix = 1
-        while uid_final in db["users"]:
-            uid_final = f"{base_uid}_{suffix}"
-            suffix += 1
-        succes = save_user(uid_final, whatsapp="", email=email)
-        if succes:
-            db["users"][uid_final] = {
-                "whatsapp": "", "email": email,
-                "joined": str(datetime.now()), "premium": False,
-                "premium_plan": None, "premium_expiry": None,
-                "gen_used": 0, "gen_date": None,
-            }
-            st.session_state["current_user"] = uid_final
-            st.session_state["view"] = "home"
-            st.session_state["db"] = load_db()
-            st.query_params["user_id"] = uid_final
-            st.toast(f"🎉 Bienvenue sur Nova, {uid_final} !", icon="✨")
-            return True
-        return False
-
-
-def handle_google_oauth():
-    """
-    Gère le retour OAuth Google de Supabase.
-
-    Supabase peut rediriger de deux façons :
-      - Implicit flow : fragment  #access_token=...&token_type=bearer
-      - PKCE flow     : query     ?code=...
-
-    Le fragment (#) nest pas lisible côté serveur Python. Un script JS
-    dans show_auth_page() lintercèpte et réinjecte le token via ?access_token=
-    pour que Streamlit puisse le lire au prochain rerun.
-    """
-    params = st.query_params
-
-    # Cas 1 : access_token reçu via JS (implicit flow)
-    access_token  = params.get("access_token")
-    refresh_token = params.get("refresh_token", "")
-    if access_token:
-        try:
-            with st.spinner("⚡ Connexion Google en cours..."):
-                session = supabase.auth.set_session(access_token, refresh_token)
-                email   = session.user.email if session and session.user else None
-            if email:
-                st.query_params.clear()
-                return _connecter_utilisateur_google(email)
-        except Exception as e:
-            st.error(f"❌ Erreur token Google : {e}")
-            st.query_params.clear()
-        return False
-
-    # Cas 2 : code PKCE reçu directement
-    code = params.get("code")
-    if code:
-        try:
-            with st.spinner("⚡ Connexion Google en cours..."):
-                session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
-                email = session_data.user.email if session_data and session_data.user else None
-            if email:
-                st.query_params.clear()
-                return _connecter_utilisateur_google(email)
-        except Exception as e:
-            st.error(f"❌ Erreur code Google : {e}")
-            st.query_params.clear()
-        return False
-
-    return False
-
-
 if "db" not in st.session_state:
     st.session_state["db"] = load_db()
 if "current_user" not in st.session_state:
@@ -2903,29 +2816,75 @@ if "gemini_results" not in st.session_state:
 if "premium_livrable" not in st.session_state:
     st.session_state["premium_livrable"] = None
 
+def connecter_via_google(email: str) -> bool:
+    """Connecte ou crée un compte Nova depuis l'email Google. Appelée après vérification JS du token."""
+    db = st.session_state["db"]
+    for uid, udata in db["users"].items():
+        if udata.get("email", "").lower() == email.lower():
+            st.session_state["current_user"] = uid
+            st.session_state["view"] = "home"
+            st.query_params["user_id"] = uid
+            return True
+    base_uid = email.split("@")[0].replace(".", "_").replace("-", "_").lower()
+    uid_final, suffix = base_uid, 1
+    while uid_final in db["users"]:
+        uid_final = f"{base_uid}_{suffix}"; suffix += 1
+    if save_user(uid_final, whatsapp="", email=email):
+        db["users"][uid_final] = {
+            "whatsapp": "", "email": email, "joined": str(datetime.now()),
+            "premium": False, "premium_plan": None, "premium_expiry": None,
+            "gen_used": 0, "gen_date": None,
+        }
+        st.session_state["db"] = load_db()
+        st.session_state["current_user"] = uid_final
+        st.session_state["view"] = "home"
+        st.query_params["user_id"] = uid_final
+        return True
+    return False
+
 if st.session_state["current_user"] is None:
-    # Vérifier d'abord si on revient d'un OAuth Google
-    if not handle_google_oauth():
+    # Priorité 1 : retour Google (email transmis par JS via query param)
+    google_email = st.query_params.get("google_email")
+    if google_email:
+        st.query_params.clear()
+        if connecter_via_google(google_email):
+            st.rerun()
+    else:
+        # Priorité 2 : reconnexion classique via user_id
         stored_user = st.query_params.get("user_id")
         if stored_user and stored_user in st.session_state["db"]["users"]:
             st.session_state["current_user"] = stored_user
         else:
+            # Priorité 3 : reconnexion auto depuis localStorage (Google ou classique)
             components.html("""
                 <script>
-                var uid = localStorage.getItem('nova_user_id');
-                if (uid) {
-                    var url = new URL(window.location.href);
-                    url.searchParams.set('user_id', uid);
-                    window.location.href = url.toString();
-                }
+                (function() {
+                    var gEmail = localStorage.getItem('nova_google_email');
+                    if (gEmail) {
+                        var url = new URL(window.parent.location.href);
+                        url.searchParams.set('google_email', gEmail);
+                        window.parent.location.href = url.toString();
+                        return;
+                    }
+                    var uid = localStorage.getItem('nova_user_id');
+                    if (uid) {
+                        var url = new URL(window.parent.location.href);
+                        url.searchParams.set('user_id', uid);
+                        window.parent.location.href = url.toString();
+                    }
+                })();
                 </script>
             """, height=0)
 
 if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
+    db_now = st.session_state.get("db", {})
+    email_connecte = db_now.get("users", {}).get(uid_connecte, {}).get("email", "")
+    google_js = f"localStorage.setItem('nova_google_email', '{email_connecte}');" if email_connecte and "@" in email_connecte and email_connecte != "Non renseigné" else ""
     components.html(f"""
         <script>
         localStorage.setItem('nova_user_id', '{uid_connecte}');
+        {google_js}
         </script>
     """, height=0)
 
@@ -3808,85 +3767,77 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Bouton Google OAuth ───────────────────────────────────────────
+    # ── Bouton Google Identity Services ─────────────────────────────
     try:
-        redirect_url = st.secrets.get("SUPABASE_REDIRECT_URL", "http://localhost:8501")
-        google_auth_url = supabase.auth.sign_in_with_oauth({
-            "provider": "google",
-            "options": {"redirect_to": redirect_url}
-        })
-        auth_url = google_auth_url.url if hasattr(google_auth_url, "url") else str(google_auth_url)
+        google_client_id = st.secrets["GOOGLE_CLIENT_ID"]
     except Exception:
-        auth_url = None
+        google_client_id = None
 
-    if auth_url:
-        st.markdown(f"""
-        <style>
-        .google-btn-wrap {{
-            display: flex; justify-content: center;
-            margin: 0 auto 28px auto; max-width: 420px;
-            animation: float-up 1s ease 0.9s both;
-        }}
-        .google-btn {{
-            display: flex; align-items: center; justify-content: center;
-            gap: 12px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50px;
-            padding: 14px 32px;
-            color: #fff !important;
-            font-weight: 700; font-size: 0.92rem;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            text-decoration: none !important;
-            transition: all 0.3s ease;
-            width: 100%;
-        }}
-        .google-btn:hover {{
-            background: rgba(255,255,255,0.13);
-            border-color: rgba(255,255,255,0.45);
-            box-shadow: 0 0 22px rgba(255,255,255,0.1);
-            transform: translateY(-2px);
-        }}
-        .google-logo {{
-            width: 22px; height: 22px;
-        }}
-        </style>
-        <div class="google-btn-wrap">
-            <a href="{auth_url}" class="google-btn" target="_self">
-                <svg class="google-logo" viewBox="0 0 48 48">
+    if google_client_id:
+        components.html(f"""
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <style>
+            #nova-google-btn {{
+                display:flex; align-items:center; justify-content:center; gap:12px;
+                background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.25);
+                border-radius:50px; padding:13px 32px; color:#fff;
+                font-family:inherit; font-weight:700; font-size:13px;
+                letter-spacing:1.5px; text-transform:uppercase;
+                cursor:pointer; width:100%; transition:all .3s ease; margin-bottom:4px;
+            }}
+            #nova-google-btn:hover {{
+                background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.5);
+                box-shadow:0 0 22px rgba(255,255,255,0.1); transform:translateY(-2px);
+            }}
+            .g-logo{{ width:20px; height:20px; }}
+            .or-line{{ display:flex; align-items:center; gap:10px; margin-top:14px;
+                color:rgba(255,215,0,0.4); font-size:11px; letter-spacing:2px; }}
+            .or-line hr{{ flex:1; border:none; border-top:1px solid rgba(255,215,0,0.2); }}
+            </style>
+            <button id="nova-google-btn" onclick="startGoogle()">
+                <svg class="g-logo" viewBox="0 0 48 48">
                     <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/>
                     <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
                     <path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/>
                     <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/>
                 </svg>
                 Continuer avec Google
-            </a>
-        </div>
-        <div class="auth-divider" style="margin-bottom:24px;">
-            <div class="auth-divider-line"></div>
-            <div class="auth-divider-dot" style="font-size:0.7rem;color:rgba(255,215,0,0.4);width:auto;background:none;border-radius:0;padding:0 6px;">ou</div>
-            <div class="auth-divider-line"></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Script JS : intercepte le fragment #access_token= de Supabase (implicit flow)
-    # et le réinjecte en query param ?access_token= lisible par Streamlit
-    components.html("""
-        <script>
-        (function() {
-            var hash = window.parent.location.hash;
-            if (hash && hash.includes('access_token=')) {
-                var params = new URLSearchParams(hash.substring(1));
-                var at = params.get('access_token');
-                var rt = params.get('refresh_token') || '';
-                if (at) {
-                    var base = window.parent.location.origin + window.parent.location.pathname;
-                    window.parent.location.href = base + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
-                }
-            }
-        })();
-        </script>
-    """, height=0)
+            </button>
+            <div class="or-line"><hr>ou<hr></div>
+            <div id="g_id_onload"
+                data-client_id="{google_client_id}"
+                data-callback="handleGoogleToken"
+                data-auto_select="true"
+                data-itp_support="true">
+            </div>
+            <script>
+            function startGoogle() {{
+                google.accounts.id.prompt();
+            }}
+            function handleGoogleToken(response) {{
+                var parts = response.credential.split('.');
+                var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+                var email = payload.email;
+                if (email) {{
+                    localStorage.setItem('nova_google_email', email);
+                    var url = new URL(window.parent.location.href);
+                    url.searchParams.set('google_email', email);
+                    window.parent.location.href = url.toString();
+                }}
+            }}
+            window.addEventListener('load', function() {{
+                if (typeof google !== 'undefined') {{
+                    google.accounts.id.initialize({{
+                        client_id: '{google_client_id}',
+                        callback: handleGoogleToken,
+                        auto_select: true,
+                        itp_support: true
+                    }});
+                    google.accounts.id.prompt();
+                }}
+            }});
+            </script>
+        """, height=110)
 
     col1, col2 = st.columns(2, gap="large")
 
@@ -4024,7 +3975,7 @@ def main_dashboard():
             if st.button("Quitter la session"):
                 st.session_state["current_user"] = None
                 st.query_params.clear()
-                components.html("<script>localStorage.removeItem('nova_user_id');</script>", height=0)
+                components.html("<script>localStorage.removeItem('nova_user_id');localStorage.removeItem('nova_google_email');</script>", height=0)
                 st.rerun()
         else:
             if st.button("Connexion"):
