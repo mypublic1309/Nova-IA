@@ -2793,6 +2793,85 @@ SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
 whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.replace(' ', '%20')}"
 
+def handle_google_oauth():
+    """
+    Gère le retour du callback Google OAuth via Supabase.
+    Supabase redirige avec ?code=... dans l'URL après authentification Google.
+    On échange ce code contre une session, on récupère l'email et on connecte/crée l'utilisateur.
+    """
+    params = st.query_params
+    code = params.get("code")
+    if not code:
+        return False
+
+    try:
+        # Échange du code OAuth contre une session Supabase
+        session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
+        user_meta = session_data.user
+        if not user_meta:
+            return False
+
+        email = user_meta.email
+        if not email:
+            return False
+
+        # Nettoyage de l'URL (supprime le ?code= pour éviter reboucle)
+        st.query_params.clear()
+
+        db = st.session_state["db"]
+
+        # Cherche si un utilisateur avec cet email existe déjà
+        uid_trouve = None
+        for uid, udata in db["users"].items():
+            if udata.get("email", "").lower() == email.lower():
+                uid_trouve = uid
+                break
+
+        if uid_trouve:
+            # Utilisateur connu → connexion directe
+            st.session_state["current_user"] = uid_trouve
+            st.session_state["view"] = "home"
+            st.query_params["user_id"] = uid_trouve
+            st.toast(f"✅ Connecté en tant que {uid_trouve} !", icon="⚡")
+        else:
+            # Nouvel utilisateur Google → création automatique du compte
+            # L'UID est dérivé de la partie locale de l'email (avant @)
+            base_uid = email.split("@")[0].replace(".", "_").lower()
+            uid_final = base_uid
+            suffix = 1
+            while uid_final in db["users"]:
+                uid_final = f"{base_uid}_{suffix}"
+                suffix += 1
+
+            succes = save_user(uid_final, whatsapp="", email=email)
+            if succes:
+                db["users"][uid_final] = {
+                    "whatsapp": "",
+                    "email": email,
+                    "joined": str(datetime.now()),
+                    "premium": False,
+                    "premium_plan": None,
+                    "premium_expiry": None,
+                    "gen_used": 0,
+                    "gen_date": None,
+                }
+                st.session_state["current_user"] = uid_final
+                st.session_state["view"] = "home"
+                st.session_state["db"] = load_db()
+                st.query_params["user_id"] = uid_final
+                st.toast(f"🎉 Compte créé et connecté : {uid_final} !", icon="✨")
+            else:
+                st.error("❌ Impossible de créer le compte Google. Réessaie.")
+                return False
+
+        return True
+
+    except Exception as e:
+        st.error(f"❌ Erreur Google OAuth : {e}")
+        st.query_params.clear()
+        return False
+
+
 if "db" not in st.session_state:
     st.session_state["db"] = load_db()
 if "current_user" not in st.session_state:
@@ -2817,20 +2896,22 @@ if "premium_livrable" not in st.session_state:
     st.session_state["premium_livrable"] = None
 
 if st.session_state["current_user"] is None:
-    stored_user = st.query_params.get("user_id")
-    if stored_user and stored_user in st.session_state["db"]["users"]:
-        st.session_state["current_user"] = stored_user
-    else:
-        components.html("""
-            <script>
-            var uid = localStorage.getItem('nova_user_id');
-            if (uid) {
-                var url = new URL(window.location.href);
-                url.searchParams.set('user_id', uid);
-                window.location.href = url.toString();
-            }
-            </script>
-        """, height=0)
+    # Vérifier d'abord si on revient d'un OAuth Google
+    if not handle_google_oauth():
+        stored_user = st.query_params.get("user_id")
+        if stored_user and stored_user in st.session_state["db"]["users"]:
+            st.session_state["current_user"] = stored_user
+        else:
+            components.html("""
+                <script>
+                var uid = localStorage.getItem('nova_user_id');
+                if (uid) {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('user_id', uid);
+                    window.location.href = url.toString();
+                }
+                </script>
+            """, height=0)
 
 if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
@@ -3718,6 +3799,67 @@ def show_auth_page():
         <div class="auth-divider-line"></div>
     </div>
     """, unsafe_allow_html=True)
+
+    # ── Bouton Google OAuth ───────────────────────────────────────────
+    try:
+        redirect_url = st.secrets.get("SUPABASE_REDIRECT_URL", "http://localhost:8501")
+        google_auth_url = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {"redirect_to": redirect_url}
+        })
+        auth_url = google_auth_url.url if hasattr(google_auth_url, "url") else str(google_auth_url)
+    except Exception:
+        auth_url = None
+
+    if auth_url:
+        st.markdown(f"""
+        <style>
+        .google-btn-wrap {{
+            display: flex; justify-content: center;
+            margin: 0 auto 28px auto; max-width: 420px;
+            animation: float-up 1s ease 0.9s both;
+        }}
+        .google-btn {{
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50px;
+            padding: 14px 32px;
+            color: #fff !important;
+            font-weight: 700; font-size: 0.92rem;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            text-decoration: none !important;
+            transition: all 0.3s ease;
+            width: 100%;
+        }}
+        .google-btn:hover {{
+            background: rgba(255,255,255,0.13);
+            border-color: rgba(255,255,255,0.45);
+            box-shadow: 0 0 22px rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }}
+        .google-logo {{
+            width: 22px; height: 22px;
+        }}
+        </style>
+        <div class="google-btn-wrap">
+            <a href="{auth_url}" class="google-btn" target="_self">
+                <svg class="google-logo" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
+                    <path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/>
+                    <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/>
+                </svg>
+                Continuer avec Google
+            </a>
+        </div>
+        <div class="auth-divider" style="margin-bottom:24px;">
+            <div class="auth-divider-line"></div>
+            <div class="auth-divider-dot" style="font-size:0.7rem;color:rgba(255,215,0,0.4);width:auto;background:none;border-radius:0;padding:0 6px;">ou</div>
+            <div class="auth-divider-line"></div>
+        </div>
+        """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2, gap="large")
 
