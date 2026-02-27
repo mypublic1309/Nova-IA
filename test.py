@@ -3,8 +3,6 @@ import json
 import os
 import hashlib
 import time
-import requests
-import urllib.parse
 from datetime import datetime, timedelta
 from io import BytesIO
 import streamlit.components.v1 as components
@@ -2818,75 +2816,27 @@ if "gemini_results" not in st.session_state:
 if "premium_livrable" not in st.session_state:
     st.session_state["premium_livrable"] = None
 
-def connecter_via_google(email: str) -> bool:
-    """Connecte ou crée un compte Nova depuis l'email Google. Appelée après vérification JS du token."""
-    db = st.session_state["db"]
-    for uid, udata in db["users"].items():
-        if udata.get("email", "").lower() == email.lower():
-            st.session_state["current_user"] = uid
-            st.session_state["view"] = "home"
-            st.query_params["user_id"] = uid
-            return True
-    base_uid = email.split("@")[0].replace(".", "_").replace("-", "_").lower()
-    uid_final, suffix = base_uid, 1
-    while uid_final in db["users"]:
-        uid_final = f"{base_uid}_{suffix}"; suffix += 1
-    if save_user(uid_final, whatsapp="", email=email):
-        db["users"][uid_final] = {
-            "whatsapp": "", "email": email, "joined": str(datetime.now()),
-            "premium": False, "premium_plan": None, "premium_expiry": None,
-            "gen_used": 0, "gen_date": None,
-        }
-        st.session_state["db"] = load_db()
-        st.session_state["current_user"] = uid_final
-        st.session_state["view"] = "home"
-        st.query_params["user_id"] = uid_final
-        return True
-    return False
-
 if st.session_state["current_user"] is None:
-    # Priorité 1 : retour Google (email transmis par JS via query param)
-    google_email = st.query_params.get("google_email")
-    if google_email:
-        st.query_params.clear()
-        if connecter_via_google(google_email):
-            st.rerun()
+    stored_user = st.query_params.get("user_id")
+    if stored_user and stored_user in st.session_state["db"]["users"]:
+        st.session_state["current_user"] = stored_user
     else:
-        # Priorité 2 : reconnexion classique via user_id
-        stored_user = st.query_params.get("user_id")
-        if stored_user and stored_user in st.session_state["db"]["users"]:
-            st.session_state["current_user"] = stored_user
-        else:
-            # Priorité 3 : reconnexion auto depuis localStorage (Google ou classique)
-            components.html("""
-                <script>
-                (function() {
-                    var gEmail = localStorage.getItem('nova_google_email');
-                    if (gEmail) {
-                        var url = new URL(window.parent.location.href);
-                        url.searchParams.set('google_email', gEmail);
-                        window.parent.location.href = url.toString();
-                        return;
-                    }
-                    var uid = localStorage.getItem('nova_user_id');
-                    if (uid) {
-                        var url = new URL(window.parent.location.href);
-                        url.searchParams.set('user_id', uid);
-                        window.parent.location.href = url.toString();
-                    }
-                })();
-                </script>
-            """, height=0)
+        components.html("""
+            <script>
+            var uid = localStorage.getItem('nova_user_id');
+            if (uid) {
+                var url = new URL(window.location.href);
+                url.searchParams.set('user_id', uid);
+                window.location.href = url.toString();
+            }
+            </script>
+        """, height=0)
 
 if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
-    db_now = st.session_state.get("db", {})
-    email_connecte = db_now.get("users", {}).get(uid_connecte, {}).get("email", "")
-    google_js = f"localStorage.setItem('nova_google_email', '{email_connecte}');" if email_connecte and "@" in email_connecte and email_connecte != "Non renseigné" else ""
     components.html(f"""
         <script>
         localStorage.setItem('nova_user_id', '{uid_connecte}');
-        {google_js}
         </script>
     """, height=0)
 
@@ -3769,85 +3719,6 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Bouton Google OAuth (Authorization Code Flow) ─────────────────────────────
-    try:
-        google_client_id     = st.secrets["GOOGLE_CLIENT_ID"]
-        google_client_secret = st.secrets["GOOGLE_CLIENT_SECRET"]
-    except Exception:
-        google_client_id     = None
-        google_client_secret = None
-
-    APP_URL = "https://espace-partage-8.streamlit.app"
-
-    # Traiter le retour OAuth (code dans query params)
-    oauth_code = st.query_params.get("code")
-    if oauth_code and not st.session_state.get("current_user"):
-        try:
-            token_resp = requests.post("https://oauth2.googleapis.com/token", data={
-                "code": oauth_code,
-                "client_id": google_client_id,
-                "client_secret": google_client_secret,
-                "redirect_uri": APP_URL,
-                "grant_type": "authorization_code"
-            })
-            token_data = token_resp.json()
-            access_token = token_data.get("access_token")
-            if access_token:
-                userinfo = requests.get(
-                    "https://www.googleapis.com/oauth2/v3/userinfo",
-                    headers={"Authorization": f"Bearer {access_token}"}
-                ).json()
-                email = userinfo.get("email")
-                if email:
-                    st.query_params.clear()
-                    if connecter_via_google(email):
-                        st.rerun()
-        except Exception as e:
-            st.query_params.clear()
-
-    if google_client_id and google_client_secret:
-        oauth_params = urllib.parse.urlencode({
-            "client_id": google_client_id,
-            "redirect_uri": APP_URL,
-            "response_type": "code",
-            "scope": "email profile",
-            "access_type": "online",
-            "prompt": "select_account"
-        })
-        oauth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{oauth_params}"
-
-        st.markdown(f"""
-        <style>
-        .nova-google-link {{
-            display:flex; align-items:center; justify-content:center; gap:12px;
-            background:rgba(255,255,255,0.07); border:2px solid rgba(255,255,255,0.25);
-            border-radius:50px; padding:13px 32px; color:#fff !important;
-            font-weight:700; font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-            text-decoration:none !important; width:100%; transition:all .3s ease;
-            margin-bottom:4px; box-sizing:border-box;
-        }}
-        .nova-google-link:hover {{
-            background:rgba(255,255,255,0.14) !important; border-color:rgba(255,255,255,0.5);
-            box-shadow:0 0 22px rgba(255,255,255,0.1); transform:translateY(-2px);
-            color:#fff !important;
-        }}
-        .g-logo-inline{{ width:20px; height:20px; vertical-align:middle; }}
-        .or-line{{ display:flex; align-items:center; gap:10px; margin:12px 0;
-            color:rgba(255,215,0,0.4); font-size:11px; letter-spacing:2px; }}
-        .or-line hr{{ flex:1; border:none; border-top:1px solid rgba(255,215,0,0.2); margin:0; }}
-        </style>
-        <a href="{oauth_url}" target="_self" class="nova-google-link">
-            <svg class="g-logo-inline" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
-                <path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/>
-                <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/>
-            </svg>
-            &nbsp; Continuer avec Google
-        </a>
-        <div class="or-line"><hr>&nbsp;ou&nbsp;<hr></div>
-        """, unsafe_allow_html=True)
-
     col1, col2 = st.columns(2, gap="large")
 
     with col1:
@@ -3984,7 +3855,7 @@ def main_dashboard():
             if st.button("Quitter la session"):
                 st.session_state["current_user"] = None
                 st.query_params.clear()
-                components.html("<script>localStorage.removeItem('nova_user_id');localStorage.removeItem('nova_google_email');</script>", height=0)
+                components.html("<script>localStorage.removeItem('nova_user_id');</script>", height=0)
                 st.rerun()
         else:
             if st.button("Connexion"):
