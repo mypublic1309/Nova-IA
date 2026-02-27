@@ -2793,83 +2793,91 @@ SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
 whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.replace(' ', '%20')}"
 
+def _connecter_utilisateur_google(email: str) -> bool:
+    """Connecte ou crée un utilisateur Nova à partir de son email Google."""
+    db = st.session_state["db"]
+    uid_trouve = None
+    for uid, udata in db["users"].items():
+        if udata.get("email", "").lower() == email.lower():
+            uid_trouve = uid
+            break
+
+    if uid_trouve:
+        st.session_state["current_user"] = uid_trouve
+        st.session_state["view"] = "home"
+        st.query_params["user_id"] = uid_trouve
+        st.toast(f"✅ Connecté : {uid_trouve} !", icon="⚡")
+        return True
+    else:
+        base_uid = email.split("@")[0].replace(".", "_").lower()
+        uid_final = base_uid
+        suffix = 1
+        while uid_final in db["users"]:
+            uid_final = f"{base_uid}_{suffix}"
+            suffix += 1
+        succes = save_user(uid_final, whatsapp="", email=email)
+        if succes:
+            db["users"][uid_final] = {
+                "whatsapp": "", "email": email,
+                "joined": str(datetime.now()), "premium": False,
+                "premium_plan": None, "premium_expiry": None,
+                "gen_used": 0, "gen_date": None,
+            }
+            st.session_state["current_user"] = uid_final
+            st.session_state["view"] = "home"
+            st.session_state["db"] = load_db()
+            st.query_params["user_id"] = uid_final
+            st.toast(f"🎉 Bienvenue sur Nova, {uid_final} !", icon="✨")
+            return True
+        return False
+
+
 def handle_google_oauth():
     """
-    Gère le retour du callback Google OAuth via Supabase.
-    Supabase redirige avec ?code=... dans l'URL après authentification Google.
-    On échange ce code contre une session, on récupère l'email et on connecte/crée l'utilisateur.
+    Gère le retour OAuth Google de Supabase.
+
+    Supabase peut rediriger de deux façons :
+      - Implicit flow : fragment  #access_token=...&token_type=bearer
+      - PKCE flow     : query     ?code=...
+
+    Le fragment (#) nest pas lisible côté serveur Python. Un script JS
+    dans show_auth_page() lintercèpte et réinjecte le token via ?access_token=
+    pour que Streamlit puisse le lire au prochain rerun.
     """
     params = st.query_params
+
+    # Cas 1 : access_token reçu via JS (implicit flow)
+    access_token  = params.get("access_token")
+    refresh_token = params.get("refresh_token", "")
+    if access_token:
+        try:
+            with st.spinner("⚡ Connexion Google en cours..."):
+                session = supabase.auth.set_session(access_token, refresh_token)
+                email   = session.user.email if session and session.user else None
+            if email:
+                st.query_params.clear()
+                return _connecter_utilisateur_google(email)
+        except Exception as e:
+            st.error(f"❌ Erreur token Google : {e}")
+            st.query_params.clear()
+        return False
+
+    # Cas 2 : code PKCE reçu directement
     code = params.get("code")
-    if not code:
+    if code:
+        try:
+            with st.spinner("⚡ Connexion Google en cours..."):
+                session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
+                email = session_data.user.email if session_data and session_data.user else None
+            if email:
+                st.query_params.clear()
+                return _connecter_utilisateur_google(email)
+        except Exception as e:
+            st.error(f"❌ Erreur code Google : {e}")
+            st.query_params.clear()
         return False
 
-    try:
-        # Échange du code OAuth contre une session Supabase
-        session_data = supabase.auth.exchange_code_for_session({"auth_code": code})
-        user_meta = session_data.user
-        if not user_meta:
-            return False
-
-        email = user_meta.email
-        if not email:
-            return False
-
-        # Nettoyage de l'URL (supprime le ?code= pour éviter reboucle)
-        st.query_params.clear()
-
-        db = st.session_state["db"]
-
-        # Cherche si un utilisateur avec cet email existe déjà
-        uid_trouve = None
-        for uid, udata in db["users"].items():
-            if udata.get("email", "").lower() == email.lower():
-                uid_trouve = uid
-                break
-
-        if uid_trouve:
-            # Utilisateur connu → connexion directe
-            st.session_state["current_user"] = uid_trouve
-            st.session_state["view"] = "home"
-            st.query_params["user_id"] = uid_trouve
-            st.toast(f"✅ Connecté en tant que {uid_trouve} !", icon="⚡")
-        else:
-            # Nouvel utilisateur Google → création automatique du compte
-            # L'UID est dérivé de la partie locale de l'email (avant @)
-            base_uid = email.split("@")[0].replace(".", "_").lower()
-            uid_final = base_uid
-            suffix = 1
-            while uid_final in db["users"]:
-                uid_final = f"{base_uid}_{suffix}"
-                suffix += 1
-
-            succes = save_user(uid_final, whatsapp="", email=email)
-            if succes:
-                db["users"][uid_final] = {
-                    "whatsapp": "",
-                    "email": email,
-                    "joined": str(datetime.now()),
-                    "premium": False,
-                    "premium_plan": None,
-                    "premium_expiry": None,
-                    "gen_used": 0,
-                    "gen_date": None,
-                }
-                st.session_state["current_user"] = uid_final
-                st.session_state["view"] = "home"
-                st.session_state["db"] = load_db()
-                st.query_params["user_id"] = uid_final
-                st.toast(f"🎉 Compte créé et connecté : {uid_final} !", icon="✨")
-            else:
-                st.error("❌ Impossible de créer le compte Google. Réessaie.")
-                return False
-
-        return True
-
-    except Exception as e:
-        st.error(f"❌ Erreur Google OAuth : {e}")
-        st.query_params.clear()
-        return False
+    return False
 
 
 if "db" not in st.session_state:
@@ -3860,6 +3868,25 @@ def show_auth_page():
             <div class="auth-divider-line"></div>
         </div>
         """, unsafe_allow_html=True)
+
+    # Script JS : intercepte le fragment #access_token= de Supabase (implicit flow)
+    # et le réinjecte en query param ?access_token= lisible par Streamlit
+    components.html("""
+        <script>
+        (function() {
+            var hash = window.parent.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                var params = new URLSearchParams(hash.substring(1));
+                var at = params.get('access_token');
+                var rt = params.get('refresh_token') || '';
+                if (at) {
+                    var base = window.parent.location.origin + window.parent.location.pathname;
+                    window.parent.location.href = base + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
+                }
+            }
+        })();
+        </script>
+    """, height=0)
 
     col1, col2 = st.columns(2, gap="large")
 
