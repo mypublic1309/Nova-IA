@@ -720,6 +720,7 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQU
 - Le SOMMAIRE = 1 PAGE PLEINE : ajoute ###ESPACE### entre chaque entrée pour remplir toute la page
 - JAMAIS de titre de section (# PAGE DE GARDE, # SOMMAIRE...) — commence directement avec le contenu
 - INTERDIT ABSOLU dans PAGE DE GARDE et SOMMAIRE : ne JAMAIS utiliser ────, ════, ---, ━━━
+- INTERDIT ABSOLU : Un tableau ne doit JAMAIS chevaucher deux pages. Si un tableau risque de dépasser la fin d'une page, insère un ---SAUT_DE_PAGE--- AVANT le tableau pour qu'il commence sur une nouvelle page. Un tableau commence et finit TOUJOURS sur la MÊME page.
 - Le titre de l'exposé DOIT utiliser le marqueur ###TITRE_ROUGE### pour être affiché en grand et en rouge
 
 ###ESPACE###
@@ -1008,10 +1009,12 @@ MOTEUR DE FORMULES — 4 MODES :
   "Résistance équivalente : R_{{1}} + R_{{2}} + R_{{3}} = 80 Ω"
   "Discriminant : Δ = b^{{2}} - 4ac = 25 - 24 = 1"
 
-④ LaTeX $...$ inline — converti automatiquement :
-  "$\frac{{U}}{{R}} = I$" → I = U/R   |   "$E = mc^{{2}}$" → E = mc^{{2}}
-  "$\omega = 2\pi f$" → ω = 2πf   |   "$\sqrt{{b^{{2}}-4ac}}$" → √(b^{{2}}-4ac)
-  "$\vec{{AB}} \perp \vec{{CD}}$" → AB⃗ ⊥ CD⃗
+④ ⛔ LaTeX $...$ et $$...$$ — ABSOLUMENT INTERDIT :
+  NE JAMAIS ecrire LaTeX avec \frac ou \text ou \left ou \right
+  A LA PLACE, utilise TOUJOURS ###FORMULE### ou la notation Nova ^{{}} _{{}}
+  CORRECT   : ###FORMULE### Cm = m/V
+  CORRECT   : ###FORMULE### x_{{1,2}} = (-b ± √(b^{{2}}-4ac)) / (2a)
+  INCORRECT : $$Cm = \frac{{m}}{{V}}$$  <- JAMAIS JAMAIS JAMAIS
 
 SYMBOLES DIRECTEMENT UTILISABLES (copier-coller dans le texte) :
   Grecs min  : α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω
@@ -1067,6 +1070,7 @@ FORMULAIRE CHIMIE (prêt à l'emploi) :
     Zn + 2HCl → ZnCl_{{2}} + H_{{2}}
 
 INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
+INTERDIT ABSOLU : Tableau à cheval sur deux pages. Si un tableau est long, place un ---SAUT_DE_PAGE--- AVANT lui. Un tableau doit TOUJOURS commencer et se terminer sur la MÊME page.
 
 SECTION 2 — MOTEUR DE DÉTECTION AUTOMATIQUE NOVA EXAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1944,6 +1948,27 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                 with _ur.urlopen(req, timeout=60) as response:
                     result = json.loads(response.read().decode("utf-8"))
                     texte = result["candidates"][0]["content"]["parts"][0]["text"]
+                    # Post-traitement : convertir LaTeX residuel en notation Nova
+                    import re as _repost
+                    def _conv_latex(expr):
+                        expr = _repost.sub(r'\\?(?:d|t|text)?frac\{([^}]+)\}\{([^}]+)\}', r'()/()', expr)
+                        expr = _repost.sub(r'\\?sqrt\{([^}]+)\}', r'sqrt()', expr)
+                        expr = _repost.sub(r'\\?text\{([^}]+)\}', r'', expr)
+                        expr = _repost.sub(r'\\?(?:left|right)\s*[()\[\]{}|]', '', expr)
+                        expr = _repost.sub(r'\\?cdot', 'x', expr)
+                        expr = _repost.sub(r'\\?times', 'x', expr)
+                        expr = _repost.sub(r'\\?pm', '+-', expr)
+                        expr = _repost.sub(r'\\?[a-zA-Z]+', '', expr)
+                        return expr.strip()
+                    def _dd_to_formule(m):
+                        return "###FORMULE### " + _conv_latex(m.group(1).strip())
+                    texte = _repost.sub(r'[$][$]([^$]+)[$][$]', _dd_to_formule, texte)
+                    def _d_inline(m):
+                        expr = m.group(1).strip()
+                        if "\\" in expr:
+                            return _conv_latex(expr)
+                        return expr
+                    texte = _repost.sub(r'[$]([^$\n]+)[$]', _d_inline, texte)
                     return texte
             except urllib.error.HTTPError as e:
                 try:
@@ -2625,12 +2650,14 @@ def creer_docx(contenu, service, client_nom):
                         para.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_idx in [0, n_cols-1] else WD_ALIGN_PARAGRAPH.LEFT
                         para.paragraph_format.space_before = Pt(2)
                         para.paragraph_format.space_after = Pt(2)
-                        run = para.add_run(cell_text)
-                        run.font.name = "Arial"
-                        run.font.size = Pt(10)
-                        run.bold = is_header
-                        if is_header:
-                            run.font.color.rgb = RC(0xFF, 0xFF, 0xFF)
+                        # Nettoyer le LaTeX dans les cellules (ex: $\text{kg}$, $m^3$...)
+                        cell_text_clean = nettoyer_latex_complet(cell_text)
+                        ajouter_formule_dans_run(
+                            para, cell_text_clean,
+                            bold=is_header,
+                            size=10,
+                            color=(0xFF, 0xFF, 0xFF) if is_header else None
+                        )
 
                 doc.add_paragraph("")
             continue
