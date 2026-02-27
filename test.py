@@ -845,12 +845,6 @@ IMPÉRATIFS ABSOLUS :
                     "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support : texte/tableau/carte + questions d'identification, analyse, interprétation)",
                     "SCHEMA": "SCHÉMA À LÉGENDER (schéma décrit textuellement avec numéros + termes à placer + corrigé légendes)",
                     "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet formulé + consignes de méthode + plan détaillé guidé)",
-                    "DEVOIR_CLASSIQUE": "DEVOIR CLASSIQUE COMPLET (plusieurs exercices variés : QCM + calcul + question ouverte + cas pratique, noté /20, structure de vrai devoir surveillé)",
-                    "DEVOIR_COMPLET": "DEVOIR COMPLET SELON LA MATIÈRE (exercices 100% conformes : Maths→problèmes+calcul, Français→rédaction+grammaire+lecture, PC→lois+calcul, SVT→schéma+questions — structure et barème d'un vrai devoir de classe)",
-                    "TEST_LOURD": "TEST LOURD / EXAMEN DE FOND (sujet dense 2h-4h, tout le programme, exercices complexes, barème détaillé, niveau examen officiel)",
-                    "EVAL_DIAGNOSTIC": "ÉVALUATION DIAGNOSTIQUE (questions progressives pour mesurer le niveau exact et identifier les lacunes de l'élève)",
-                    "CONTROLE_RAPIDE": "CONTRÔLE RAPIDE (15-20 min max, questions ciblées sur l'essentiel du chapitre)",
-                    "REVISION_GUIDEE": "RÉVISION GUIDÉE (fiches de révision + exercices corrigés progressifs pour préparer un examen)",
                 }
                 label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
                 type_sujet_inject = f"""
@@ -869,14 +863,8 @@ RÈGLE ABSOLUE : Tu dois générer UN SEUL TYPE D'EXERCICE correspondant EXACTEM
 - Si ETUDE_DOCUMENT → Document support + questions d'exploitation UNIQUEMENT
 - Si SCHEMA → Description du schéma numéroté + légendes UNIQUEMENT
 - Si DISSERTATION → Sujet + consignes de méthode + plan guidé UNIQUEMENT
-- Si DEVOIR_CLASSIQUE → Devoir multi-exercices variés (QCM + calcul + ouvertes + cas pratique), noté /20
-- Si DEVOIR_COMPLET → Exercices 100% conformes à la matière (Maths→problèmes, Français→rédaction+grammaire, PC→lois, SVT→schéma) — respecter les vrais types d'exercices de la discipline
-- Si TEST_LOURD → Examen de fond dense 2h-4h, tout le programme, exercices complexes
-- Si EVAL_DIAGNOSTIC → Questions progressives du facile au difficile pour évaluer le niveau
-- Si CONTROLE_RAPIDE → Contrôle court 15-20 min sur l'essentiel
-- Si REVISION_GUIDEE → Fiches de révision + exercices corrigés progressifs
 
-NE PAS MÉLANGER LES TYPES sauf si MIXTE ou DEVOIR_CLASSIQUE ou DEVOIR_COMPLET est sélectionné.
+NE PAS MÉLANGER LES TYPES sauf si MIXTE est explicitement sélectionné.
 """
 
             prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d\'examens numéro 1 du système scolaire ivoirien.
@@ -1550,6 +1538,106 @@ Rédige maintenant le sujet COMPLET en te basant STRICTEMENT sur cette demande c
 {description}{type_sujet_inject}
 
 TOUT est rédigé intégralement. Total = /20. Adapte la matière, le niveau, le type d'examen et les exercices EXACTEMENT à la demande ci-dessus. Zéro "[à compléter]"."""
+
+        elif "Fiche de Cours" in service:
+            prompt = f"""Tu es un Professeur expert et pédagogue de haut niveau spécialisé dans la rédaction de fiches de cours complètes pour le système éducatif ivoirien (programme officiel MENET-FP).
+
+COMMANDE DU PROFESSEUR :
+{description}
+
+══════════════════════════════════════════════════════════════
+STRUCTURE OBLIGATOIRE DE LA FICHE DE COURS :
+══════════════════════════════════════════════════════════════
+
+# FICHE DE COURS — [TITRE EN MAJUSCULES]
+
+## INFORMATIONS GÉNÉRALES
+- **Matière :** [matière]  |  **Niveau :** [niveau]  |  **Durée :** [durée]
+- **Prérequis :** [notions déjà connues]
+- **Matériel :** [tableau, manuel, ardoise...]
+
+---
+
+## OBJECTIFS PÉDAGOGIQUES
+À la fin de cette leçon, l'élève doit être capable de :
+1. [Objectif 1 — verbe d'action précis]
+2. [Objectif 2]
+3. [Objectif 3]
+
+---
+
+## PLAN DE LA LEÇON
+I. [Partie 1]
+   A. [Sous-partie]  B. [Sous-partie]
+II. [Partie 2]
+   A. [Sous-partie]  B. [Sous-partie]
+III. [Partie 3 si nécessaire]
+
+---
+
+## DÉVELOPPEMENT COMPLET DU COURS
+
+### I. [TITRE PARTIE 1]
+
+**A. [Sous-titre]**
+[Contenu rédigé en paragraphes clairs, adaptés au niveau. Définitions, explications détaillées.]
+
+> **Définition :** [Terme clé] : [définition précise]
+
+**Exemple ivoirien :**
+[Exemple concret tiré du quotidien ivoirien ou africain]
+
+**B. [Sous-titre]**
+[Contenu complet...]
+
+### II. [TITRE PARTIE 2]
+[Contenu complet développé...]
+
+### III. [TITRE PARTIE 3 si applicable]
+[Contenu complet...]
+
+---
+
+## SYNTHÈSE — À RETENIR
+[Points clés absolus à mémoriser — résumé dense]
+
+---
+
+## EXERCICES D'APPLICATION
+
+**Exercice 1 — Application directe** *(facile)*
+[Énoncé clair]
+
+**Exercice 2 — Approfondissement** *(moyen)*
+[Énoncé + sous-questions]
+
+**Exercice 3 — Problème ouvert** *(difficile)*
+[Problème contextualisé CI + barème]
+
+---
+
+## CORRIGÉ DES EXERCICES
+[Corrigé complet et détaillé]
+
+---
+
+## ÉVALUATION FORMATIVE (fin de séance)
+[2-3 questions courtes pour vérifier la compréhension]
+
+---
+
+## RÉFÉRENCES
+- Programme officiel MENET-FP — [niveau]
+- Manuel : [titre si connu]
+
+RÈGLES ABSOLUES :
+- Contenu 100% conforme au programme MENET-FP du niveau indiqué
+- Exemples et contextes EXCLUSIVEMENT ivoiriens et africains
+- Vocabulaire adapté à l'âge des élèves
+- AUCUN "[à compléter]" — TOUT est rédigé intégralement
+- Cours complet et directement utilisable en classe
+- Minimum 4-6 pages de contenu substantiel
+"""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -4048,6 +4136,7 @@ def main_dashboard():
     SERVICES_GEMINI = [
         "📝 Exposé scolaire complet IA",
         "📝 Création de Sujets & Examens",
+        "📖 Fiche de Cours Professeur IA",
         "👔 CV & Lettre de Motivation",
         "⚙️ Pack Office (Word/Excel/PPT)",
         "📊 Data & Excel Analytics",
@@ -4188,6 +4277,7 @@ def main_dashboard():
                     "📊 Data & Excel Analytics",
                     "📝 Exposé scolaire complet IA",
                     "📝 Création de Sujets & Examens",
+                    "📖 Fiche de Cours Professeur IA",
                     "⚙️ Pack Office (Word/Excel/PPT)",
                     "🎨 Création Design IA",
                     "📚 Affiches & Reçus",
@@ -4269,12 +4359,6 @@ def main_dashboard():
                 "🗺️ Étude de Document (texte, tableau, carte)": "ETUDE_DOCUMENT",
                 "🔬 Schéma à Légender / Identification": "SCHEMA",
                 "📝 Composition / Dissertation guidée": "DISSERTATION",
-                "📒 Devoir Classique (exercices variés complets)": "DEVOIR_CLASSIQUE",
-                "📓 Devoir Complet (devoir normal selon la matière)": "DEVOIR_COMPLET",
-                "🏋️ Test Lourd / Examen de Fond (sujet dense)": "TEST_LOURD",
-                "🎯 Évaluation Diagnostique (niveau + lacunes)": "EVAL_DIAGNOSTIC",
-                "⚡ Contrôle Rapide (15-20 min, essentiel)": "CONTROLE_RAPIDE",
-                "🔁 Révision Guidée (fiches + exercices corrigés)": "REVISION_GUIDEE",
             }
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
@@ -4293,17 +4377,17 @@ def main_dashboard():
                 "CALCUL": "**Exercices de Calcul sélectionnés** — Gemini rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
                 "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
                 "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Nova formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
-                "DEVOIR_CLASSIQUE": "**Devoir Classique sélectionné** — Nova générera un devoir complet avec plusieurs exercices variés (QCM + calcul + question ouverte + cas pratique), exactement comme un vrai devoir surveillé noté sur 20.",
-                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Nova générera un devoir 100% conforme à la matière : Maths→problèmes+calcul, Français→rédaction+grammaire+lecture, PC→lois+exercices, SVT→schéma+questions. Structure et barème exactement comme en classe.",
-                "TEST_LOURD": "**Test Lourd sélectionné** — Nova générera un examen de fond dense et complet (2h à 4h), couvrant tout le programme, exercices longs et complexes, barème détaillé.",
-                "EVAL_DIAGNOSTIC": "**Évaluation Diagnostique sélectionnée** — Nova générera un test progressif du simple au complexe pour mesurer le niveau exact et identifier les lacunes.",
-                "CONTROLE_RAPIDE": "**Contrôle Rapide sélectionné** — Nova générera un contrôle court (15-20 min) sur l'essentiel du chapitre.",
-                "REVISION_GUIDEE": "**Révision Guidée sélectionnée** — Nova générera des fiches de révision + exercices corrigés progressifs pour préparer un examen.",
+                "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
         st.markdown("#### 📝 Spécifications de la mission")
+
+        # Initialisations (Streamlit re-évalue à chaque run)
+        _niveau_val     = ""
+        _matiere_val    = ""
+        _fc_niveau_val  = ""
+        _fc_matiere_val = ""
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
@@ -4456,6 +4540,132 @@ INSTRUCTIONS NOVA EXAM :
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
+        elif "Fiche de Cours" in service:
+            # ── FORMULAIRE STRUCTURÉ FICHE DE COURS PROFESSEUR ────────────────
+            st.markdown("""
+            <div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.35);
+                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+                <span style="color:#9b59b6;font-weight:700;">📖 Remplissez les champs — Nova va générer une fiche de cours complète utilisable directement en classe</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                fc_niveau = st.selectbox("🎓 Niveau de la classe *", [
+                    "── PRIMAIRE ──", "CP1","CP2","CE1","CE2","CM1","CM2",
+                    "── COLLÈGE ──", "6ème","5ème","4ème","3ème",
+                    "── LYCÉE ──", "2nde",
+                    "1ère - Série A1","1ère - Série A2","1ère - Série B",
+                    "1ère - Série C","1ère - Série D","1ère - Série E",
+                    "Terminale - Série A1","Terminale - Série A2","Terminale - Série B",
+                    "Terminale - Série C","Terminale - Série D","Terminale - Série E",
+                    "── UNIVERSITÉ / BTS ──",
+                    "Licence 1 (L1)","Licence 2 (L2)","Licence 3 (L3)",
+                    "Master 1 (M1)","Master 2 (M2)",
+                    "BTS 1ère année","BTS 2ème année",
+                ], index=0, key="fc_niveau")
+                fc_matiere = st.selectbox("📚 Matière *", [
+                    "── TOUTES MATIÈRES ──",
+                    "Français / Lettres","Mathématiques","Sciences Physiques (PC)","SVT / Biologie",
+                    "Histoire-Géographie","Économie / Gestion","Comptabilité","Philosophie",
+                    "EDHC / Éducation Civique","Anglais (LV1)","Espagnol (LV2)","Allemand (LV2)",
+                    "Informatique / TIC","Technologie industrielle","EPS","Arts Plastiques",
+                    "Agronomie / Agriculture","Droit","Économie politique",
+                    "── PRIMAIRE ──",
+                    "Lecture / Écriture (primaire)","Calcul (primaire)",
+                    "Sciences d'Éveil (primaire)","Histoire-Géo (primaire)","ECM (primaire)",
+                    "Autre matière (préciser dans les notes)",
+                ], index=0, key="fc_matiere")
+            with col_b:
+                fc_duree = st.selectbox("⏱️ Durée de la séance *", [
+                    "30 minutes","45 minutes","1 heure",
+                    "1 heure 30","2 heures","3 heures",
+                    "Cours complet (plusieurs séances)",
+                ], index=2, key="fc_duree")
+                fc_type = st.selectbox("📄 Type de document *", [
+                    "Fiche de cours complète (objectifs + développement + exercices)",
+                    "Cours magistral (contenu seul, très détaillé)",
+                    "Plan de leçon (structure + timing + activités)",
+                    "Fiche de révision élève (synthèse dense)",
+                    "Cours + Exercices corrigés",
+                    "Fiche méthode (procédure étape par étape)",
+                    "Séquence pédagogique (plusieurs séances liées)",
+                ], index=0, key="fc_type")
+
+            col_c, col_d = st.columns(2)
+            with col_c:
+                fc_chapitre = st.text_input(
+                    "📖 Titre du chapitre / Notion *",
+                    placeholder="Ex: Les fractions, La photosynthèse, La Première Guerre Mondiale...",
+                    key="fc_chapitre"
+                )
+            with col_d:
+                fc_etablissement = st.text_input(
+                    "🏢 Établissement (optionnel)",
+                    placeholder="Ex: Lycée Moderne de Cocody, CEG Treichville...",
+                    key="fc_etablissement"
+                )
+
+            fc_inclure = st.multiselect("✨ Éléments à inclure", [
+                "Objectifs pédagogiques détaillés",
+                "Prérequis des élèves",
+                "Exercices d'application",
+                "Corrigé complet des exercices",
+                "Évaluation formative (fin de séance)",
+                "Résumé / Synthèse à retenir",
+                "Exemples contextualisés (Côte d'Ivoire)",
+                "Définitions des termes clés",
+                "Référence au manuel officiel MENET-FP",
+                "Tableau récapitulatif",
+                "Schéma ou illustration décrite",
+            ], default=[
+                "Objectifs pédagogiques détaillés",
+                "Exercices d'application",
+                "Corrigé complet des exercices",
+                "Exemples contextualisés (Côte d'Ivoire)",
+                "Définitions des termes clés",
+                "Résumé / Synthèse à retenir",
+            ], key="fc_inclure")
+
+            fc_notes = st.text_area(
+                "💬 Instructions supplémentaires (optionnel)",
+                height=70,
+                placeholder="Ex: Niveau très faible — simplifier le langage, Insister sur les formules, Inclure exemples en FCFA...",
+                key="fc_notes"
+            )
+
+            _fc_niveau_val  = fc_niveau  if not fc_niveau.startswith("──")  else ""
+            _fc_matiere_val = fc_matiere if not fc_matiere.startswith("──") else ""
+            _fc_inclure_str = ", ".join(fc_inclure) if fc_inclure else "Éléments standards"
+
+            prompt = f"""FICHE DE COMMANDE NOVA COURS — INFORMATIONS DU PROFESSEUR :
+
+🎓 NIVEAU / CLASSE     : {_fc_niveau_val if _fc_niveau_val else "Non précisé"}
+📚 MATIÈRE             : {_fc_matiere_val if _fc_matiere_val else "Non précisée"}
+📖 CHAPITRE / NOTION   : {fc_chapitre.strip() if fc_chapitre.strip() else "Choisir un chapitre cohérent avec la matière et le niveau"}
+📄 TYPE DE DOCUMENT    : {fc_type}
+⏱️ DURÉE DE SÉANCE     : {fc_duree}
+🏢 ÉTABLISSEMENT       : {fc_etablissement.strip() if fc_etablissement.strip() else "Non précisé"}
+✨ ÉLÉMENTS À INCLURE  : {_fc_inclure_str}
+💬 INSTRUCTIONS SUPP.  : {fc_notes.strip() if fc_notes.strip() else "Aucune"}
+
+INSTRUCTIONS NOVA :
+- Programme officiel MENET-FP niveau "{_fc_niveau_val}" — contenu 100% conforme
+- Vocabulaire et complexité adaptés à l'âge des élèves
+- Exemples ivoiriens et africains en priorité
+- Document complet et directement utilisable en classe
+- TOUT rédigé intégralement — aucun "[à compléter]"
+"""
+            if _fc_niveau_val and _fc_matiere_val and fc_chapitre.strip():
+                st.success(f"✅ Fiche prête : **{fc_chapitre.strip()[:45]}** · **{_fc_matiere_val}** · **{_fc_niveau_val}**")
+            elif _fc_niveau_val and _fc_matiere_val:
+                st.info("💡 Pensez à préciser le titre du chapitre pour un meilleur résultat")
+            else:
+                if not _fc_niveau_val or fc_niveau.startswith("──"):
+                    st.warning("⚠️ Sélectionnez un niveau scolaire précis")
+                if not _fc_matiere_val or fc_matiere.startswith("──"):
+                    st.warning("⚠️ Sélectionnez une matière précise")
+
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
@@ -4519,6 +4729,11 @@ INSTRUCTIONS NOVA EXAM :
             if not _niveau_val or _niveau_val.startswith("──"):
                 champs_manquants.append("Niveau scolaire")
             if not _matiere_val or _matiere_val.startswith("──"):
+                champs_manquants.append("Matière")
+        elif "Fiche de Cours" in service:
+            if not _fc_niveau_val or fc_niveau.startswith("──"):
+                champs_manquants.append("Niveau scolaire")
+            if not _fc_matiere_val or fc_matiere.startswith("──"):
                 champs_manquants.append("Matière")
         else:
             # Pour les autres services : vérifier le champ texte libre
@@ -4610,12 +4825,6 @@ INSTRUCTIONS NOVA EXAM :
                                     "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support + questions d'exploitation)",
                                     "SCHEMA": "SCHÉMA À LÉGENDER (description numérotée + termes à placer + corrigé)",
                                     "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet + méthode + plan guidé)",
-                                    "DEVOIR_CLASSIQUE": "DEVOIR CLASSIQUE COMPLET (exercices variés : QCM + calcul + question ouverte + cas pratique, noté /20)",
-                                    "DEVOIR_COMPLET": "DEVOIR COMPLET SELON LA MATIÈRE (Maths→problèmes+calcul, Français→rédaction+grammaire, PC→lois+calcul, SVT→schéma+questions — vrai devoir de classe)",
-                                    "TEST_LOURD": "TEST LOURD / EXAMEN DE FOND (sujet dense 2h-4h, tout le programme, exercices complexes)",
-                                    "EVAL_DIAGNOSTIC": "ÉVALUATION DIAGNOSTIQUE (questions progressives du facile au difficile pour évaluer le niveau)",
-                                    "CONTROLE_RAPIDE": "CONTRÔLE RAPIDE (15-20 min, questions ciblées sur l'essentiel)",
-                                    "REVISION_GUIDEE": "RÉVISION GUIDÉE (fiches + exercices corrigés progressifs pour préparer un examen)",
                                 }
                                 label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
                                 prompt_enrichi = f"""{prompt}
