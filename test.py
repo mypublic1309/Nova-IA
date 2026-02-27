@@ -2000,6 +2000,15 @@ def creer_docx(contenu, service, client_nom):
     from docx.oxml import OxmlElement
     import re
 
+    # Supprimer les caractères de contrôle interdits en XML (NULL, BEL, BS, VT, FF, etc.)
+    # Seuls \t (tab), \n (newline), \r (carriage return) sont autorisés
+    def sanitize_xml(texte):
+        if not texte:
+            return texte
+        return re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', texte)
+
+    contenu = sanitize_xml(contenu)
+
     doc = Document()
 
     # Supprimer le paragraphe vide créé automatiquement par python-docx
@@ -2387,6 +2396,9 @@ def creer_docx(contenu, service, client_nom):
         )
 
         def _run(text, sup=False, sub=False, bd=False, sz=None):
+            text = sanitize_xml(text)
+            if not text:
+                return None
             r = p.add_run(text)
             r.font.name  = "Arial"
             r.font.size  = Pt(sz if sz else (max(7, size - 2) if (sup or sub) else size))
