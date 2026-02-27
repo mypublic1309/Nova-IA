@@ -159,18 +159,25 @@ def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
             _ur.urlopen(_r, timeout=10)
         except Exception:
             pass
-        # Uploader le fichier (nom nettoyé pour éviter les erreurs Supabase)
+        # Uploader le fichier (uid + nom nettoyés pour éviter les erreurs Supabase)
+        uid_safe         = sanitize_nom_fichier(str(uid))
         fichier_nom_safe = sanitize_nom_fichier(fichier_nom)
-        chemin = f"fichiers_clients/{uid}_{req_id}_{fichier_nom_safe}"
+        chemin           = f"fichiers_clients/{uid_safe}_{req_id}_{fichier_nom_safe}"
+        # URL-encoder le chemin pour éviter les 400 sur caractères résiduels
+        from urllib.parse import quote as _quote
+        chemin_encode = _quote(chemin, safe="/")
+        # S'assurer que les données sont bien en bytes
+        if hasattr(fichier_bytes, "read"):
+            fichier_bytes = fichier_bytes.read()
         _ru = _ur.Request(
-            f"{sb_url}/storage/v1/object/{BUCKET}/{chemin}",
+            f"{sb_url}/storage/v1/object/{BUCKET}/{chemin_encode}",
             data=fichier_bytes,
             headers={"apikey": sb_key, "Authorization": f"Bearer {sb_key}",
                      "Content-Type": "application/octet-stream", "x-upsert": "true"},
             method="POST"
         )
         _ur.urlopen(_ru, timeout=30)
-        return f"{sb_url}/storage/v1/object/public/{BUCKET}/{chemin}"
+        return f"{sb_url}/storage/v1/object/public/{BUCKET}/{chemin_encode}"
     except Exception as e:
         return f"ERREUR_UPLOAD:{e}"
 
