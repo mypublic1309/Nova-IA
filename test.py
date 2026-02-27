@@ -76,6 +76,7 @@ def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan
             "uid": uid, "whatsapp": whatsapp,
             "email": email, "joined": str(datetime.now()),
             "premium": premium, "premium_plan": premium_plan, "premium_expiry": premium_expiry,
+            "gen_used": 0, "gen_date": None,
         }).execute()
         return True
     except Exception as e:
@@ -844,6 +845,12 @@ IMPÉRATIFS ABSOLUS :
                     "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support : texte/tableau/carte + questions d'identification, analyse, interprétation)",
                     "SCHEMA": "SCHÉMA À LÉGENDER (schéma décrit textuellement avec numéros + termes à placer + corrigé légendes)",
                     "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet formulé + consignes de méthode + plan détaillé guidé)",
+                    "DEVOIR_CLASSIQUE": "DEVOIR CLASSIQUE COMPLET (plusieurs exercices variés : QCM + calcul + question ouverte + cas pratique, noté /20, structure de vrai devoir surveillé)",
+                    "DEVOIR_COMPLET": "DEVOIR COMPLET SELON LA MATIÈRE (exercices 100% conformes : Maths→problèmes+calcul, Français→rédaction+grammaire+lecture, PC→lois+calcul, SVT→schéma+questions — structure et barème d'un vrai devoir de classe)",
+                    "TEST_LOURD": "TEST LOURD / EXAMEN DE FOND (sujet dense 2h-4h, tout le programme, exercices complexes, barème détaillé, niveau examen officiel)",
+                    "EVAL_DIAGNOSTIC": "ÉVALUATION DIAGNOSTIQUE (questions progressives pour mesurer le niveau exact et identifier les lacunes de l'élève)",
+                    "CONTROLE_RAPIDE": "CONTRÔLE RAPIDE (15-20 min max, questions ciblées sur l'essentiel du chapitre)",
+                    "REVISION_GUIDEE": "RÉVISION GUIDÉE (fiches de révision + exercices corrigés progressifs pour préparer un examen)",
                 }
                 label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
                 type_sujet_inject = f"""
@@ -862,8 +869,14 @@ RÈGLE ABSOLUE : Tu dois générer UN SEUL TYPE D'EXERCICE correspondant EXACTEM
 - Si ETUDE_DOCUMENT → Document support + questions d'exploitation UNIQUEMENT
 - Si SCHEMA → Description du schéma numéroté + légendes UNIQUEMENT
 - Si DISSERTATION → Sujet + consignes de méthode + plan guidé UNIQUEMENT
+- Si DEVOIR_CLASSIQUE → Devoir multi-exercices variés (QCM + calcul + ouvertes + cas pratique), noté /20
+- Si DEVOIR_COMPLET → Exercices 100% conformes à la matière (Maths→problèmes, Français→rédaction+grammaire, PC→lois, SVT→schéma) — respecter les vrais types d'exercices de la discipline
+- Si TEST_LOURD → Examen de fond dense 2h-4h, tout le programme, exercices complexes
+- Si EVAL_DIAGNOSTIC → Questions progressives du facile au difficile pour évaluer le niveau
+- Si CONTROLE_RAPIDE → Contrôle court 15-20 min sur l'essentiel
+- Si REVISION_GUIDEE → Fiches de révision + exercices corrigés progressifs
 
-NE PAS MÉLANGER LES TYPES sauf si MIXTE est explicitement sélectionné.
+NE PAS MÉLANGER LES TYPES sauf si MIXTE ou DEVOIR_CLASSIQUE ou DEVOIR_COMPLET est sélectionné.
 """
 
             prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d\'examens numéro 1 du système scolaire ivoirien.
@@ -4256,6 +4269,12 @@ def main_dashboard():
                 "🗺️ Étude de Document (texte, tableau, carte)": "ETUDE_DOCUMENT",
                 "🔬 Schéma à Légender / Identification": "SCHEMA",
                 "📝 Composition / Dissertation guidée": "DISSERTATION",
+                "📒 Devoir Classique (exercices variés complets)": "DEVOIR_CLASSIQUE",
+                "📓 Devoir Complet (devoir normal selon la matière)": "DEVOIR_COMPLET",
+                "🏋️ Test Lourd / Examen de Fond (sujet dense)": "TEST_LOURD",
+                "🎯 Évaluation Diagnostique (niveau + lacunes)": "EVAL_DIAGNOSTIC",
+                "⚡ Contrôle Rapide (15-20 min, essentiel)": "CONTROLE_RAPIDE",
+                "🔁 Révision Guidée (fiches + exercices corrigés)": "REVISION_GUIDEE",
             }
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
@@ -4274,7 +4293,13 @@ def main_dashboard():
                 "CALCUL": "**Exercices de Calcul sélectionnés** — Gemini rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
                 "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
                 "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "DISSERTATION": "**Dissertation guidée sélectionnée** — Nova formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "DEVOIR_CLASSIQUE": "**Devoir Classique sélectionné** — Nova générera un devoir complet avec plusieurs exercices variés (QCM + calcul + question ouverte + cas pratique), exactement comme un vrai devoir surveillé noté sur 20.",
+                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Nova générera un devoir 100% conforme à la matière : Maths→problèmes+calcul, Français→rédaction+grammaire+lecture, PC→lois+exercices, SVT→schéma+questions. Structure et barème exactement comme en classe.",
+                "TEST_LOURD": "**Test Lourd sélectionné** — Nova générera un examen de fond dense et complet (2h à 4h), couvrant tout le programme, exercices longs et complexes, barème détaillé.",
+                "EVAL_DIAGNOSTIC": "**Évaluation Diagnostique sélectionnée** — Nova générera un test progressif du simple au complexe pour mesurer le niveau exact et identifier les lacunes.",
+                "CONTROLE_RAPIDE": "**Contrôle Rapide sélectionné** — Nova générera un contrôle court (15-20 min) sur l'essentiel du chapitre.",
+                "REVISION_GUIDEE": "**Révision Guidée sélectionnée** — Nova générera des fiches de révision + exercices corrigés progressifs pour préparer un examen.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
@@ -4585,6 +4610,12 @@ INSTRUCTIONS NOVA EXAM :
                                     "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support + questions d'exploitation)",
                                     "SCHEMA": "SCHÉMA À LÉGENDER (description numérotée + termes à placer + corrigé)",
                                     "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet + méthode + plan guidé)",
+                                    "DEVOIR_CLASSIQUE": "DEVOIR CLASSIQUE COMPLET (exercices variés : QCM + calcul + question ouverte + cas pratique, noté /20)",
+                                    "DEVOIR_COMPLET": "DEVOIR COMPLET SELON LA MATIÈRE (Maths→problèmes+calcul, Français→rédaction+grammaire, PC→lois+calcul, SVT→schéma+questions — vrai devoir de classe)",
+                                    "TEST_LOURD": "TEST LOURD / EXAMEN DE FOND (sujet dense 2h-4h, tout le programme, exercices complexes)",
+                                    "EVAL_DIAGNOSTIC": "ÉVALUATION DIAGNOSTIQUE (questions progressives du facile au difficile pour évaluer le niveau)",
+                                    "CONTROLE_RAPIDE": "CONTRÔLE RAPIDE (15-20 min, questions ciblées sur l'essentiel)",
+                                    "REVISION_GUIDEE": "RÉVISION GUIDÉE (fiches + exercices corrigés progressifs pour préparer un examen)",
                                 }
                                 label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
                                 prompt_enrichi = f"""{prompt}
