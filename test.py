@@ -3,6 +3,8 @@ import json
 import os
 import hashlib
 import time
+import requests
+import urllib.parse
 from datetime import datetime, timedelta
 from io import BytesIO
 import streamlit.components.v1 as components
@@ -3767,23 +3769,49 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Bouton Google OAuth (redirect direct) ─────────────────────────────
+    # ── Bouton Google OAuth (Authorization Code Flow) ─────────────────────────────
     try:
-        google_client_id = st.secrets["GOOGLE_CLIENT_ID"]
+        google_client_id     = st.secrets["GOOGLE_CLIENT_ID"]
+        google_client_secret = st.secrets["GOOGLE_CLIENT_SECRET"]
     except Exception:
-        google_client_id = None
+        google_client_id     = None
+        google_client_secret = None
 
-    if google_client_id:
-        import urllib.parse
-        # URL de base de l'app (sans query params)
-        app_url = "https://espace-partage-8.streamlit.app"
-        redirect_uri = app_url
-        # Construire l'URL OAuth Google
+    APP_URL = "https://espace-partage-8.streamlit.app"
+
+    # Traiter le retour OAuth (code dans query params)
+    oauth_code = st.query_params.get("code")
+    if oauth_code and not st.session_state.get("current_user"):
+        try:
+            token_resp = requests.post("https://oauth2.googleapis.com/token", data={
+                "code": oauth_code,
+                "client_id": google_client_id,
+                "client_secret": google_client_secret,
+                "redirect_uri": APP_URL,
+                "grant_type": "authorization_code"
+            })
+            token_data = token_resp.json()
+            access_token = token_data.get("access_token")
+            if access_token:
+                userinfo = requests.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {access_token}"}
+                ).json()
+                email = userinfo.get("email")
+                if email:
+                    st.query_params.clear()
+                    if connecter_via_google(email):
+                        st.rerun()
+        except Exception as e:
+            st.query_params.clear()
+
+    if google_client_id and google_client_secret:
         oauth_params = urllib.parse.urlencode({
             "client_id": google_client_id,
-            "redirect_uri": redirect_uri,
-            "response_type": "token",
+            "redirect_uri": APP_URL,
+            "response_type": "code",
             "scope": "email profile",
+            "access_type": "online",
             "prompt": "select_account"
         })
         oauth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{oauth_params}"
@@ -3801,7 +3829,7 @@ def show_auth_page():
         .nova-google-link:hover {{
             background:rgba(255,255,255,0.14) !important; border-color:rgba(255,255,255,0.5);
             box-shadow:0 0 22px rgba(255,255,255,0.1); transform:translateY(-2px);
-            color:#fff !important; text-decoration:none !important;
+            color:#fff !important;
         }}
         .g-logo-inline{{ width:20px; height:20px; vertical-align:middle; }}
         .or-line{{ display:flex; align-items:center; gap:10px; margin:12px 0;
@@ -3819,35 +3847,6 @@ def show_auth_page():
         </a>
         <div class="or-line"><hr>&nbsp;ou&nbsp;<hr></div>
         """, unsafe_allow_html=True)
-
-        # Récupérer le token depuis le fragment d'URL (#access_token=...)
-        # Le fragment arrive via JS car Python ne peut pas le lire directement
-        components.html("""
-        <script>
-        (function() {
-            var hash = window.location.hash;
-            if (hash && hash.includes('access_token=')) {
-                var params = new URLSearchParams(hash.substring(1));
-                var token = params.get('access_token');
-                if (token) {
-                    // Récupérer l'email via l'API Google
-                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                        headers: { 'Authorization': 'Bearer ' + token }
-                    }).then(function(r) { return r.json(); })
-                    .then(function(info) {
-                        if (info.email) {
-                            // Nettoyer le fragment et rediriger avec google_email
-                            var url = new URL(window.location.href);
-                            url.hash = '';
-                            url.searchParams.set('google_email', info.email);
-                            window.location.replace(url.toString());
-                        }
-                    });
-                }
-            }
-        })();
-        </script>
-        """, height=0)
 
     col1, col2 = st.columns(2, gap="large")
 
