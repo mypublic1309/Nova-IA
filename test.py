@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 DATA_FILE = "data_nova_v3.json"
-ADMIN_CODE = "02110240"
+ADMIN_CODE = st.secrets.get("ADMIN_CODE", "02110240")
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -120,6 +120,24 @@ def save_lien(uid, name, url, date):
         }).execute()
     except Exception as e:
         st.error(f"Erreur sauvegarde lien : {e}")
+
+def delete_all_liens(uid):
+    try:
+        supabase.table("liens").delete().eq("uid", uid).execute()
+    except Exception as e:
+        st.error(f"Erreur suppression historique : {e}")
+
+def save_refus(uid, service, message):
+    """Sauvegarde un refus de mission dans les livrables du client."""
+    try:
+        supabase.table("liens").insert({
+            "uid": uid,
+            "name": service,
+            "url": f"__refus__{message}",
+            "date": datetime.now().strftime("%d/%m/%Y")
+        }).execute()
+    except Exception as e:
+        st.error(f"Erreur sauvegarde refus : {e}")
 
 def sanitize_nom_fichier(nom):
     """Nettoie un nom de fichier pour le rendre compatible avec Supabase Storage.
@@ -702,6 +720,7 @@ Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQU
 - Le SOMMAIRE = 1 PAGE PLEINE : ajoute ###ESPACE### entre chaque entrée pour remplir toute la page
 - JAMAIS de titre de section (# PAGE DE GARDE, # SOMMAIRE...) — commence directement avec le contenu
 - INTERDIT ABSOLU dans PAGE DE GARDE et SOMMAIRE : ne JAMAIS utiliser ────, ════, ---, ━━━
+- INTERDIT ABSOLU : Un tableau ne doit JAMAIS chevaucher deux pages. Si un tableau risque de dépasser la fin d'une page, insère un ---SAUT_DE_PAGE--- AVANT le tableau pour qu'il commence sur une nouvelle page. Un tableau commence et finit TOUJOURS sur la MÊME page.
 - Le titre de l'exposé DOIT utiliser le marqueur ###TITRE_ROUGE### pour être affiché en grand et en rouge
 
 ###ESPACE###
@@ -990,10 +1009,12 @@ MOTEUR DE FORMULES — 4 MODES :
   "Résistance équivalente : R_{{1}} + R_{{2}} + R_{{3}} = 80 Ω"
   "Discriminant : Δ = b^{{2}} - 4ac = 25 - 24 = 1"
 
-④ LaTeX $...$ inline — converti automatiquement :
-  "$\frac{{U}}{{R}} = I$" → I = U/R   |   "$E = mc^{{2}}$" → E = mc^{{2}}
-  "$\omega = 2\pi f$" → ω = 2πf   |   "$\sqrt{{b^{{2}}-4ac}}$" → √(b^{{2}}-4ac)
-  "$\vec{{AB}} \perp \vec{{CD}}$" → AB⃗ ⊥ CD⃗
+④ ⛔ LaTeX $...$ et $$...$$ — ABSOLUMENT INTERDIT :
+  NE JAMAIS ecrire LaTeX avec \frac ou \text ou \left ou \right
+  A LA PLACE, utilise TOUJOURS ###FORMULE### ou la notation Nova ^{{}} _{{}}
+  CORRECT   : ###FORMULE### Cm = m/V
+  CORRECT   : ###FORMULE### x_{{1,2}} = (-b ± √(b^{{2}}-4ac)) / (2a)
+  INCORRECT : $$Cm = \frac{{m}}{{V}}$$  <- JAMAIS JAMAIS JAMAIS
 
 SYMBOLES DIRECTEMENT UTILISABLES (copier-coller dans le texte) :
   Grecs min  : α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω
@@ -1049,6 +1070,11 @@ FORMULAIRE CHIMIE (prêt à l'emploi) :
     Zn + 2HCl → ZnCl_{{2}} + H_{{2}}
 
 INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
+INTERDIT ABSOLU : notation avec accolades vides comme _() ^() __ (indices/exposants vides)
+INTERDIT ABSOLU : notation _(x)(y) imbriquée — ecris directement les valeurs
+FORMULE CORRECTE : ###FORMULE### R = U/I = 50/0,5 = 100 Ohm
+FORMULE INCORRECTE : R_eq = (U_eq)/(I_eq) = (50)/(0,5) avec indices vides <- JAMAIS
+INTERDIT ABSOLU : Tableau à cheval sur deux pages. Si un tableau est long, place un ---SAUT_DE_PAGE--- AVANT lui. Un tableau doit TOUJOURS commencer et se terminer sur la MÊME page.
 
 SECTION 2 — MOTEUR DE DÉTECTION AUTOMATIQUE NOVA EXAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1926,6 +1952,27 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                 with _ur.urlopen(req, timeout=60) as response:
                     result = json.loads(response.read().decode("utf-8"))
                     texte = result["candidates"][0]["content"]["parts"][0]["text"]
+                    # Post-traitement : convertir LaTeX residuel en notation Nova
+                    import re as _repost
+                    def _conv_latex(expr):
+                        expr = _repost.sub(r'\\?(?:d|t|text)?frac\{([^}]+)\}\{([^}]+)\}', r'()/()', expr)
+                        expr = _repost.sub(r'\\?sqrt\{([^}]+)\}', r'sqrt()', expr)
+                        expr = _repost.sub(r'\\?text\{([^}]+)\}', r'', expr)
+                        expr = _repost.sub(r'\\?(?:left|right)\s*[()\[\]{}|]', '', expr)
+                        expr = _repost.sub(r'\\?cdot', 'x', expr)
+                        expr = _repost.sub(r'\\?times', 'x', expr)
+                        expr = _repost.sub(r'\\?pm', '+-', expr)
+                        expr = _repost.sub(r'\\?[a-zA-Z]+', '', expr)
+                        return expr.strip()
+                    def _dd_to_formule(m):
+                        return "###FORMULE### " + _conv_latex(m.group(1).strip())
+                    texte = _repost.sub(r'[$][$]([^$]+)[$][$]', _dd_to_formule, texte)
+                    def _d_inline(m):
+                        expr = m.group(1).strip()
+                        if "\\" in expr:
+                            return _conv_latex(expr)
+                        return expr
+                    texte = _repost.sub(r'[$]([^$\n]+)[$]', _d_inline, texte)
                     return texte
             except urllib.error.HTTPError as e:
                 try:
@@ -1956,6 +2003,15 @@ def creer_docx(contenu, service, client_nom):
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
     import re
+
+    # Supprimer les caractères de contrôle interdits en XML (NULL, BEL, BS, VT, FF, etc.)
+    # Seuls \t (tab), \n (newline), \r (carriage return) sont autorisés
+    def sanitize_xml(texte):
+        if not texte:
+            return texte
+        return re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', texte)
+
+    contenu = sanitize_xml(contenu)
 
     doc = Document()
 
@@ -2278,6 +2334,14 @@ def creer_docx(contenu, service, client_nom):
 
     def nettoyer_latex_complet(texte):
         """Convertit LaTeX complet + notation Nova ^{} _{} en texte normalisé."""
+
+        # 0. Pré-nettoyage des formules malformées produites par Gemini
+        # ex: __{} __{}  _{  }  {50 } {0,5 }
+        texte = _re.sub(r'_{2,}\{\s*\}', '',  texte)   # __{}  ___{}  → supprimé
+        texte = _re.sub(r'\^{2,}\{\s*\}', '', texte)   # ^^{}         → supprimé
+        texte = _re.sub(r'[_^]\{\s*\}',   '',  texte)  # _{}   ^{}    → supprimé
+        texte = _re.sub(r'_{2,}([^{])',  r'_\1', texte)  # __x   → _x
+        texte = _re.sub(r'\^{2,}([^{])', r'^\1', texte)  # ^^x   → ^x
         # 1. Blocs $$...$$ et formules $...$
         def conv_dollar(m):
             f = m.group(1)
@@ -2344,6 +2408,9 @@ def creer_docx(contenu, service, client_nom):
         )
 
         def _run(text, sup=False, sub=False, bd=False, sz=None):
+            text = sanitize_xml(text)
+            if not text:
+                return None
             r = p.add_run(text)
             r.font.name  = "Arial"
             r.font.size  = Pt(sz if sz else (max(7, size - 2) if (sup or sub) else size))
@@ -2607,12 +2674,14 @@ def creer_docx(contenu, service, client_nom):
                         para.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_idx in [0, n_cols-1] else WD_ALIGN_PARAGRAPH.LEFT
                         para.paragraph_format.space_before = Pt(2)
                         para.paragraph_format.space_after = Pt(2)
-                        run = para.add_run(cell_text)
-                        run.font.name = "Arial"
-                        run.font.size = Pt(10)
-                        run.bold = is_header
-                        if is_header:
-                            run.font.color.rgb = RC(0xFF, 0xFF, 0xFF)
+                        # Nettoyer le LaTeX dans les cellules (ex: $\text{kg}$, $m^3$...)
+                        cell_text_clean = nettoyer_latex_complet(cell_text)
+                        ajouter_formule_dans_run(
+                            para, cell_text_clean,
+                            bold=is_header,
+                            size=10,
+                            color=(0xFF, 0xFF, 0xFF) if is_header else None
+                        )
 
                 doc.add_paragraph("")
             continue
@@ -2946,7 +3015,7 @@ def creer_xlsx(description, client_nom):
     return buf
 
 
-WHATSAPP_NUMBER = "2250171542505"
+WHATSAPP_NUMBER = st.secrets.get("WHATSAPP_NUMBER", "2250171542505")
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
 SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
@@ -4249,6 +4318,19 @@ def main_dashboard():
                 ],
                 "note": "Vous pouvez également joindre un fichier exemple via WhatsApp après la soumission."
             },
+            "📖 Fiche de Cours Professeur IA": {
+                "icone": "📖",
+                "titre": "Fiche de Cours Professeur IA",
+                "intro": "Pour générer une fiche de cours complète et professionnelle, veuillez préciser :",
+                "items": [
+                    ("📚", "La matière ou discipline (Maths, SVT, Histoire, Français...)"),
+                    ("🎓", "Le niveau scolaire (CP, 6ème, Terminale, BTS...)"),
+                    ("🎯", "Le titre exact de la leçon ou du chapitre"),
+                    ("⏱️", "La durée de la séance prévue"),
+                    ("🏫", "L'établissement ou le contexte (public, privé, spécialité...)"),
+                ],
+                "note": "Plus le titre de la leçon est précis, plus la fiche sera exploitable directement en classe."
+            },
             "⚙️ Pack Office (Word/Excel/PPT)": {
                 "icone": "⚙️",
                 "titre": "Pack Office — Word / Excel / PowerPoint",
@@ -4334,6 +4416,8 @@ def main_dashboard():
                 "Type d'intervention",
                 [
                     "📊 Data & Excel Analytics",
+                    "📖 Fiche de Cours Professeur IA",
+                    "📎 Modifier mon Fichier (Word / Excel / PPT)",
                     "📝 Exposé scolaire complet IA",
                     "📝 Création de Sujets & Examens",
                     "⚙️ Pack Office (Word/Excel/PPT)",
@@ -4341,8 +4425,6 @@ def main_dashboard():
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
                     "📄 Conversion & Fichier PDF",
-                    "📖 Fiche de Cours Professeur IA",
-                    "📎 Modifier mon Fichier (Word / Excel / PPT)"
                 ]
             )
         with col_wa:
@@ -5060,8 +5142,6 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         </script>
                     """, height=0)
 
-                st.balloons()
-                time.sleep(20)
                 st.rerun()
             else:
                 st.session_state["view"] = "auth"
@@ -5097,8 +5177,29 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                 st.divider()
 
             if user_links:
+                col_titre, col_vider = st.columns([3, 1])
+                with col_titre:
+                    st.markdown("#### 📁 Mes livrables")
+                with col_vider:
+                    if st.button("🗑️ Vider l'historique", key="vider_historique", use_container_width=True):
+                        delete_all_liens(user)
+                        st.success("Historique vidé !")
+                        st.rerun()
+
                 for link in user_links:
-                    if link["url"].startswith("__local__"):
+                    if link["url"].startswith("__refus__"):
+                        msg_refus = link["url"].replace("__refus__", "")
+                        st.markdown(f"""
+                        <div class="file-card" style="border-color:rgba(231,76,60,0.5); background:rgba(231,76,60,0.05);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <h3 style="color:#e74c3c;margin:0;">❌ Mission refusée — {link['name']}</h3>
+                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Le {link.get('date','')}</p>
+                                    <p style="color:#eee;font-size:.9rem;margin-top:8px;">{msg_refus}</p>
+                                </div>
+                            </div>
+                        </div>""", unsafe_allow_html=True)
+                    elif link["url"].startswith("__local__"):
                         st.markdown(f"""
                         <div class="file-card" style="border-color:rgba(255,215,0,.5);">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -5240,7 +5341,12 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
 
                     col_rejet, col_recu, col_succes = st.columns(3)
                     with col_rejet:
-                        st.markdown(f'<a href="{wa_url(client_wa, msg_rejet)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.5); color:#e74c3c; font-weight:700; text-decoration:none;">❌ Rejeter</a>', unsafe_allow_html=True)
+                        if st.button("❌ Rejeter", key=f"rej_{i}", use_container_width=True):
+                            save_refus(client_nom, service, msg_rejet)
+                            delete_demande(req["id"])
+                            st.session_state["db"] = load_db()
+                            st.success(f"Mission refusée — notification envoyée dans les livrables de {client_nom}.")
+                            st.rerun()
                     with col_recu:
                         st.markdown(f'<a href="{wa_url(client_wa, msg_recu)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
                     with col_succes:
@@ -5292,39 +5398,37 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             with st.expander("👁️ Aperçu du contenu généré", expanded=False):
                                 st.markdown(result["contenu"])
 
-                            try:
-                                SERVICE_EXCEL = "📊 Data & Excel Analytics"
-                                if result["service"] == SERVICE_EXCEL:
-                                    buf = creer_xlsx(result.get("desc", ""), result["client"])
-                                    nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
-                                    st.download_button(
-                                        label="📥 TÉLÉCHARGER LE FICHIER EXCEL (.xlsx)",
-                                        data=buf,
-                                        file_name=nom_fichier,
-                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                        key=f"dl_{req_id}",
-                                        use_container_width=True
-                                    )
-                                    st.info("📊 Fichier Excel avec 3 feuilles : Saisie, Catégories, Tableau de Bord")
-                                else:
-                                    buf = creer_docx(result["contenu"], result["service"], result["client"])
-                                    nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
-                                    st.download_button(
-                                        label="📥 TÉLÉCHARGER LE DOCUMENT WORD (.docx)",
-                                        data=buf,
-                                        file_name=nom_fichier,
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key=f"dl_{req_id}",
-                                        use_container_width=True
-                                    )
-                            except Exception as e:
-                                st.error(f"Erreur génération fichier : {e}")
+                            if st.button("🚀 LIVRER DIRECTEMENT AU CLIENT", key=f"livrer_auto_{req_id}", use_container_width=True):
+                                try:
+                                    SERVICE_EXCEL = "📊 Data & Excel Analytics"
+                                    if result["service"] == SERVICE_EXCEL:
+                                        buf = creer_xlsx(result.get("desc", ""), result["client"])
+                                        nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
+                                        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    else:
+                                        buf = creer_docx(result["contenu"], result["service"], result["client"])
+                                        nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                        mime_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-                            st.info("💡 Télécharge → upload sur Google Drive → colle le lien ci-dessous pour livrer au client.")
+                                    with st.spinner("⬆️ Upload du fichier vers Supabase..."):
+                                        url_fichier = upload_fichier_client(client_nom, req_id, buf, nom_fichier)
+
+                                    if url_fichier.startswith("ERREUR"):
+                                        st.error(f"❌ Upload échoué : {url_fichier}")
+                                    else:
+                                        save_lien(client_nom, service, url_fichier, datetime.now().strftime("%d/%m/%Y"))
+                                        delete_demande(req["id"])
+                                        if req_id in st.session_state["gemini_results"]:
+                                            del st.session_state["gemini_results"][req_id]
+                                        st.session_state["db"] = load_db()
+                                        st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
+                                        st.rerun()
+                                except Exception as e:
+                                    st.error(f"Erreur livraison : {e}")
 
                     st.markdown("<br>", unsafe_allow_html=True)
-                    url_dl = st.text_input("🔗 Lien de livraison (Google Drive...)", key=f"url_{i}", placeholder="https://drive.google.com/...")
-                    if st.button("📦 LIVRER LA MISSION AU CLIENT", key=f"btn_{i}", use_container_width=True):
+                    url_dl = st.text_input("🔗 Lien de livraison manuel (optionnel)", key=f"url_{i}", placeholder="https://drive.google.com/...")
+                    if st.button("📦 LIVRER AVEC LIEN MANUEL", key=f"btn_{i}", use_container_width=True):
                         if url_dl:
                             save_lien(req['user'], req['service'], url_dl, datetime.now().strftime("%d/%m/%Y"))
                             delete_demande(req['id'])
