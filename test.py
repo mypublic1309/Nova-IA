@@ -121,6 +121,19 @@ def save_lien(uid, name, url, date):
     except Exception as e:
         st.error(f"Erreur sauvegarde lien : {e}")
 
+def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
+    """Upload le fichier client dans Supabase Storage et retourne l'URL publique."""
+    try:
+        chemin = f"fichiers_clients/{uid}_{req_id}_{fichier_nom}"
+        supabase.storage.from_("nova-ai").upload(
+            chemin, fichier_bytes,
+            {"content-type": "application/octet-stream", "x-upsert": "true"}
+        )
+        url = supabase.storage.from_("nova-ai").get_public_url(chemin)
+        return url
+    except Exception as e:
+        return f"ERREUR_UPLOAD:{e}"
+
 def save_db(data):
     pass
 
@@ -1538,106 +1551,6 @@ Rédige maintenant le sujet COMPLET en te basant STRICTEMENT sur cette demande c
 {description}{type_sujet_inject}
 
 TOUT est rédigé intégralement. Total = /20. Adapte la matière, le niveau, le type d'examen et les exercices EXACTEMENT à la demande ci-dessus. Zéro "[à compléter]"."""
-
-        elif "Fiche de Cours" in service:
-            prompt = f"""Tu es un Professeur expert et pédagogue de haut niveau spécialisé dans la rédaction de fiches de cours complètes pour le système éducatif ivoirien (programme officiel MENET-FP).
-
-COMMANDE DU PROFESSEUR :
-{description}
-
-══════════════════════════════════════════════════════════════
-STRUCTURE OBLIGATOIRE DE LA FICHE DE COURS :
-══════════════════════════════════════════════════════════════
-
-# FICHE DE COURS — [TITRE EN MAJUSCULES]
-
-## INFORMATIONS GÉNÉRALES
-- **Matière :** [matière]  |  **Niveau :** [niveau]  |  **Durée :** [durée]
-- **Prérequis :** [notions déjà connues]
-- **Matériel :** [tableau, manuel, ardoise...]
-
----
-
-## OBJECTIFS PÉDAGOGIQUES
-À la fin de cette leçon, l'élève doit être capable de :
-1. [Objectif 1 — verbe d'action précis]
-2. [Objectif 2]
-3. [Objectif 3]
-
----
-
-## PLAN DE LA LEÇON
-I. [Partie 1]
-   A. [Sous-partie]  B. [Sous-partie]
-II. [Partie 2]
-   A. [Sous-partie]  B. [Sous-partie]
-III. [Partie 3 si nécessaire]
-
----
-
-## DÉVELOPPEMENT COMPLET DU COURS
-
-### I. [TITRE PARTIE 1]
-
-**A. [Sous-titre]**
-[Contenu rédigé en paragraphes clairs, adaptés au niveau. Définitions, explications détaillées.]
-
-> **Définition :** [Terme clé] : [définition précise]
-
-**Exemple ivoirien :**
-[Exemple concret tiré du quotidien ivoirien ou africain]
-
-**B. [Sous-titre]**
-[Contenu complet...]
-
-### II. [TITRE PARTIE 2]
-[Contenu complet développé...]
-
-### III. [TITRE PARTIE 3 si applicable]
-[Contenu complet...]
-
----
-
-## SYNTHÈSE — À RETENIR
-[Points clés absolus à mémoriser — résumé dense]
-
----
-
-## EXERCICES D'APPLICATION
-
-**Exercice 1 — Application directe** *(facile)*
-[Énoncé clair]
-
-**Exercice 2 — Approfondissement** *(moyen)*
-[Énoncé + sous-questions]
-
-**Exercice 3 — Problème ouvert** *(difficile)*
-[Problème contextualisé CI + barème]
-
----
-
-## CORRIGÉ DES EXERCICES
-[Corrigé complet et détaillé]
-
----
-
-## ÉVALUATION FORMATIVE (fin de séance)
-[2-3 questions courtes pour vérifier la compréhension]
-
----
-
-## RÉFÉRENCES
-- Programme officiel MENET-FP — [niveau]
-- Manuel : [titre si connu]
-
-RÈGLES ABSOLUES :
-- Contenu 100% conforme au programme MENET-FP du niveau indiqué
-- Exemples et contextes EXCLUSIVEMENT ivoiriens et africains
-- Vocabulaire adapté à l'âge des élèves
-- AUCUN "[à compléter]" — TOUT est rédigé intégralement
-- Cours complet et directement utilisable en classe
-- Minimum 4-6 pages de contenu substantiel
-"""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -4136,7 +4049,6 @@ def main_dashboard():
     SERVICES_GEMINI = [
         "📝 Exposé scolaire complet IA",
         "📝 Création de Sujets & Examens",
-        "📖 Fiche de Cours Professeur IA",
         "👔 CV & Lettre de Motivation",
         "⚙️ Pack Office (Word/Excel/PPT)",
         "📊 Data & Excel Analytics",
@@ -4277,12 +4189,12 @@ def main_dashboard():
                     "📊 Data & Excel Analytics",
                     "📝 Exposé scolaire complet IA",
                     "📝 Création de Sujets & Examens",
-                    "📖 Fiche de Cours Professeur IA",
                     "⚙️ Pack Office (Word/Excel/PPT)",
                     "🎨 Création Design IA",
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
-                    "📄 Conversion & Fichier PDF"
+                    "📄 Conversion & Fichier PDF",
+                    "📎 Modifier mon Fichier (Word / Excel / PPT)"
                 ]
             )
         with col_wa:
@@ -4388,6 +4300,7 @@ def main_dashboard():
         _matiere_val    = ""
         _fc_niveau_val  = ""
         _fc_matiere_val = ""
+        mf_fichier      = None
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
@@ -4540,131 +4453,76 @@ INSTRUCTIONS NOVA EXAM :
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
-        elif "Fiche de Cours" in service:
-            # ── FORMULAIRE STRUCTURÉ FICHE DE COURS PROFESSEUR ────────────────
+        elif "Modifier" in service and "Fichier" in service:
+            # ── FORMULAIRE UPLOAD FICHIER CLIENT ──────────────────────────────
             st.markdown("""
-            <div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.35);
+            <div style="background:rgba(0,210,255,0.07);border:1px solid rgba(0,210,255,0.3);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#9b59b6;font-weight:700;">📖 Remplissez les champs — Nova va générer une fiche de cours complète utilisable directement en classe</span>
+                <span style="color:#00d2ff;font-weight:700;">📎 Importez votre fichier et décrivez vos modifications — notre équipe s'en charge</span>
             </div>
             """, unsafe_allow_html=True)
 
-            col_a, col_b = st.columns(2)
-            with col_a:
-                fc_niveau = st.selectbox("🎓 Niveau de la classe *", [
-                    "── PRIMAIRE ──", "CP1","CP2","CE1","CE2","CM1","CM2",
-                    "── COLLÈGE ──", "6ème","5ème","4ème","3ème",
-                    "── LYCÉE ──", "2nde",
-                    "1ère - Série A1","1ère - Série A2","1ère - Série B",
-                    "1ère - Série C","1ère - Série D","1ère - Série E",
-                    "Terminale - Série A1","Terminale - Série A2","Terminale - Série B",
-                    "Terminale - Série C","Terminale - Série D","Terminale - Série E",
-                    "── UNIVERSITÉ / BTS ──",
-                    "Licence 1 (L1)","Licence 2 (L2)","Licence 3 (L3)",
-                    "Master 1 (M1)","Master 2 (M2)",
-                    "BTS 1ère année","BTS 2ème année",
-                ], index=0, key="fc_niveau")
-                fc_matiere = st.selectbox("📚 Matière *", [
-                    "── TOUTES MATIÈRES ──",
-                    "Français / Lettres","Mathématiques","Sciences Physiques (PC)","SVT / Biologie",
-                    "Histoire-Géographie","Économie / Gestion","Comptabilité","Philosophie",
-                    "EDHC / Éducation Civique","Anglais (LV1)","Espagnol (LV2)","Allemand (LV2)",
-                    "Informatique / TIC","Technologie industrielle","EPS","Arts Plastiques",
-                    "Agronomie / Agriculture","Droit","Économie politique",
-                    "── PRIMAIRE ──",
-                    "Lecture / Écriture (primaire)","Calcul (primaire)",
-                    "Sciences d'Éveil (primaire)","Histoire-Géo (primaire)","ECM (primaire)",
-                    "Autre matière (préciser dans les notes)",
-                ], index=0, key="fc_matiere")
-            with col_b:
-                fc_duree = st.selectbox("⏱️ Durée de la séance *", [
-                    "30 minutes","45 minutes","1 heure",
-                    "1 heure 30","2 heures","3 heures",
-                    "Cours complet (plusieurs séances)",
-                ], index=2, key="fc_duree")
-                fc_type = st.selectbox("📄 Type de document *", [
-                    "Fiche de cours complète (objectifs + développement + exercices)",
-                    "Cours magistral (contenu seul, très détaillé)",
-                    "Plan de leçon (structure + timing + activités)",
-                    "Fiche de révision élève (synthèse dense)",
-                    "Cours + Exercices corrigés",
-                    "Fiche méthode (procédure étape par étape)",
-                    "Séquence pédagogique (plusieurs séances liées)",
-                ], index=0, key="fc_type")
-
-            col_c, col_d = st.columns(2)
-            with col_c:
-                fc_chapitre = st.text_input(
-                    "📖 Titre du chapitre / Notion *",
-                    placeholder="Ex: Les fractions, La photosynthèse, La Première Guerre Mondiale...",
-                    key="fc_chapitre"
-                )
-            with col_d:
-                fc_etablissement = st.text_input(
-                    "🏢 Établissement (optionnel)",
-                    placeholder="Ex: Lycée Moderne de Cocody, CEG Treichville...",
-                    key="fc_etablissement"
-                )
-
-            fc_inclure = st.multiselect("✨ Éléments à inclure", [
-                "Objectifs pédagogiques détaillés",
-                "Prérequis des élèves",
-                "Exercices d'application",
-                "Corrigé complet des exercices",
-                "Évaluation formative (fin de séance)",
-                "Résumé / Synthèse à retenir",
-                "Exemples contextualisés (Côte d'Ivoire)",
-                "Définitions des termes clés",
-                "Référence au manuel officiel MENET-FP",
-                "Tableau récapitulatif",
-                "Schéma ou illustration décrite",
-            ], default=[
-                "Objectifs pédagogiques détaillés",
-                "Exercices d'application",
-                "Corrigé complet des exercices",
-                "Exemples contextualisés (Côte d'Ivoire)",
-                "Définitions des termes clés",
-                "Résumé / Synthèse à retenir",
-            ], key="fc_inclure")
-
-            fc_notes = st.text_area(
-                "💬 Instructions supplémentaires (optionnel)",
-                height=70,
-                placeholder="Ex: Niveau très faible — simplifier le langage, Insister sur les formules, Inclure exemples en FCFA...",
-                key="fc_notes"
+            mf_fichier = st.file_uploader(
+                "📂 Importer votre fichier *",
+                type=["docx", "xlsx", "xls", "pptx", "ppt", "doc", "pdf", "csv", "txt"],
+                help="Formats acceptés : Word (.docx/.doc), Excel (.xlsx/.xls), PowerPoint (.pptx/.ppt), PDF, CSV, TXT",
+                key="mf_fichier"
             )
 
-            _fc_niveau_val  = fc_niveau  if not fc_niveau.startswith("──")  else ""
-            _fc_matiere_val = fc_matiere if not fc_matiere.startswith("──") else ""
-            _fc_inclure_str = ", ".join(fc_inclure) if fc_inclure else "Éléments standards"
+            if mf_fichier:
+                taille_ko = round(mf_fichier.size / 1024, 1)
+                st.success(f"✅ Fichier reçu : **{mf_fichier.name}** · {taille_ko} Ko")
 
-            prompt = f"""FICHE DE COMMANDE NOVA COURS — INFORMATIONS DU PROFESSEUR :
+            mf_type_modif = st.selectbox(
+                "🛠️ Type de modification souhaité *",
+                [
+                    "Correction et amélioration du contenu",
+                    "Mise en forme / Design professionnel",
+                    "Ajout de données / contenu supplémentaire",
+                    "Restructuration complète du document",
+                    "Traduction (Français ↔ Anglais)",
+                    "Fusion de plusieurs documents",
+                    "Extraction et réorganisation des données",
+                    "Création de graphiques / tableaux depuis les données",
+                    "Correction orthographique et grammaticale",
+                    "Adapter à un nouveau modèle / template",
+                    "Autre modification (préciser dans les instructions)",
+                ],
+                key="mf_type_modif"
+            )
 
-🎓 NIVEAU / CLASSE     : {_fc_niveau_val if _fc_niveau_val else "Non précisé"}
-📚 MATIÈRE             : {_fc_matiere_val if _fc_matiere_val else "Non précisée"}
-📖 CHAPITRE / NOTION   : {fc_chapitre.strip() if fc_chapitre.strip() else "Choisir un chapitre cohérent avec la matière et le niveau"}
-📄 TYPE DE DOCUMENT    : {fc_type}
-⏱️ DURÉE DE SÉANCE     : {fc_duree}
-🏢 ÉTABLISSEMENT       : {fc_etablissement.strip() if fc_etablissement.strip() else "Non précisé"}
-✨ ÉLÉMENTS À INCLURE  : {_fc_inclure_str}
-💬 INSTRUCTIONS SUPP.  : {fc_notes.strip() if fc_notes.strip() else "Aucune"}
+            mf_instructions = st.text_area(
+                "✍️ Décrivez précisément ce que vous voulez *",
+                height=130,
+                placeholder="Ex: Mettre le tableau en page 3 en format automatique, ajouter une colonne 'Total' avec formule, corriger les fautes, changer la police en Times New Roman 12pt, ajouter le logo en en-tête...",
+                key="mf_instructions"
+            )
 
-INSTRUCTIONS NOVA :
-- Programme officiel MENET-FP niveau "{_fc_niveau_val}" — contenu 100% conforme
-- Vocabulaire et complexité adaptés à l'âge des élèves
-- Exemples ivoiriens et africains en priorité
-- Document complet et directement utilisable en classe
-- TOUT rédigé intégralement — aucun "[à compléter]"
+            mf_urgence = st.selectbox(
+                "⏱️ Délai souhaité",
+                ["Dès que possible (standard)", "Urgent — dans les 2 heures", "Très urgent — dans 1 heure"],
+                key="mf_urgence"
+            )
+
+            # Construction du prompt
+            _mf_fichier_nom = mf_fichier.name if mf_fichier else "Aucun fichier"
+            prompt = f"""FICHE DE COMMANDE NOVA MODIFICATION FICHIER :
+
+📎 FICHIER IMPORTÉ    : {_mf_fichier_nom}
+🛠️ TYPE MODIFICATION  : {mf_type_modif}
+⏱️ DÉLAI SOUHAITÉ     : {mf_urgence}
+✍️ INSTRUCTIONS       :
+{mf_instructions.strip() if mf_instructions.strip() else "(aucune instruction fournie)"}
+
+NOTE ÉQUIPE : Le fichier original est joint à cette demande.
 """
-            if _fc_niveau_val and _fc_matiere_val and fc_chapitre.strip():
-                st.success(f"✅ Fiche prête : **{fc_chapitre.strip()[:45]}** · **{_fc_matiere_val}** · **{_fc_niveau_val}**")
-            elif _fc_niveau_val and _fc_matiere_val:
-                st.info("💡 Pensez à préciser le titre du chapitre pour un meilleur résultat")
+            if mf_fichier and mf_instructions.strip():
+                st.success("✅ Demande complète — votre fichier sera traité par notre équipe")
             else:
-                if not _fc_niveau_val or fc_niveau.startswith("──"):
-                    st.warning("⚠️ Sélectionnez un niveau scolaire précis")
-                if not _fc_matiere_val or fc_matiere.startswith("──"):
-                    st.warning("⚠️ Sélectionnez une matière précise")
+                if not mf_fichier:
+                    st.warning("⚠️ Importez votre fichier pour continuer")
+                if not mf_instructions.strip():
+                    st.warning("⚠️ Décrivez les modifications souhaitées")
 
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
@@ -4730,11 +4588,11 @@ INSTRUCTIONS NOVA :
                 champs_manquants.append("Niveau scolaire")
             if not _matiere_val or _matiere_val.startswith("──"):
                 champs_manquants.append("Matière")
-        elif "Fiche de Cours" in service:
-            if not _fc_niveau_val or fc_niveau.startswith("──"):
-                champs_manquants.append("Niveau scolaire")
-            if not _fc_matiere_val or fc_matiere.startswith("──"):
-                champs_manquants.append("Matière")
+        elif "Modifier" in service and "Fichier" in service:
+            if not mf_fichier:
+                champs_manquants.append("Fichier à modifier")
+            if not mf_instructions.strip() if 'mf_instructions' in dir() else True:
+                champs_manquants.append("Instructions de modification")
         else:
             # Pour les autres services : vérifier le champ texte libre
             if not prompt:
@@ -4919,11 +4777,29 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
 
             statut = "En attente de vérification (informations incomplètes)" if champs_manquants else "Traitement Nova en cours..."
 
+            req_id_new = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
+
+            # Upload du fichier client si présent (service Modifier Fichier)
+            fichier_info = ""
+            if "Modifier" in service and "Fichier" in service and mf_fichier:
+                url_fichier = upload_fichier_client(
+                    user if user else "guest",
+                    req_id_new,
+                    mf_fichier.getvalue(),
+                    mf_fichier.name
+                )
+                if url_fichier.startswith("ERREUR"):
+                    fichier_info = f"\n⚠️ Fichier non uploadé ({url_fichier})"
+                else:
+                    fichier_info = f"\n📎 FICHIER CLIENT : {url_fichier}"
+
+            desc_finale = (prompt if prompt else "(aucune description fournie)") + fichier_info
+
             new_req = {
-                "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
+                "id": req_id_new,
                 "user": user if user else "guest",
                 "service": service,
-                "desc": prompt if prompt else "(aucune description fournie)",
+                "desc": desc_finale,
                 "whatsapp": normalize_wa(wa_display) if wa_display else "(non renseigné)",
                 "status": statut,
                 "incomplet": bool(champs_manquants),
@@ -4936,7 +4812,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                 client_nom  = user if user else "Visiteur",
                 client_wa   = normalize_wa(wa_display) if wa_display else "(non renseigné)",
                 service     = service,
-                description = prompt if prompt else "(aucune description fournie)"
+                description = desc_finale
             )
             st.session_state["db"] = load_db()
             st.session_state["is_glowing"] = False
