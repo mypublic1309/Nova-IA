@@ -3243,6 +3243,10 @@ if "current_user" not in st.session_state:
     st.session_state["current_user"] = None
 if "view" not in st.session_state:
     st.session_state["view"] = "home"
+if "cs_ready" not in st.session_state:
+    st.session_state["cs_ready"] = False
+if "cs_description" not in st.session_state:
+    st.session_state["cs_description"] = ""
 if "is_glowing" not in st.session_state:
     st.session_state["is_glowing"] = False
 if "show_premium_modal" not in st.session_state:
@@ -3928,6 +3932,491 @@ def inject_custom_css():
 
     if st.session_state["is_glowing"]:
         st.markdown('<style>.stApp { animation: glow-pulse 1.5s ease-in-out infinite; }</style>', unsafe_allow_html=True)
+
+
+
+def show_creation_sujet_page():
+    """Page dédiée à la création de sujets & examens — design inspiré de la page auth."""
+
+    user = st.session_state.get("current_user")
+    db   = st.session_state.get("db", {"users": {}, "demandes": [], "liens": {}})
+
+    st.markdown("""
+    <style>
+    @keyframes shimmer-gold {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+    }
+    @keyframes float-up {
+        0%   { opacity: 0; transform: translateY(24px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow-border {
+        0%,100% { box-shadow: 0 0 10px rgba(245,158,11,0.3); }
+        50%      { box-shadow: 0 0 30px rgba(245,158,11,0.7); }
+    }
+    @keyframes slide-in {
+        0%   { opacity: 0; transform: translateX(-20px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    .cs-hero {
+        text-align: center;
+        padding: 32px 20px 8px 20px;
+        animation: float-up 0.7s ease both;
+    }
+    .cs-icon-ring {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 16px auto;
+        background: radial-gradient(circle at 35% 35%, #fef3c7, #f59e0b 40%, #92400e);
+        box-shadow: 0 0 0 4px rgba(245,158,11,0.2), 0 0 40px rgba(245,158,11,0.5);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.2rem;
+        animation: glow-border 3s ease-in-out infinite;
+    }
+    .cs-title {
+        font-size: 2.2rem; font-weight: 900;
+        background: linear-gradient(90deg, #92400e, #f59e0b, #fef3c7, #f59e0b, #92400e);
+        background-size: 200% auto;
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        animation: shimmer-gold 3s linear infinite;
+        margin-bottom: 4px;
+    }
+    .cs-subtitle {
+        color: rgba(245,158,11,0.6);
+        font-size: 0.82rem; letter-spacing: 3px;
+        text-transform: uppercase;
+        animation: float-up 0.9s ease 0.3s both;
+    }
+    .cs-back-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: rgba(245,158,11,0.7); font-size: 0.82rem;
+        cursor: pointer; margin-bottom: 20px;
+        border: 1px solid rgba(245,158,11,0.2);
+        padding: 6px 14px; border-radius: 20px;
+        background: rgba(245,158,11,0.05);
+        transition: all 0.2s;
+    }
+    .cs-back-btn:hover { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .cs-section {
+        background: linear-gradient(145deg, rgba(20,15,5,0.97), rgba(35,25,5,0.92));
+        border: 1px solid rgba(245,158,11,0.25);
+        border-radius: 18px;
+        padding: 24px 22px;
+        margin-bottom: 16px;
+        position: relative; overflow: hidden;
+        animation: float-up 0.8s ease both;
+    }
+    .cs-section::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, #92400e, #f59e0b, #fef3c7, #f59e0b, #92400e);
+        background-size: 200% auto;
+        animation: shimmer-gold 2.5s linear infinite;
+    }
+    .cs-section-title {
+        font-size: 0.9rem; font-weight: 700;
+        color: #f59e0b; letter-spacing: 1px;
+        text-transform: uppercase; margin-bottom: 14px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .cs-type-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: 20px;
+        font-size: 0.78rem; font-weight: 600;
+        background: rgba(245,158,11,0.1);
+        border: 1px solid rgba(245,158,11,0.3);
+        color: #fbbf24; margin: 3px;
+        animation: slide-in 0.4s ease both;
+    }
+    .cs-exo-card {
+        background: rgba(245,158,11,0.04);
+        border: 1px solid rgba(245,158,11,0.15);
+        border-radius: 14px; padding: 16px;
+        margin-bottom: 10px;
+        border-left: 3px solid #f59e0b;
+        animation: slide-in 0.5s ease both;
+    }
+    .cs-exo-num {
+        font-size: 1rem; font-weight: 800;
+        color: #f59e0b; margin-bottom: 8px;
+    }
+    .cs-total-ok {
+        background: rgba(16,185,129,0.1);
+        border: 1px solid rgba(16,185,129,0.4);
+        border-radius: 10px; padding: 10px 16px;
+        color: #34d399; font-size: 0.88rem; font-weight: 700;
+        text-align: center;
+    }
+    .cs-total-warn {
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.4);
+        border-radius: 10px; padding: 10px 16px;
+        color: #f87171; font-size: 0.88rem; font-weight: 700;
+        text-align: center;
+    }
+    .cs-divider {
+        display: flex; align-items: center; gap: 12px;
+        margin: 18px 0;
+    }
+    .cs-divider-line { flex:1; height:1px; background: linear-gradient(90deg,transparent,rgba(245,158,11,0.4),transparent); }
+    .cs-divider-dot  { width:5px; height:5px; border-radius:50%; background:#f59e0b; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ── Hero ──────────────────────────────────────────────────────────────────
+    _, col_c, _ = st.columns([1,3,1])
+    with col_c:
+        st.markdown("""
+        <div class='cs-hero'>
+            <div class='cs-icon-ring'>📝</div>
+            <div class='cs-title'>Création de Sujet</div>
+            <div class='cs-subtitle'>Configurateur Nova Exam — Collège & Lycée CI</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Bouton retour ─────────────────────────────────────────────────────────
+    if st.button("← Retour au tableau de bord", key="cs_back"):
+        st.session_state["view"] = "home"
+        st.rerun()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 1 — Informations générales
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>📋 Informations générales</div>", unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        cs_niveau = st.selectbox("🎓 Niveau scolaire *", [
+            "── COLLÈGE ──","6ème","5ème","4ème","3ème / BEPC",
+            "── LYCÉE ──",
+            "2nde",
+            "1ère - Série A1","1ère - Série A2","1ère - Série B",
+            "1ère - Série C","1ère - Série D","1ère - Série E",
+            "Terminale - Série A1","Terminale - Série A2","Terminale - Série B",
+            "Terminale - Série C","Terminale - Série D","Terminale - Série E",
+            "Terminale - Série F","Terminale - Série G1","Terminale - Série G2",
+            "Terminale - Série G3","Terminale - Série H",
+        ], key="cs_niveau")
+
+        cs_matiere = st.selectbox("📚 Matière *", [
+            "── SCIENCES ──",
+            "Mathématiques","Sciences Physiques (PC)","SVT / Biologie",
+            "── LETTRES ──",
+            "Français / Lettres","Anglais","Espagnol","Philosophie",
+            "── AUTRES ──",
+            "Histoire-Géographie","Économie / Gestion","Comptabilité",
+            "Informatique / TIC","EDHC / Éducation Civique","EPS",
+        ], key="cs_matiere")
+
+    with col2:
+        cs_type_epreuve = st.selectbox("📄 Type d'épreuve *", [
+            "📝 Devoir Surveillé (DS)",
+            "🏆 Devoir Complet adapté à la classe",
+            "⚡ Interrogation Écrite (IE)",
+            "🏠 Devoir de Maison (DM)",
+            "📅 Devoir du 1er Trimestre",
+            "📅 Devoir du 2ème Trimestre",
+            "📅 Devoir du 3ème Trimestre",
+            "📋 Examen Blanc (BEPC / BAC)",
+            "🎯 Contrôle de chapitre",
+            "📌 Rattrapage / Remédiation",
+        ], key="cs_type_epreuve")
+
+        cs_duree = st.selectbox("⏱️ Durée", [
+            "30 minutes","1 heure","1 heure 30",
+            "2 heures","2 heures 30","3 heures","4 heures",
+            "Libre (DM)",
+        ], index=3, key="cs_duree")
+
+    col3, col4 = st.columns(2)
+    with col3:
+        cs_etablissement = st.text_input("🏢 Établissement", placeholder="Ex: Collège Sainte Famille de Bouaké", key="cs_etab")
+        cs_chapitre = st.text_input("📖 Chapitre / Notion", placeholder="Ex: La loi d'Ohm, Les fractions...", key="cs_chap")
+    with col4:
+        cs_coefficient = st.selectbox("📊 Coefficient", ["1","2","3","4","5"], index=1, key="cs_coef")
+        cs_avec_corrige = st.toggle("📋 Inclure le corrigé professeur", value=False, key="cs_corrige")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 2 — Format de réponse
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>✏️ Format de réponse</div>", unsafe_allow_html=True)
+
+    cs_reponse_copie = st.toggle(
+        "L'élève répond sur sa copie (standard CI — pas de lignes dans le sujet)",
+        value=True, key="cs_reponse_copie"
+    )
+    if cs_reponse_copie:
+        st.markdown("<span style='color:#34d399;font-size:0.82rem;'>✅ Sur la copie — Consignes : <em>'Écris sur ta feuille de copie...'</em> (format standard Collège/Lycée CI)</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span style='color:#fbbf24;font-size:0.82rem;'>📝 Sur le sujet — Lignes ___ ajoutées sous chaque question (fiche activité, IE primaire)</span>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 3 — Configurateur exercice par exercice
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>⚙️ Plan des exercices</div>", unsafe_allow_html=True)
+
+    # Détecter si c'est un "Devoir Complet adapté" → forcer la structure automatique
+    est_devoir_complet = "Devoir Complet" in cs_type_epreuve
+
+    if est_devoir_complet:
+        st.markdown("""
+        <div style='background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;color:#34d399;font-size:0.85rem;'>
+        🤖 <strong>Mode Devoir Complet</strong> — Nova va générer automatiquement la structure complète adaptée au niveau et à la matière.
+        Les exercices seront organisés selon le format réel des devoirs ivoiriens pour ce niveau.
+        Vous pouvez quand même choisir un thème spécifique ci-dessous.
+        </div>
+        """, unsafe_allow_html=True)
+        cs_theme_global = st.text_input("🎯 Thème / Chapitre spécifique (optionnel)", placeholder="Ex: La cinématique, Les probabilités, La colonisation...", key="cs_theme_global")
+        cs_nb_exos = 0
+        exercices_cs = []
+    else:
+        cs_nb_exos = st.slider("📏 Nombre d'exercices", 1, 5, 2, key="cs_nb_exos",
+            help="DS standard = 2 exercices (2 pages). Devoir trimestriel = 3-4 exercices.")
+        cs_theme_global = ""
+        exercices_cs = []
+
+        # Tous les types disponibles
+        TYPES_CS = {
+            "🤖 Automatique (Nova choisit)":                    ("AUTO",          "Nova sélectionne le meilleur format selon la matière et le niveau."),
+            "🔵 QCM — Questionnaire à choix unique":            ("QCM",           "Tableau N°/Affirmation/Réponse1/Réponse2/Réponse3. L'élève encercle la bonne réponse sur sa copie."),
+            "✅ Vrai ou Faux":                                   ("VRAI_FAUX",     "Affirmations numérotées à évaluer V ou F sur la copie. Justification si fausse."),
+            "🔤 Texte à Trous (lacunaire)":                     ("TEXTE_TROU",    "Texte avec blancs numérotés 1.___ 2.___ + liste de mots à placer."),
+            "✍️ Questions Ouvertes / Rédigées":                 ("QUESTIONS_OUVERTES", "Questions directes numérotées. Réponses rédigées sur la copie."),
+            "❓ Questions / Réponses courtes":                   ("QR",            "Questions ou affirmations courtes numérotées. Format PC / SVT ivoirien."),
+            "🔗 Exercice Relié (termes ↔ définitions)":         ("RELIE",         "Colonne A (termes ①②③) ↔ Colonne B (définitions •). L'élève recopie et trace des flèches."),
+            "🔀 Mots Désordonnés (remettre dans l'ordre)":      ("MOTS_DESORDRE", "Mots numérotés et mélangés. L'élève recopie et réécrit la phrase dans le bon ordre."),
+            "📊 Tableau à Classer":                             ("TABLEAU_CLASSER","Mots/expressions à placer dans les bonnes colonnes d'un tableau à recopier."),
+            "🔬 Schéma à Légender":                             ("SCHEMA",        "Schéma numéroté (cellule, circuit...) + liste de termes à placer."),
+            "📐 Problème de Calcul":                            ("CALCUL",        "Mise en situation + données + questions guidées (Données → Formule → Résultat)."),
+            "🗺️ Étude de Document":                            ("ETUDE_DOCUMENT","Document support (texte, tableau, graphe) + questions d'analyse progressives."),
+            "📋 Situation Complexe / Cas Pratique":             ("CAS_PRATIQUE",  "Contexte réel ivoirien + questions multi-niveaux. Recommandé en dernier exercice."),
+            "📝 Dissertation / Composition guidée":             ("DISSERTATION",  "Sujet formulé + consignes méthode + plan détaillé. Pour Français, Philo, HG."),
+            "🔀 Mixte (2 sous-parties A/ et B/)":               ("MIXTE",         "Combine 2 types différents en sous-parties A/ et B/."),
+        }
+
+        labels_cs  = list(TYPES_CS.keys())
+        codes_cs   = [v[0] for v in TYPES_CS.values()]
+        descs_cs   = {v[0]: v[1] for v in TYPES_CS.values()}
+
+        for i in range(cs_nb_exos):
+            st.markdown(f"<div class='cs-exo-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='cs-exo-num'>EXERCICE {i+1}</div>", unsafe_allow_html=True)
+
+            col_ta, col_tb = st.columns([3, 1])
+            with col_ta:
+                lbl_sel = st.selectbox(
+                    "Type", labels_cs,
+                    index=0 if i == 0 else min(i+1, len(labels_cs)-1),
+                    key=f"cs_exo_type_{i}",
+                    label_visibility="collapsed"
+                )
+                code_sel = codes_cs[labels_cs.index(lbl_sel)]
+                st.caption(f"💡 {descs_cs.get(code_sel,'')}")
+
+                # Si MIXTE → 2 sous-sélecteurs
+                cs_sous_a, cs_sous_b = None, None
+                if code_sel == "MIXTE":
+                    labels_sans_mixte = [l for l in labels_cs if "Mixte" not in l and "Automatique" not in l]
+                    codes_sans_mixte  = [codes_cs[labels_cs.index(l)] for l in labels_sans_mixte]
+                    cola, colb = st.columns(2)
+                    with cola:
+                        st.markdown("**Sous-partie A/ :**")
+                        lbl_a = st.selectbox("Type A", labels_sans_mixte, key=f"cs_sa_{i}", label_visibility="collapsed")
+                        cs_sous_a = codes_sans_mixte[labels_sans_mixte.index(lbl_a)]
+                        st.caption(f"A/ : {descs_cs.get(cs_sous_a,'')[:60]}...")
+                    with colb:
+                        st.markdown("**Sous-partie B/ :**")
+                        lbl_b = st.selectbox("Type B", labels_sans_mixte, index=min(1,len(labels_sans_mixte)-1), key=f"cs_sb_{i}", label_visibility="collapsed")
+                        cs_sous_b = codes_sans_mixte[labels_sans_mixte.index(lbl_b)]
+                        st.caption(f"B/ : {descs_cs.get(cs_sous_b,'')[:60]}...")
+
+            with col_tb:
+                cs_pts = st.number_input("Points", 1, 20,
+                    value=10 if cs_nb_exos==1 else (7 if cs_nb_exos==2 else 5),
+                    key=f"cs_pts_{i}", help="Barème de cet exercice")
+                cs_nq  = st.number_input("Nb questions", 1, 20, value=4,
+                    key=f"cs_nq_{i}")
+
+            cs_th = st.text_input(
+                "Thème spécifique (optionnel)",
+                placeholder="Ex: La loi d'Ohm, Pythagore, La décolonisation...",
+                key=f"cs_th_{i}", label_visibility="visible"
+            )
+
+            exercices_cs.append({
+                "num": i+1,
+                "type": code_sel,
+                "sous_type_a": cs_sous_a,
+                "sous_type_b": cs_sous_b,
+                "points": cs_pts,
+                "nb_questions": cs_nq,
+                "theme": cs_th,
+            })
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Récapitulatif / total
+        if exercices_cs:
+            st.markdown("<div class='cs-divider'><div class='cs-divider-line'></div><div class='cs-divider-dot'></div><div class='cs-divider-line'></div></div>", unsafe_allow_html=True)
+            total_pts = sum(e["points"] for e in exercices_cs)
+            badges = "".join([
+                f"<span class='cs-type-badge'>Exo {e['num']} · {e['type']} · {e['points']}pts</span>"
+                for e in exercices_cs
+            ])
+            st.markdown(f"<div style='margin-bottom:10px;'>{badges}</div>", unsafe_allow_html=True)
+            if total_pts == 20:
+                st.markdown(f"<div class='cs-total-ok'>✅ Total : {total_pts}/20 — Barème correct !</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div class='cs-total-warn'>⚠️ Total actuel : {total_pts}/20 — Ajustez les points pour atteindre exactement /20</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 4 — Infos complémentaires + bouton générer
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>💬 Informations complémentaires</div>", unsafe_allow_html=True)
+
+    cs_notes = st.text_area(
+        "Précisions supplémentaires (optionnel)",
+        height=80,
+        placeholder="Ex: Avec corrigé détaillé, thème sur le cacao ivoirien, niveau difficile, chapitres 1 et 2...",
+        key="cs_notes"
+    )
+
+    default_wa = db["users"].get(user, {}).get("whatsapp", "") if user else ""
+    cs_wa = st.text_input("📞 WhatsApp de contact", value=default_wa, placeholder="225...", key="cs_wa")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # BOUTON GÉNÉRER
+    # ══════════════════════════════════════════════════════════════════════════
+    premium_actif = is_premium_actif(db["users"].get(user, {})) if user else False
+    SERVICE_SUJETS = "📝 Création de Sujets & Examens"
+
+    if st.button("⚡ GÉNÉRER LE SUJET AVEC NOVA IA", use_container_width=True, key="cs_generer"):
+        if not user:
+            st.session_state["view"] = "auth"
+            st.rerun()
+        elif not premium_actif:
+            st.warning("⭐ Cette fonctionnalité est réservée aux membres Premium. Contactez Nova pour activer votre accès.")
+        else:
+            # Vérification quota
+            user_data = db["users"].get(user, {})
+            restant = quota_restant(user_data)
+            if restant <= 0:
+                st.error("🚫 Limite de générations atteinte pour aujourd'hui. Votre quota se renouvelle demain.")
+            else:
+                # ── Construction du prompt ─────────────────────────────────
+                niveau_ok  = cs_niveau if not cs_niveau.startswith("──") else ""
+                matiere_ok = cs_matiere if not cs_matiere.startswith("──") else ""
+
+                if not niveau_ok or not matiere_ok:
+                    st.error("⚠️ Veuillez sélectionner un niveau et une matière.")
+                else:
+                    # Plan exercices
+                    TYPE_LABELS_PROMPT = {
+                        "AUTO": "AUTOMATIQUE (Nova choisit la structure optimale)",
+                        "QCM": "QCM — Tableau N°/Affirmation/Réponse1/Réponse2/Réponse3",
+                        "VRAI_FAUX": "VRAI ou FAUX — Affirmations numérotées, l'élève écrit V/F sur sa copie",
+                        "TEXTE_TROU": "TEXTE À TROUS — Blancs numérotés + liste de mots",
+                        "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES — Questions rédigées, réponses sur copie",
+                        "QR": "QUESTIONS/RÉPONSES COURTES — Format PC/SVT ivoirien",
+                        "RELIE": "EXERCICE RELIÉ — Colonne A (①②③ termes) ↔ Colonne B (• définitions). Consigne : 'Recopie sur ta copie et relie'",
+                        "MOTS_DESORDRE": "MOTS DÉSORDONNÉS — Mots numérotés et mélangés, l'élève réécrit la phrase correcte sur sa copie",
+                        "TABLEAU_CLASSER": "TABLEAU À CLASSER — Recopier le tableau et placer les mots dans les bonnes colonnes",
+                        "SCHEMA": "SCHÉMA À LÉGENDER — Numéros + liste de termes à placer",
+                        "CALCUL": "PROBLÈME DE CALCUL — Données + questions guidées (Données→Formule→Résultat)",
+                        "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT — Support + questions progressives",
+                        "CAS_PRATIQUE": "SITUATION COMPLEXE — Contexte réel + questions multi-niveaux",
+                        "DISSERTATION": "DISSERTATION GUIDÉE — Sujet + méthode + plan détaillé",
+                        "MIXTE": "MIXTE",
+                    }
+
+                    if est_devoir_complet:
+                        plan_prompt = f"DEVOIR COMPLET ADAPTÉ À LA CLASSE — Structure automatique optimale pour {niveau_ok} en {matiere_ok}"
+                        if cs_theme_global.strip():
+                            plan_prompt += f"\nThème imposé : {cs_theme_global}"
+                    else:
+                        lignes_plan = []
+                        for e in exercices_cs:
+                            t = TYPE_LABELS_PROMPT.get(e["type"], e["type"])
+                            if e["type"] == "MIXTE" and e.get("sous_type_a"):
+                                sa = TYPE_LABELS_PROMPT.get(e["sous_type_a"], "").split("—")[0]
+                                sb = TYPE_LABELS_PROMPT.get(e.get("sous_type_b",""), "").split("—")[0]
+                                t = f"MIXTE → A/ {sa.strip()} + B/ {sb.strip()}"
+                            th = f" — Thème : {e['theme']}" if e.get("theme","").strip() else ""
+                            lignes_plan.append(f"  EXERCICE {e['num']} ({e['points']} points, {e['nb_questions']} questions) : {t}{th}")
+                        plan_prompt = "\n".join(lignes_plan)
+                        plan_prompt += f"\n  TOTAL : {sum(e['points'] for e in exercices_cs)}/20"
+
+                    format_rep = "L'ÉLÈVE RÉPOND SUR SA COPIE — INTERDIT dans le sujet : lignes ___, espaces vides. Consignes : 'Écris sur ta feuille de copie...'" if cs_reponse_copie else "L'ÉLÈVE RÉPOND DIRECTEMENT SUR LE SUJET — Ajouter lignes ___ sous chaque question (proportionnel au barème)"
+
+                    notes_txt = f"\nInformations complémentaires : {cs_notes}" if cs_notes.strip() else ""
+                    corrige_txt = "\nINCLURE LE CORRIGÉ PROFESSEUR COMPLET après un saut de page." if cs_avec_corrige else ""
+
+                    description_finale = f"""
+🎓 NIVEAU : {niveau_ok}
+📚 MATIÈRE : {matiere_ok}
+📄 TYPE D'ÉPREUVE : {cs_type_epreuve}
+⏱️ DURÉE : {cs_duree}
+📊 COEFFICIENT : {cs_coefficient}
+🏢 ÉTABLISSEMENT : {cs_etablissement if cs_etablissement.strip() else 'Non précisé'}
+📖 CHAPITRE : {cs_chapitre if cs_chapitre.strip() else 'Non précisé'}
+
+📋 PLAN DES EXERCICES IMPOSÉ :
+{plan_prompt}
+
+✏️ FORMAT RÉPONSE : {format_rep}
+{notes_txt}{corrige_txt}
+"""
+
+                    # Sauvegarde en session pour le prompt principal
+                    st.session_state["cs_description"] = description_finale
+                    st.session_state["cs_service"] = SERVICE_SUJETS
+                    st.session_state["cs_wa"] = cs_wa
+                    st.session_state["cs_ready"] = True
+                    st.rerun()
+
+    # ── Génération effective si prête ─────────────────────────────────────────
+    if st.session_state.get("cs_ready") and st.session_state.get("cs_description"):
+        description_finale = st.session_state["cs_description"]
+        with st.spinner("⚡ Nova génère votre sujet... (30-60 secondes)"):
+            try:
+                import threading, time as _time
+                from supabase import create_client as _sc
+
+                # Récupère le prompt complet depuis le service sujets
+                # On réutilise generer_avec_gemini directement
+                contenu = generer_avec_gemini(SERVICE_SUJETS, description_finale, user)
+
+                if contenu.startswith("❌"):
+                    st.error(contenu)
+                else:
+                    buf = creer_docx(contenu, SERVICE_SUJETS, user)
+                    nom = f"{user}_Sujet_{cs_niveau[:10].strip()}.docx".replace(" ","_").replace("/","-")
+                    url_fichier = upload_fichier_client(user, f"cs_{int(__import__('time').time())}", buf, nom)
+
+                    if url_fichier.startswith("ERREUR"):
+                        st.error(f"❌ Erreur upload : {url_fichier}")
+                    else:
+                        save_lien(user, SERVICE_SUJETS, url_fichier, __import__('datetime').datetime.now().strftime("%d/%m/%Y"))
+                        st.session_state["cs_ready"] = False
+                        st.session_state["cs_description"] = ""
+                        st.session_state["db"] = load_db()
+                        st.success("✅ Sujet généré et livré dans vos livrables !")
+                        st.balloons()
+            except Exception as e:
+                st.error(f"Erreur génération : {e}")
+                st.session_state["cs_ready"] = False
 
 
 def show_auth_page():
@@ -4643,6 +5132,12 @@ def main_dashboard():
                     "📄 Conversion & Fichier PDF",
                 ]
             )
+            # Redirection vers la page dédiée si service Sujets sélectionné
+            if service == "📝 Création de Sujets & Examens":
+                st.markdown("")
+                if st.button("🚀 Ouvrir le Configurateur de Sujets", use_container_width=True, key="open_cs_page"):
+                    st.session_state["view"] = "creation_sujet"
+                    st.rerun()
         with col_wa:
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
@@ -5949,5 +6444,7 @@ st.markdown("""
 
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
+elif st.session_state["view"] == "creation_sujet":
+    show_creation_sujet_page()
 else:
     main_dashboard()
