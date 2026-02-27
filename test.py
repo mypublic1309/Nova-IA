@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 DATA_FILE = "data_nova_v3.json"
-ADMIN_CODE = "02110240"
+ADMIN_CODE = st.secrets.get("ADMIN_CODE", "02110240")
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -2964,7 +2964,7 @@ def creer_xlsx(description, client_nom):
     return buf
 
 
-WHATSAPP_NUMBER = "2250171542505"
+WHATSAPP_NUMBER = st.secrets.get("WHATSAPP_NUMBER", "2250171542505")
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
 SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
@@ -4267,6 +4267,19 @@ def main_dashboard():
                 ],
                 "note": "Vous pouvez également joindre un fichier exemple via WhatsApp après la soumission."
             },
+            "📖 Fiche de Cours Professeur IA": {
+                "icone": "📖",
+                "titre": "Fiche de Cours Professeur IA",
+                "intro": "Pour générer une fiche de cours complète et professionnelle, veuillez préciser :",
+                "items": [
+                    ("📚", "La matière ou discipline (Maths, SVT, Histoire, Français...)"),
+                    ("🎓", "Le niveau scolaire (CP, 6ème, Terminale, BTS...)"),
+                    ("🎯", "Le titre exact de la leçon ou du chapitre"),
+                    ("⏱️", "La durée de la séance prévue"),
+                    ("🏫", "L'établissement ou le contexte (public, privé, spécialité...)"),
+                ],
+                "note": "Plus le titre de la leçon est précis, plus la fiche sera exploitable directement en classe."
+            },
             "⚙️ Pack Office (Word/Excel/PPT)": {
                 "icone": "⚙️",
                 "titre": "Pack Office — Word / Excel / PowerPoint",
@@ -4352,6 +4365,8 @@ def main_dashboard():
                 "Type d'intervention",
                 [
                     "📊 Data & Excel Analytics",
+                    "📖 Fiche de Cours Professeur IA",
+                    "📎 Modifier mon Fichier (Word / Excel / PPT)",
                     "📝 Exposé scolaire complet IA",
                     "📝 Création de Sujets & Examens",
                     "⚙️ Pack Office (Word/Excel/PPT)",
@@ -4359,8 +4374,6 @@ def main_dashboard():
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
                     "📄 Conversion & Fichier PDF",
-                    "📖 Fiche de Cours Professeur IA",
-                    "📎 Modifier mon Fichier (Word / Excel / PPT)"
                 ]
             )
         with col_wa:
