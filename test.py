@@ -76,7 +76,6 @@ def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan
             "uid": uid, "whatsapp": whatsapp,
             "email": email, "joined": str(datetime.now()),
             "premium": premium, "premium_plan": premium_plan, "premium_expiry": premium_expiry,
-            "gen_used": 0, "gen_date": None,
         }).execute()
         return True
     except Exception as e:
