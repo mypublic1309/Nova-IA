@@ -140,44 +140,57 @@ def sanitize_nom_fichier(nom):
     return nom.strip("_")
 
 def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
-    """Upload via API REST Supabase Storage — bucket créé auto si absent."""
+    """Upload via API REST Supabase Storage."""
     try:
-        import urllib.request as _ur
-        BUCKET = "nova-fichiers"
-        sb_url = st.secrets["SUPABASE_URL"].rstrip("/")
-        sb_key = st.secrets["SUPABASE_KEY"]
-        headers_json = {
-            "apikey": sb_key,
+        import requests as _req
+        BUCKET   = "nova-fichiers"
+        sb_url   = st.secrets["SUPABASE_URL"].rstrip("/")
+        sb_key   = st.secrets["SUPABASE_KEY"]
+        auth_hdrs = {
+            "apikey":        sb_key,
             "Authorization": f"Bearer {sb_key}",
-            "Content-Type": "application/json"
         }
-        # Créer bucket (ignoré si déjà existant)
-        try:
-            import json as _json
-            _data = _json.dumps({"id": BUCKET, "name": BUCKET, "public": True}).encode()
-            _r = _ur.Request(f"{sb_url}/storage/v1/bucket", data=_data, headers=headers_json, method="POST")
-            _ur.urlopen(_r, timeout=10)
-        except Exception:
-            pass
-        # Uploader le fichier (uid + nom nettoyés pour éviter les erreurs Supabase)
-        uid_safe         = sanitize_nom_fichier(str(uid))
-        fichier_nom_safe = sanitize_nom_fichier(fichier_nom)
-        chemin           = f"fichiers_clients/{uid_safe}_{req_id}_{fichier_nom_safe}"
-        # URL-encoder le chemin pour éviter les 400 sur caractères résiduels
-        from urllib.parse import quote as _quote
-        chemin_encode = _quote(chemin, safe="/")
-        # S'assurer que les données sont bien en bytes
-        if hasattr(fichier_bytes, "read"):
-            fichier_bytes = fichier_bytes.read()
-        _ru = _ur.Request(
-            f"{sb_url}/storage/v1/object/{BUCKET}/{chemin_encode}",
-            data=fichier_bytes,
-            headers={"apikey": sb_key, "Authorization": f"Bearer {sb_key}",
-                     "Content-Type": "application/octet-stream", "x-upsert": "true"},
-            method="POST"
+
+        # — Nettoyage des composantes du chemin —
+        uid_safe  = sanitize_nom_fichier(str(uid))
+        nom_safe  = sanitize_nom_fichier(fichier_nom)
+        chemin    = f"fichiers_clients/{uid_safe}_{req_id}_{nom_safe}"
+
+        # — Bytes bruts —
+        data = fichier_bytes.read() if hasattr(fichier_bytes, "read") else fichier_bytes
+
+        # — Détection du Content-Type selon l'extension —
+        ext = nom_safe.rsplit(".", 1)[-1].lower() if "." in nom_safe else ""
+        mime_map = {
+            "pdf": "application/pdf",
+            "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+            "gif": "image/gif", "webp": "image/webp",
+            "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "txt": "text/plain", "csv": "text/csv", "zip": "application/zip",
+        }
+        content_type = mime_map.get(ext, "application/octet-stream")
+
+        # — Upload —
+        url_upload = f"{sb_url}/storage/v1/object/{BUCKET}/{chemin}"
+        resp = _req.post(
+            url_upload,
+            headers={**auth_hdrs, "Content-Type": content_type, "x-upsert": "true"},
+            data=data,
+            timeout=30
         )
-        _ur.urlopen(_ru, timeout=30)
-        return f"{sb_url}/storage/v1/object/public/{BUCKET}/{chemin_encode}"
+
+        if resp.status_code in (200, 201):
+            return f"{sb_url}/storage/v1/object/public/{BUCKET}/{chemin}"
+        else:
+            # Afficher le message exact de Supabase pour debug
+            try:
+                detail = resp.json()
+            except Exception:
+                detail = resp.text
+            return f"ERREUR_UPLOAD:{resp.status_code} — {detail}"
+
     except Exception as e:
         return f"ERREUR_UPLOAD:{e}"
 
