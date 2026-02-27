@@ -122,24 +122,36 @@ def save_lien(uid, name, url, date):
         st.error(f"Erreur sauvegarde lien : {e}")
 
 def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
-    """Upload le fichier client dans Supabase Storage — crée le bucket si absent."""
+    """Upload via API REST Supabase Storage — bucket créé auto si absent."""
     try:
+        import urllib.request as _ur
         BUCKET = "nova-fichiers"
-
-        # Créer le bucket automatiquement s'il n'existe pas
+        sb_url = st.secrets["SUPABASE_URL"].rstrip("/")
+        sb_key = st.secrets["SUPABASE_KEY"]
+        headers_json = {
+            "apikey": sb_key,
+            "Authorization": f"Bearer {sb_key}",
+            "Content-Type": "application/json"
+        }
+        # Créer bucket (ignoré si déjà existant)
         try:
-            supabase.storage.create_bucket(BUCKET, {"public": True})
+            import json as _json
+            _data = _json.dumps({"id": BUCKET, "name": BUCKET, "public": True}).encode()
+            _r = _ur.Request(f"{sb_url}/storage/v1/bucket", data=_data, headers=headers_json, method="POST")
+            _ur.urlopen(_r, timeout=10)
         except Exception:
-            pass  # Bucket existe déjà — c'est normal
-
+            pass
+        # Uploader le fichier
         chemin = f"fichiers_clients/{uid}_{req_id}_{fichier_nom}"
-        supabase.storage.from_(BUCKET).upload(
-            chemin,
-            fichier_bytes,
-            {"content-type": "application/octet-stream", "x-upsert": "true"}
+        _ru = _ur.Request(
+            f"{sb_url}/storage/v1/object/{BUCKET}/{chemin}",
+            data=fichier_bytes,
+            headers={"apikey": sb_key, "Authorization": f"Bearer {sb_key}",
+                     "Content-Type": "application/octet-stream", "x-upsert": "true"},
+            method="POST"
         )
-        url = supabase.storage.from_(BUCKET).get_public_url(chemin)
-        return url
+        _ur.urlopen(_ru, timeout=30)
+        return f"{sb_url}/storage/v1/object/public/{BUCKET}/{chemin}"
     except Exception as e:
         return f"ERREUR_UPLOAD:{e}"
 
@@ -1560,6 +1572,88 @@ Rédige maintenant le sujet COMPLET en te basant STRICTEMENT sur cette demande c
 {description}{type_sujet_inject}
 
 TOUT est rédigé intégralement. Total = /20. Adapte la matière, le niveau, le type d'examen et les exercices EXACTEMENT à la demande ci-dessus. Zéro "[à compléter]"."""
+
+        elif "Fiche de Cours" in service:
+            prompt = f"""Tu es un Professeur expert et pédagogue de haut niveau specialise dans la redaction de fiches de cours completes pour le systeme educatif ivoirien (programme officiel MENET-FP).
+
+COMMANDE DU PROFESSEUR :
+{description}
+
+STRUCTURE OBLIGATOIRE :
+
+# FICHE DE COURS
+
+## INFORMATIONS GENERALES
+- Matiere : | Niveau : | Duree :
+- Prerequis : [notions deja connues des eleves]
+
+---
+
+## OBJECTIFS PEDAGOGIQUES
+A la fin, l'eleve doit etre capable de :
+1. [Objectif 1]
+2. [Objectif 2]
+3. [Objectif 3]
+
+---
+
+## PLAN
+I. [Partie 1] A. [Sous-partie] B. [Sous-partie]
+II. [Partie 2] A. [Sous-partie] B. [Sous-partie]
+
+---
+
+## DEVELOPPEMENT COMPLET
+
+### I. [TITRE]
+A. [Sous-titre]
+[Contenu redige, clair, adapte au niveau]
+
+Definition : [terme] : [definition precise]
+
+Exemple ivoirien : [exemple concret Cote d Ivoire / Afrique]
+
+B. [Sous-titre]
+[Contenu...]
+
+### II. [TITRE]
+[Contenu complet...]
+
+---
+
+## SYNTHESE - A RETENIR
+[Points cles absolus a memoriser]
+
+---
+
+## EXERCICES D APPLICATION
+
+Exercice 1 - Facile
+[Enonce]
+
+Exercice 2 - Moyen
+[Enonce + sous-questions]
+
+Exercice 3 - Difficile
+[Probleme contextualise CI + bareme]
+
+---
+
+## CORRIGE COMPLET
+[Corrige detaille de chaque exercice]
+
+---
+
+## EVALUATION FORMATIVE
+[2-3 questions courtes fin de seance]
+
+REGLES ABSOLUES :
+- Programme 100% conforme MENET-FP du niveau indique
+- Exemples EXCLUSIVEMENT ivoiriens et africains
+- AUCUN "[a completer]" - TOUT redige integralement
+- Minimum 4-6 pages de contenu substantiel
+- Directement utilisable en classe par le professeur
+"""
 
         elif "CV" in service:
             prompt = f"""Tu es un expert RH et recrutement. Crée un CV et une lettre de motivation professionnels basés sur :
@@ -4058,6 +4152,7 @@ def main_dashboard():
     SERVICES_GEMINI = [
         "📝 Exposé scolaire complet IA",
         "📝 Création de Sujets & Examens",
+        "📖 Fiche de Cours Professeur IA",
         "👔 CV & Lettre de Motivation",
         "⚙️ Pack Office (Word/Excel/PPT)",
         "📊 Data & Excel Analytics",
@@ -4203,6 +4298,7 @@ def main_dashboard():
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
                     "📄 Conversion & Fichier PDF",
+                    "📖 Fiche de Cours Professeur IA",
                     "📎 Modifier mon Fichier (Word / Excel / PPT)"
                 ]
             )
@@ -4304,13 +4400,13 @@ def main_dashboard():
 
         st.markdown("#### 📝 Spécifications de la mission")
 
-        # Initialisations (Streamlit re-évalue à chaque run)
-        _niveau_val     = ""
-        _matiere_val    = ""
-        _fc_niveau_val  = ""
-        _fc_matiere_val = ""
-        mf_fichier      = None
-        mf_instructions = ""
+        # Initialisations (re-évaluées à chaque run Streamlit)
+        _niveau_val      = ""
+        _matiere_val     = ""
+        _fc_niveau_val   = ""
+        _fc_matiere_val  = ""
+        mf_fichier       = None
+        mf_instructions  = ""
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
@@ -4463,23 +4559,110 @@ INSTRUCTIONS NOVA EXAM :
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
+        elif "Fiche de Cours" in service:
+            st.markdown('''
+            <div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.35);
+                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+                <span style="color:#9b59b6;font-weight:700;">📖 Remplissez les champs — Nova génère une fiche de cours complète utilisable directement en classe</span>
+            </div>
+            ''', unsafe_allow_html=True)
+            col_a, col_b = st.columns(2)
+            with col_a:
+                fc_niveau = st.selectbox("🎓 Niveau de la classe *", [
+                    "── PRIMAIRE ──","CP1","CP2","CE1","CE2","CM1","CM2",
+                    "── COLLÈGE ──","6ème","5ème","4ème","3ème",
+                    "── LYCÉE ──","2nde",
+                    "1ère - Série A1","1ère - Série A2","1ère - Série B",
+                    "1ère - Série C","1ère - Série D","1ère - Série E",
+                    "Terminale - Série A1","Terminale - Série A2","Terminale - Série B",
+                    "Terminale - Série C","Terminale - Série D","Terminale - Série E",
+                    "── UNIVERSITÉ / BTS ──",
+                    "Licence 1 (L1)","Licence 2 (L2)","Licence 3 (L3)",
+                    "Master 1 (M1)","Master 2 (M2)",
+                    "BTS 1ère année","BTS 2ème année",
+                ], index=0, key="fc_niveau")
+                fc_matiere = st.selectbox("📚 Matière *", [
+                    "── TOUTES MATIÈRES ──",
+                    "Français / Lettres","Mathématiques","Sciences Physiques (PC)","SVT / Biologie",
+                    "Histoire-Géographie","Économie / Gestion","Comptabilité","Philosophie",
+                    "EDHC / Éducation Civique","Anglais (LV1)","Espagnol (LV2)","Allemand (LV2)",
+                    "Informatique / TIC","Technologie industrielle","EPS","Arts Plastiques",
+                    "Agronomie / Agriculture","Droit","Économie politique",
+                    "── PRIMAIRE ──",
+                    "Lecture / Écriture (primaire)","Calcul (primaire)",
+                    "Sciences d'Éveil (primaire)","Histoire-Géo (primaire)","ECM (primaire)",
+                    "Autre matière (préciser dans les notes)",
+                ], index=0, key="fc_matiere")
+            with col_b:
+                fc_duree = st.selectbox("⏱️ Durée de la séance *", [
+                    "30 minutes","45 minutes","1 heure",
+                    "1 heure 30","2 heures","3 heures",
+                    "Cours complet (plusieurs séances)",
+                ], index=2, key="fc_duree")
+                fc_type = st.selectbox("📄 Type de document *", [
+                    "Fiche de cours complète (objectifs + développement + exercices)",
+                    "Cours magistral (contenu seul, très détaillé)",
+                    "Plan de leçon (structure + timing + activités)",
+                    "Fiche de révision élève (synthèse dense)",
+                    "Cours + Exercices corrigés",
+                    "Fiche méthode (procédure étape par étape)",
+                ], index=0, key="fc_type")
+            col_c, col_d = st.columns(2)
+            with col_c:
+                fc_chapitre = st.text_input("📖 Titre du chapitre / Notion *",
+                    placeholder="Ex: Les fractions, La photosynthèse, La colonisation...",
+                    key="fc_chapitre")
+            with col_d:
+                fc_etablissement = st.text_input("🏢 Établissement (optionnel)",
+                    placeholder="Ex: Lycée Moderne de Cocody...", key="fc_etablissement")
+            fc_inclure = st.multiselect("✨ Éléments à inclure", [
+                "Objectifs pédagogiques détaillés","Prérequis des élèves",
+                "Exercices d'application","Corrigé complet des exercices",
+                "Évaluation formative (fin de séance)","Résumé / Synthèse à retenir",
+                "Exemples contextualisés (Côte d'Ivoire)","Définitions des termes clés",
+                "Référence au manuel officiel MENET-FP","Tableau récapitulatif",
+            ], default=[
+                "Objectifs pédagogiques détaillés","Exercices d'application",
+                "Corrigé complet des exercices","Exemples contextualisés (Côte d'Ivoire)",
+                "Définitions des termes clés","Résumé / Synthèse à retenir",
+            ], key="fc_inclure")
+            fc_notes = st.text_area("💬 Instructions supplémentaires (optionnel)", height=70,
+                placeholder="Ex: Niveau très faible — simplifier, Inclure exemples en FCFA...",
+                key="fc_notes")
+            _fc_niveau_val  = fc_niveau  if not fc_niveau.startswith("──")  else ""
+            _fc_matiere_val = fc_matiere if not fc_matiere.startswith("──") else ""
+            _fc_inclure_str = ", ".join(fc_inclure) if fc_inclure else "Éléments standards"
+            prompt = f"""FICHE DE COMMANDE NOVA COURS :
+🎓 NIVEAU          : {_fc_niveau_val or "Non précisé"}
+📚 MATIÈRE         : {_fc_matiere_val or "Non précisée"}
+📖 CHAPITRE        : {fc_chapitre.strip() or "Choisir un chapitre cohérent"}
+📄 TYPE DOCUMENT   : {fc_type}
+⏱️ DURÉE           : {fc_duree}
+🏢 ÉTABLISSEMENT   : {fc_etablissement.strip() or "Non précisé"}
+✨ ÉLÉMENTS        : {_fc_inclure_str}
+💬 INSTRUCTIONS    : {fc_notes.strip() or "Aucune"}
+"""
+            if _fc_niveau_val and _fc_matiere_val and fc_chapitre.strip():
+                st.success(f"✅ Fiche prête : **{fc_chapitre.strip()[:40]}** · **{_fc_matiere_val}** · **{_fc_niveau_val}**")
+            elif _fc_niveau_val and _fc_matiere_val:
+                st.info("💡 Précisez le titre du chapitre pour un meilleur résultat")
+            else:
+                if not _fc_niveau_val: st.warning("⚠️ Sélectionnez un niveau scolaire précis")
+                if not _fc_matiere_val: st.warning("⚠️ Sélectionnez une matière précise")
+
         elif "Modifier" in service and "Fichier" in service:
-            st.markdown("""
+            st.markdown('''
             <div style="background:rgba(0,210,255,0.07);border:1px solid rgba(0,210,255,0.3);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
                 <span style="color:#00d2ff;font-weight:700;">📎 Importez votre fichier et décrivez vos modifications — notre équipe s'en charge</span>
             </div>
-            """, unsafe_allow_html=True)
-
-            mf_fichier = st.file_uploader(
-                "📂 Importer votre fichier *",
+            ''', unsafe_allow_html=True)
+            mf_fichier = st.file_uploader("📂 Importer votre fichier *",
                 type=["docx","xlsx","xls","pptx","ppt","doc","pdf","csv","txt"],
                 help="Formats : Word, Excel, PowerPoint, PDF, CSV, TXT",
-                key="mf_fichier"
-            )
+                key="mf_fichier")
             if mf_fichier:
-                st.success(f"✅ Fichier reçu : **{mf_fichier.name}** · {round(mf_fichier.size/1024,1)} Ko")
-
+                st.success(f"✅ **{mf_fichier.name}** · {round(mf_fichier.size/1024,1)} Ko")
             mf_type_modif = st.selectbox("🛠️ Type de modification *", [
                 "Correction et amélioration du contenu",
                 "Mise en forme / Design professionnel",
@@ -4493,37 +4676,29 @@ INSTRUCTIONS NOVA EXAM :
                 "Adapter à un nouveau modèle / template",
                 "Autre modification (préciser dans les instructions)",
             ], key="mf_type_modif")
-
-            mf_instructions = st.text_area(
-                "✍️ Décrivez précisément ce que vous voulez *",
+            mf_instructions = st.text_area("✍️ Décrivez précisément ce que vous voulez *",
                 height=130,
-                placeholder="Ex: Mettre le tableau en page 3 en format automatique, ajouter une colonne Total avec formule, corriger les fautes, changer la police...",
-                key="mf_instructions"
-            )
+                placeholder="Ex: Mettre le tableau en page 3 en format auto, ajouter colonne Total avec formule, corriger les fautes...",
+                key="mf_instructions")
             mf_urgence = st.selectbox("⏱️ Délai souhaité", [
                 "Dès que possible (standard)",
                 "Urgent — dans les 2 heures",
                 "Très urgent — dans 1 heure",
             ], key="mf_urgence")
-
-            _mf_fichier_nom = mf_fichier.name if mf_fichier else "Aucun fichier"
-            prompt = f"""FICHE DE COMMANDE NOVA MODIFICATION FICHIER :
-
-📎 FICHIER IMPORTÉ    : {_mf_fichier_nom}
-🛠️ TYPE MODIFICATION  : {mf_type_modif}
-⏱️ DÉLAI SOUHAITÉ     : {mf_urgence}
-✍️ INSTRUCTIONS       :
-{mf_instructions.strip() if mf_instructions.strip() else "(aucune instruction fournie)"}
-
-NOTE ÉQUIPE : Le fichier original est joint à cette demande via le lien ci-dessous.
+            _mf_nom = mf_fichier.name if mf_fichier else "Aucun fichier"
+            prompt = f"""FICHE MODIFICATION FICHIER :
+📎 FICHIER         : {_mf_nom}
+🛠️ MODIFICATION    : {mf_type_modif}
+⏱️ DÉLAI           : {mf_urgence}
+✍️ INSTRUCTIONS    :
+{mf_instructions.strip() or "(aucune instruction)"}
+NOTE : fichier original joint via lien ci-dessous.
 """
             if mf_fichier and mf_instructions.strip():
-                st.success("✅ Demande complète — votre fichier sera traité par notre équipe")
+                st.success("✅ Demande complète — notre équipe s'en charge")
             else:
-                if not mf_fichier:
-                    st.warning("⚠️ Importez votre fichier pour continuer")
-                if not mf_instructions.strip():
-                    st.warning("⚠️ Décrivez les modifications souhaitées")
+                if not mf_fichier: st.warning("⚠️ Importez votre fichier")
+                if not mf_instructions.strip(): st.warning("⚠️ Décrivez les modifications souhaitées")
 
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
@@ -4588,6 +4763,11 @@ NOTE ÉQUIPE : Le fichier original est joint à cette demande via le lien ci-des
             if not _niveau_val or _niveau_val.startswith("──"):
                 champs_manquants.append("Niveau scolaire")
             if not _matiere_val or _matiere_val.startswith("──"):
+                champs_manquants.append("Matière")
+        elif "Fiche de Cours" in service:
+            if not _fc_niveau_val or fc_niveau.startswith("──"):
+                champs_manquants.append("Niveau scolaire")
+            if not _fc_matiere_val or fc_matiere.startswith("──"):
                 champs_manquants.append("Matière")
         elif "Modifier" in service and "Fichier" in service:
             if not mf_fichier:
@@ -4778,24 +4958,17 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
             statut = "En attente de vérification (informations incomplètes)" if champs_manquants else "Traitement Nova en cours..."
 
             req_id_new = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
-
-            # Upload fichier si service "Modifier Fichier"
             fichier_info = ""
             if "Modifier" in service and "Fichier" in service and mf_fichier:
-                with st.spinner("📤 Upload du fichier en cours..."):
-                    url_fichier = upload_fichier_client(
-                        user if user else "guest",
-                        req_id_new,
-                        mf_fichier.getvalue(),
-                        mf_fichier.name
-                    )
-                if url_fichier.startswith("ERREUR"):
-                    st.warning(f"⚠️ Fichier non uploadé — demande transmise sans fichier ({url_fichier})")
+                with st.spinner("📤 Upload du fichier..."):
+                    url_f = upload_fichier_client(
+                        user if user else "guest", req_id_new,
+                        mf_fichier.getvalue(), mf_fichier.name)
+                if url_f.startswith("ERREUR"):
+                    st.warning(f"⚠️ Fichier non uploadé ({url_f})")
                 else:
-                    fichier_info = f"\n📎 FICHIER CLIENT : {url_fichier}"
-
+                    fichier_info = f"\n📎 FICHIER CLIENT : {url_f}"
             desc_finale = (prompt if prompt else "(aucune description fournie)") + fichier_info
-
             new_req = {
                 "id": req_id_new,
                 "user": user if user else "guest",
@@ -4977,30 +5150,24 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         st.markdown(f"📱 **WhatsApp :** {client_wa}")
                         st.markdown(f"🛠️ **Service demandé :** {service}")
                         st.markdown(f"📝 **Détails de la demande :** {description}")
-
-                        # Bouton téléchargement fichier client
                         if "Modifier" in service and "Fichier" in service:
-                            fichier_url = None
-                            fichier_nom_dl = "fichier_client"
-                            for ligne in description.split("\n"):
-                                if "📎 FICHIER CLIENT :" in ligne:
-                                    fichier_url = ligne.replace("📎 FICHIER CLIENT :", "").strip()
-                                if "FICHIER IMPORTÉ" in ligne:
-                                    fichier_nom_dl = ligne.split(":")[-1].strip()
-                            if fichier_url and fichier_url.startswith("http"):
-                                st.markdown(f"""
-                                <a href="{fichier_url}" target="_blank"
+                            _url_dl = None
+                            _nom_dl = "fichier_client"
+                            for _l in description.split("\n"):
+                                if "📎 FICHIER CLIENT :" in _l:
+                                    _url_dl = _l.replace("📎 FICHIER CLIENT :", "").strip()
+                                if "FICHIER" in _l and ":" in _l and "MODIF" not in _l and "NOTE" not in _l and "📎 FICHIER CLIENT" not in _l:
+                                    _nom_dl = _l.split(":")[-1].strip()
+                            if _url_dl and _url_dl.startswith("http"):
+                                st.markdown(f'''<a href="{_url_dl}" target="_blank"
                                    style="display:inline-flex;align-items:center;gap:8px;
-                                          background:linear-gradient(135deg,rgba(0,210,255,0.15),rgba(0,180,220,0.08));
-                                          border:1px solid rgba(0,210,255,0.5);border-radius:10px;
-                                          padding:10px 20px;color:#00d2ff;font-weight:700;
-                                          text-decoration:none;font-size:0.9rem;margin-top:8px;">
-                                    📥 TÉLÉCHARGER LE FICHIER — {fichier_nom_dl}
-                                </a>
-                                """, unsafe_allow_html=True)
+                                   background:rgba(0,210,255,0.12);border:1px solid rgba(0,210,255,0.5);
+                                   border-radius:10px;padding:10px 20px;color:#00d2ff;
+                                   font-weight:700;text-decoration:none;margin-top:6px;">
+                                   📥 TÉLÉCHARGER LE FICHIER — {_nom_dl}</a>''',
+                                   unsafe_allow_html=True)
                             else:
-                                st.info("📎 Fichier client non disponible")
-
+                                st.info("📎 Fichier non disponible")
                     with col_badge:
                         if client_premium:
                             st.markdown('<span class="badge-premium">⭐ PREMIUM</span>', unsafe_allow_html=True)
