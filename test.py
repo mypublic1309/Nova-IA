@@ -930,38 +930,104 @@ IMPÉRATIFS ABSOLUS :
             # ── INJECTION DU TYPE DE SUJET dans la description si renseigné ──
             type_sujet_inject = ""
             if "type_sujet_selectionne" in dir() and type_sujet_selectionne:
+
+                # ── Descriptions complètes de tous les types ──────────────────
                 TYPE_SUJET_LABELS_FR = {
-                    "QCM": "QCM (Questions à Choix Multiple — 4 options A/B/C/D, cases □, un seul type d'exercice)",
-                    "VRAI_FAUX": "VRAI ou FAUX UNIQUEMENT (affirmations à évaluer V/F + justification si faux, UN SEUL TYPE d'exercice)",
-                    "TEXTE_TROU": "TEXTE À TROUS UNIQUEMENT (texte lacunaire + liste de mots à placer, UN SEUL TYPE d'exercice)",
-                    "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES UNIQUEMENT (questions de réflexion rédigées avec lignes de réponse, UN SEUL TYPE)",
-                    "MIXTE": "FORMAT MIXTE (Partie 1 QCM + Partie 2 Vrai/Faux + Partie 3 Question ouverte, barème équilibré)",
-                    "CAS_PRATIQUE": "CAS PRATIQUE / ÉTUDE DE CAS (texte contextualisé Côte d'Ivoire + questions d'analyse progressives)",
-                    "CALCUL": "EXERCICES DE CALCUL / PROBLÈMES (chiffrés, contextualisés CI, formules rappelées, démarche guidée)",
-                    "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support : texte/tableau/carte + questions d'identification, analyse, interprétation)",
-                    "SCHEMA": "SCHÉMA À LÉGENDER (schéma décrit textuellement avec numéros + termes à placer + corrigé légendes)",
-                    "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet formulé + consignes de méthode + plan détaillé guidé)",
+                    "AUTO": "AUTOMATIQUE — Nova choisit le meilleur type selon la matière et le niveau",
+                    "QCM": "QCM — Tableau 4 colonnes (N° / Affirmation incomplète / Réponse 1 / Réponse 2 / Réponse 3). L'élève écrit sur sa copie le numéro suivi de la bonne réponse.",
+                    "VRAI_FAUX": "VRAI ou FAUX — Affirmations numérotées, l'élève écrit V ou F sur sa copie avec justification si fausse.",
+                    "TEXTE_TROU": "TEXTE À TROUS — Texte lacunaire avec blancs numérotés 1.___ 2.___ + liste de mots à placer donnée entre parenthèses.",
+                    "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES — Questions rédigées numérotées, l'élève répond sur sa copie.",
+                    "QR": "QUESTIONS/RÉPONSES COURTES — Questions ou affirmations numérotées courtes, format PC/SVT ivoirien. Réponses sur copie.",
+                    "CALCUL": "PROBLÈME DE CALCUL — Mise en situation + données + questions guidées (Données → Formule → Application numérique → Résultat avec unité).",
+                    "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT — Document support (texte, tableau, graphe, carte) + questions d'identification, analyse, interprétation.",
+                    "CAS_PRATIQUE": "CAS PRATIQUE / SITUATION COMPLEXE — Contexte réel ivoirien + questions multi-niveaux (restitution → application → analyse → synthèse).",
+                    "DISSERTATION": "DISSERTATION / COMPOSITION GUIDÉE — Sujet formulé + consignes méthode + plan détaillé guidé.",
+                    "RELIE": "EXERCICE RELIÉ — Colonne A (termes numérotés ① ② ③...) ↔ Colonne B (définitions avec puces •). Consigne : 'Recopie sur ta copie et relie chaque élément de la colonne A à sa définition dans la colonne B'.",
+                    "MOTS_DESORDRE": "MOTS DÉSORDONNÉS — Mots numérotés et mélangés sur une ligne, l'élève recopie et réécrit la phrase correcte sur sa copie.",
+                    "TABLEAU_CLASSER": "TABLEAU À CLASSER — Mots/expressions à placer dans les bonnes colonnes d'un tableau. Consigne : 'Recopie le tableau sur ta copie et classe les éléments suivants'.",
+                    "SCHEMA": "SCHÉMA À LÉGENDER — Description textuelle d'un schéma numéroté + liste des termes à placer.",
+                    "MIXTE": "MIXTE — Deux sous-parties A/ et B/ avec des types différents.",
+                    "THESE_ANTITHESE": "THÈSE / ANTITHÈSE / SYNTHÈSE — Plan dialectique complet pour Philo, Éco, Droit.",
+                    "ETUDE_CAS_PRO": "ÉTUDE DE CAS PROFESSIONNELLE — Dossier + annexes + questions d'analyse et de décision.",
+                    "COMMENTAIRE": "COMMENTAIRE DE TEXTE — Texte + axes d'analyse + commentaire structuré.",
                 }
-                label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
-                type_sujet_inject = f"""
 
-⚠️ TYPE DE SUJET IMPOSÉ PAR L'UTILISATEUR — RESPECTER ABSOLUMENT :
-TYPE UNIQUE SÉLECTIONNÉ : {label_fr}
+                # ── Construction du plan structuré ────────────────────────────
+                _exercices = st.session_state.get("exercices_config_built", exercices_config)
+                if _exercices:
+                    plan_lignes = []
+                    for e in _exercices:
+                        t_label = TYPE_SUJET_LABELS_FR.get(e["type"], e["type"])
+                        theme_txt = f" — Thème : {e['theme']}" if e.get("theme","").strip() else ""
+                        nb_q_txt = f" — {e['nb_questions']} questions"
+                        if e["type"] == "MIXTE" and e.get("sous_type_a"):
+                            sa = TYPE_SUJET_LABELS_FR.get(e["sous_type_a"], e["sous_type_a"]).split("—")[0]
+                            sb = TYPE_SUJET_LABELS_FR.get(e.get("sous_type_b",""), "").split("—")[0]
+                            t_label = f"MIXTE → A/ {sa} + B/ {sb}"
+                        plan_lignes.append(f"  EXERCICE {e['num']} ({e['points']} points) : {t_label}{theme_txt}{nb_q_txt}")
 
-RÈGLE ABSOLUE : Tu dois générer UN SEUL TYPE D'EXERCICE correspondant EXACTEMENT au type ci-dessus.
-- Si QCM → QCM UNIQUEMENT (pas de Vrai/Faux, pas de texte à trous, pas de questions ouvertes)
-- Si VRAI_FAUX → Vrai/Faux UNIQUEMENT
-- Si TEXTE_TROU → Texte à trous UNIQUEMENT
-- Si QUESTIONS_OUVERTES → Questions ouvertes UNIQUEMENT
-- Si MIXTE → Les 3 parties indiquées (QCM + Vrai/Faux + Question ouverte)
-- Si CAS_PRATIQUE → Un texte de mise en contexte + questions d'analyse
-- Si CALCUL → Exercices de calcul/problèmes chiffrés UNIQUEMENT
-- Si ETUDE_DOCUMENT → Document support + questions d'exploitation UNIQUEMENT
-- Si SCHEMA → Description du schéma numéroté + légendes UNIQUEMENT
-- Si DISSERTATION → Sujet + consignes de méthode + plan guidé UNIQUEMENT
+                    total_config = sum(e["points"] for e in _exercices)
+                    type_sujet_inject = f"""
 
-NE PAS MÉLANGER LES TYPES sauf si MIXTE est explicitement sélectionné.
+⚠️ PLAN D'EXERCICES IMPOSÉ PAR L'UTILISATEUR — RESPECTER ABSOLUMENT :
+
+STRUCTURE EXACTE DU SUJET :
+{chr(10).join(plan_lignes)}
+TOTAL : {total_config}/20
+
+RÈGLES ABSOLUES :
+- Génère EXACTEMENT {len(_exercices)} exercice(s) dans CET ORDRE précis
+- Chaque exercice doit correspondre EXACTEMENT au type spécifié ci-dessus
+- Respecte le barème exact de chaque exercice
+- Respecte le nombre de questions demandé pour chaque exercice
+- NE PAS inventer d'exercices supplémentaires ni changer les types
+- Si un thème est précisé pour un exercice, l'exercice DOIT porter sur ce thème
+
+CONSIGNES PAR TYPE :
+- QCM → Tableau 4 colonnes (N°/Affirmation/Réponse 1/Réponse 2/Réponse 3), l'élève encercle sur sa copie
+- VRAI_FAUX → Affirmations numérotées, l'élève écrit V ou F sur sa copie
+- TEXTE_TROU → Texte avec blancs 1.___ 2.___ et liste de mots fournie
+- RELIE → Colonne A (①②③ termes) ↔ Colonne B (• définitions), consigne "Recopie sur ta copie et relie"
+- MOTS_DESORDRE → Mots numérotés et mélangés, l'élève réécrit la phrase correcte sur sa copie
+- TABLEAU_CLASSER → Tableau vide à recopier + mots à placer dans les bonnes colonnes
+- QR → Questions/affirmations courtes numérotées, réponses sur copie
+- CALCUL → Mise en situation + données + questions guidées avec démarche
+- ETUDE_DOCUMENT → Document support + questions progressives
+- CAS_PRATIQUE → Situation complexe + questions multi-niveaux
+- SCHEMA → Schéma décrit textuellement avec numéros + liste termes à placer
+- MIXTE → Sous-partie A/ puis B/ chacune avec son propre type
 """
+                else:
+                    # Fallback ancien système
+                    label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
+                    type_sujet_inject = f"""
+
+⚠️ TYPE DE SUJET IMPOSÉ : {label_fr}
+RÈGLE : Génère UNIQUEMENT ce type d'exercice sur l'ensemble du sujet.
+"""
+
+            # ── INJECTION FORMAT RÉPONSE (copie ou sur le sujet) ──────────
+            reponse_inject = ""
+            _reponse_sur_copie = st.session_state.get("reponse_sur_copie_val", True)
+            if _reponse_sur_copie:
+                reponse_inject = """
+
+📄 FORMAT RÉPONSE : L'ÉLÈVE RÉPOND SUR SA COPIE (choix de l'utilisateur)
+→ INTERDIT dans le sujet : lignes ___________, espaces vides sous les questions, "Réponse : ..."
+→ AUTORISÉ uniquement : blancs numérotés dans textes lacunaires (1._______ 2.________)
+→ Consignes à utiliser : "Écris sur ta feuille de copie...", "Recopie sur ta copie et complète...", "Réponds sur ta feuille de copie"
+"""
+            else:
+                reponse_inject = """
+
+📄 FORMAT RÉPONSE : L'ÉLÈVE RÉPOND DIRECTEMENT SUR LE SUJET (choix de l'utilisateur)
+→ OBLIGATOIRE : ajouter des lignes de réponse _______________ (min 15 underscores) sous chaque question
+→ Espace proportionnel au barème : 1pt → 2 lignes / 2pts → 4 lignes / 3pts → 6 lignes
+→ Consignes : "Complète directement sur ce document", "Écris ta réponse sur les lignes ci-dessous"
+→ Format adapté aux fiches d'activité, IE primaire, exercices distribués à remplir
+"""
+            type_sujet_inject = type_sujet_inject + reponse_inject
 
             prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d\'examens numéro 1 du système scolaire ivoirien.
 Tu maîtrises tous les programmes officiels MENET-FP/DECO, tous les formats CEPE, BEPC, BAC et concours, et tu es expert en mise en page Word professionnelle via python-docx.
@@ -983,7 +1049,7 @@ MISE EN PAGE WORD :
 - ════════════════════════════════════════════════════════ → trait bleu épais entre exercices
 - ---SAUT_DE_PAGE--- → saut de page réel (JAMAIS précédé d'un ════)
 - □ ☐ → cases à cocher (QCM, Vrai/Faux)
-- _______________ (min 15 underscores) → ligne de réponse élève
+- _______________ (min 15 underscores) → UNIQUEMENT dans les textes à trous lacunaires (jamais comme ligne de réponse sous une question)
 
 MOTEUR DE FORMULES — 4 MODES :
 
@@ -1462,6 +1528,129 @@ DEVOIR SURVEILLÉ (DS) — 1h à 3h, /20 :
   → 3-4 exercices progressifs (facile → difficile)
   → Programme récent (1 à 3 chapitres), barème équilibré
 
+RÈGLES SPÉCIFIQUES PAR MATIÈRE — FORMAT RÉEL DES DEVOIRS IVOIRIENS (basé sur vrais sujets) :
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EN-TÊTE RÉELLE DES DEVOIRS IVOIRIENS — À RESPECTER STRICTEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FORMAT EN-TÊTE SIMPLIFIÉ (DS, IE, devoir trimestriel) — PAS de grandes cases ni tableau :
+  Ligne 1 (centré, en-tête petit) : NOM ÉTABLISSEMENT / NOM ÉTABLISSEMENT (répété comme les vrais sujets CI)
+  Ligne 2 gauche : Année Scolaire : 20XX-20XX    |    Ligne 2 droite : Coefficient : X
+  Ligne 3 gauche : Classe : [niveau]              |    Ligne 3 droite : Durée : X Heures
+  Titre centré encadré : DEVOIR DE [MATIÈRE EN MAJUSCULES] N°X
+  Sous-titre italique centré : "Cette épreuve comporte deux (02) pages numérotées 1 et 2."
+  Sous-titre 2 italique centré : "L'usage de la calculatrice scientifique est autorisé." (si applicable)
+  PAS de logo, PAS de cases Nom/Prénom dans l'en-tête (seulement sur la copie de l'élève)
+  PAS de tableau "RÉPARTITION DES POINTS" dans l'en-tête — les points sont indiqués par exercice
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHYSIQUE-CHIMIE (PC) — FORMAT RÉEL COLLÈGE ET LYCÉE CI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Structure OBLIGATOIRE pour un DS de PC (2 exercices × 5 points = /10 OU 2 exercices × 10 points = /20) :
+
+EXERCICE 1 (X Points) — TOUJOURS divisé en 2 parties :
+  ## PHYSIQUE (Y Points) :
+    A/ Exercice RELIÉ en tableau : "Recopie chaque diagramme/terme sur ta copie et relie chaque expression à sa définition."
+       Format TABLEAU 2 colonnes :
+       | Termes/Notions (colonne gauche) | Définitions (colonne droite avec puces •) |
+       Exemple réel : Un référentiel • | • Il permet de situer un point mobile dans le temps.
+                      Un repère d'espace • | • C'est un solide par rapport auquel on décrit un mouvement.
+                      Un repère de temps • | • Il permet de définir la position du point mobile par ses coordonnées
+                                            | • Il permet de suivre la vitesse du point mobile dans le temps.
+    B/ MOTS DÉSORDONNÉS : "Réarrange les mots et groupes de mots suivants de sorte à constituer une phrase correcte."
+       Afficher les mots numérotés (avec numéros au-dessus) et la ligne de réponse
+
+  ## CHIMIE (Z Points) :
+    A/ QUESTIONS/RÉPONSES numérotées : "Écris le numéro de chacune des affirmations ci-dessous, suivi de la lettre V si l'affirmation est vraie ou de la lettre F si elle est fausse."
+       Format : numéros 1- 2- 3- 4- avec affirmations à évaluer V ou F
+    B/ Identifier l'élément commun : "Indique pour chaque liste de corps, le nom de l'élément chimique commun."
+       Format liste : a) CuO ; CuSO₄ ; Cu(OH)₂ ; Cu²⁺   b) SO₂ ; S²⁻ ; H₂SO₄ ; H₂S
+
+EXERCICE 2 (X Points) — SITUATION AVEC DONNÉES + CALCULS :
+  Contexte : "Un de tes camarades découvre dans un manuel que..." ou situation réelle ivoirienne
+  Données fournies en encadré ou liste : masse du proton, constantes, valeurs mesurées
+  Questions numérotées avec démarche guidée :
+    → Questions de compréhension (définir, identifier)
+    → Questions de calcul (formule + application numérique + résultat avec unité)
+    Démarche calcul OBLIGATOIRE : **Données :** ... → **Formule :** ... → **Application :** ... → **Résultat :**
+
+FORMAT 2 PAGES RECTO-VERSO PC :
+  → Page 1 : En-tête + EXERCICE 1 complet (Physique A/ B/ + Chimie A/ B/)
+  → ---SAUT_DE_PAGE--- entre exercice 1 et exercice 2
+  → Page 2 : EXERCICE 2 complet (situation + données + questions de calcul)
+  → Bas page 1 : "Tournez la feuille — Page 1/2"
+  → Bas page 2 : "Fin du sujet — Page 2/2"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MATHÉMATIQUES — FORMAT RÉEL COLLÈGE ET LYCÉE CI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXERCICE 1 — QCU EN TABLEAU (questionnaire à choix unique) :
+  Consigne : "Cet exercice est un questionnaire à choix unique. Pour chacune des affirmations incomplètes contenues dans le tableau ci-dessous, trois réponses sont proposées dont une seule est correcte. Pour avoir une réponse complète correcte et juste, écris sur ta feuille de copie, le numéro de l'affirmation incomplète suivi de la réponse juste. Exemple de réponse juste : 4- Réponse 1."
+  Format TABLEAU 4 colonnes :
+  | N° | Affirmations incomplètes | Réponse 1 | Réponse 2 | Réponse 3 |
+  (PAS de cases A/B/C/D — les réponses sont dans des colonnes "Réponse 1", "Réponse 2", "Réponse 3")
+
+EXERCICE 2 — VRAI/FAUX EN TABLEAU ou TEXTE + QUESTIONS :
+  Format Vrai/Faux : "Écris sur ta feuille de copie, le numéro de chacune des affirmations ci-dessous suivi de V si l'affirmation est vraie ou de F si l'affirmation est fausse."
+  Tableau 2 colonnes : | N° | AFFIRMATIONS |
+  OU : texte + questions numérotées classiques
+
+EXERCICE 3 — EXERCICE RELIÉ EN TABLEAU :
+  Tableau 3 colonnes A / B / C avec éléments à relier par flèches
+  OU problème algébrique classique
+
+EXERCICE 4 — PROBLÈME GÉOMÉTRIE ou SITUATION COMPLEXE :
+  Contexte réel ivoirien, données mesurées, questions progressive
+
+FORMAT 2 PAGES MATHS :
+  → Page 1 : En-tête + Exercice 1 + Exercice 2
+  → ---SAUT_DE_PAGE---
+  → Page 2 : Exercice 3 + Exercice 4
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SVT — FORMAT RÉEL COLLÈGE ET LYCÉE CI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXERCICE 1 (04 points) — RESTITUTION DES CONNAISSANCES :
+  A/ Tableau à classer : "Les mots et groupes de mots ci-dessous sont en relation avec une cellule végétale placée dans différents milieux. Classe ces mots et groupes de mots dans la colonne du tableau qui convient."
+     Tableau 3 colonnes : | Milieu hypotonique | Milieu isotonique | Milieu hypertonique |
+  OU : liste de mots mélangés à classer dans un tableau par catégorie
+
+EXERCICE 2 (04 points) — VRAI/FAUX + TEXTE À TROUS :
+  A/ "Les affirmations suivantes se rapportent à [thème]. Reponds par Vrai si l'affirmation est vraie ou Faux si elle est fausse."
+     Affirmations numérotées 1 à 8
+  B/ "Les mots et groupes de mots suivants sont extraits d'un texte. Reponds par Vrai ou Faux si chaque assertion est vraie ou fausse."
+     PUIS : texte à trous numéroté : "La structure de l'ADN en : 1._______ 2._______ 3._______ ..."
+     Mots à placer fournis entre parenthèses en désordre
+
+EXERCICE 3 (06 points) — GRAPHE OU SCHÉMA + QUESTIONS :
+  Contexte : situation réelle (cycle cellulaire, photosynthèse, hérédité...)
+  Graphe décrit textuellement avec axes, légendes et valeurs
+  Questions : 1. Identifier les phases 2. Relever les valeurs 3. Expliquer 4. Établir une relation
+
+EXERCICE 4 (06 points) — SITUATION COMPLEXE EXPÉRIMENTALE :
+  Situation : "Après avoir suivi le cours sur [thème], les élèves de la classe réalisent l'expérience suivante..."
+  1. Donner les résultats 2. Nommer le phénomène 3. Expliquer
+
+FORMAT 2 PAGES SVT :
+  → Page 1 : En-tête + Exercice 1 + Exercice 2
+  → ---SAUT_DE_PAGE---
+  → Page 2 : Exercice 3 + Exercice 4
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRANÇAIS — COLLÈGE ET LYCÉE CI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  → Partie A : Compréhension de texte (texte 150-200 mots + questions numérotées)
+  → Partie B : Étude de la langue (grammaire, conjugaison, vocabulaire)
+  → Partie C : Production écrite (rédaction, commentaire, dissertation)
+
+RÈGLE UNIVERSELLE FORMAT 2 PAGES :
+  → TOUJOURS utiliser ---SAUT_DE_PAGE--- EXACTEMENT au milieu du sujet (entre Exo 2 et Exo 3)
+  → En-tête SIMPLE comme les vrais sujets CI — pas de cases énormes, pas de logo inventé
+  → Les points sont indiqués dans le titre de chaque exercice : EXERCICE 1 (5 Points)
+  → Chaque sous-partie a ses points : PHYSIQUE (2 Points) / CHIMIE (3 Points)
+  → "Tournez la feuille — Page 1/2" en bas de page 1
+  → "Fin du sujet — Page 2/2" en bas de page 2
+
 DEVOIR DE MAISON (DM) — sans limite, /20 :
   → "Travail individuel exigé — copie identique = note 0 pour les deux élèves"
   → Documents autorisés, recherche personnelle encouragée
@@ -1579,8 +1768,24 @@ RÈGLE 8  — DISTRACTORS QCM = ERREURS RÉELLES : fausses réponses = erreurs c
 RÈGLE 9  — NIVEAU STRICT : vocabulaire, longueur, complexité EXACTEMENT adaptés au niveau détecté
 RÈGLE 10 — VARIÉTÉ OBLIGATOIRE : jamais le même format deux fois dans un même sujet
 RÈGLE 11 — TEXTE ÉTUDE COMPLET : texte rédigé 150-250 mots, ancré en CI/Afrique, JAMAIS "[insérer texte]"
-RÈGLE 12 — LIGNES DE RÉPONSE PROPORTIONNELLES : 1 pt → 2 lignes / 2 pts → 4 lignes / 3+ pts → 6+ lignes
-RÈGLE 13 — BARÈME DANS TABLEAU EN-TÊTE : tableau récapitulatif avec tous les exercices et leurs points
+RÈGLE 12 — SUJET SANS LIGNES DE RÉPONSE (RÈGLE FONDAMENTALE DU SYSTÈME SCOLAIRE IVOIRIEN) :
+  ⚠️ EN CÔTE D'IVOIRE, L'ÉLÈVE RÉPOND SUR SA COPIE — PAS SUR LE SUJET.
+  INTERDIT ABSOLU dans le sujet :
+  ✗ _______________ (underscores pour répondre) sauf dans les TEXTES À TROUS (lacunaires)
+  ✗ "Réponse : ..........." ou "Réponse : ___________"
+  ✗ Espaces vides sous les questions pour écrire
+  ✗ "Écris ta réponse ici :"
+  AUTORISÉ dans le sujet :
+  ✓ Les blancs numérotés dans un texte lacunaire : "La cellule est composée de 1._______ et de 2._______"
+  ✓ Les mots à placer dans un texte à trous : "(mots : noyau, membrane, cytoplasme)"
+  ✓ La consigne "Recopie et complète sur ta copie" ou "Réponds sur ta copie"
+  ✓ Le tableau vide à recopier sur la copie (pas à remplir sur le sujet)
+  FORMULATION CORRECTE des consignes :
+  ✓ "Écris sur ta feuille de copie, le numéro de chacune des affirmations suivi de V ou F"
+  ✓ "Recopie chaque diagramme sur ta copie et relie chaque expression à sa définition"
+  ✓ "Pour chacune des affirmations, écris sur ta copie le numéro suivi de la lettre de la bonne réponse"
+  ✓ "Réponds aux questions suivantes sur ta feuille de copie"
+RÈGLE 13 — BARÈME DANS LE TITRE DE CHAQUE EXERCICE : ## EXERCICE 1 (5 Points) — pas de tableau récapitulatif
 RÈGLE 14 — CORRIGÉ SEULEMENT SI DEMANDÉ : n\'inclure le corrigé que si "corrigé/correction" est dans la demande
 RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
   • QCM → bonne lettre + explication pourquoi chaque distractor est FAUX
@@ -1592,35 +1797,46 @@ RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
 
 === STRUCTURE DU DOCUMENT À PRODUIRE ===
 
-###TITRE_ROUGE### SUJET — [MATIÈRE EN MAJUSCULES] — [NIVEAU]
+⚠️ EN-TÊTE OBLIGATOIRE — FORMAT RÉEL DES VRAIS DEVOIRS IVOIRIENS (Collège/Lycée CI) :
+NE PAS utiliser le format "RÉPUBLIQUE DE CÔTE D'IVOIRE" pour les devoirs de classe normaux.
+UTILISER CE FORMAT EXACT pour DS, devoir trimestriel, IE :
 
-**RÉPUBLIQUE DE CÔTE D\'IVOIRE**
-Union — Discipline — Travail
+───────────────────────────────────────────────────────────────────────
+[NOM ÉTABLISSEMENT] * [NOM ÉTABLISSEMENT] * [NOM ÉTABLISSEMENT]
 
-**Établissement :** [Nom complet]     **Année scolaire :** 2025 — 2026
-**Matière :** [Matière]     **Niveau / Série :** [Niveau]     **Type :** [DS / Examen blanc / IE / DM...]
-**Durée :** [Durée]     **Coefficient :** [Coef]     **Barème total :** /20
+Année Scolaire : [20XX-20XX]          [LOGO optionnel]          Coefficient : [X]
+Classe : [niveau]                                                Durée : [X] Heures(s)
 
-**Nom et Prénoms :** ...........................................................     **N° de table :** .............
-**Salle :** ....................     **Signature du surveillant :** .......................................
+╔══════════════════════════════════════════════════════╗
+║        DEVOIR DE [MATIÈRE EN MAJUSCULES] N°[X]       ║
+╚══════════════════════════════════════════════════════╝
 
-**CONSIGNES GÉNÉRALES :**
-- Lisez l\'intégralité du sujet avant de commencer — la lecture attentive évite les erreurs
-- Indiquez clairement le numéro de chaque question dans votre copie
-- Rédigez en français correct et lisible — la présentation et l\'expression sont évaluées
-- Tout document et téléphone portable sont strictement interdits
-- Fraude = exclusion immédiate et note zéro pour toutes les matières du jour
+*Cette épreuve comporte deux (02) pages numérotées 1 et 2.*
+*L'usage de la calculatrice scientifique est autorisé.* (si applicable)
 
-**RÉPARTITION DES POINTS :**
-| Exercice | Contenu | Barème |
-|----------|---------|--------|
-| Exercice 1 | [Format + thème concret] | /[X] |
-| Exercice 2 | [Format + thème concret] | /[X] |
-| Exercice 3 | [Format + thème concret] | /[X] |
-| Exercice 4 | [si nécessaire] | /[X] |
-| **TOTAL** | | **/20** |
+───────────────────────────────────────────────────────────────────────
+EXERCICE 1 (X Points)
+...
+
+*Tournez la feuille — Page 1/2*
 
 ---SAUT_DE_PAGE---
+
+EXERCICE 3 (X Points)
+...
+
+*Fin du sujet — Page 2/2*
+───────────────────────────────────────────────────────────────────────
+
+RÈGLES STRUCTURE :
+→ PAS de tableau "RÉPARTITION DES POINTS" dans l'en-tête
+→ PAS de cases Nom/Prénom dans le sujet (seulement sur la copie de l'élève)
+→ PAS de "CONSIGNES GÉNÉRALES" longues — seulement les mentions calculatrice/pages
+→ Les points sont dans le titre de chaque exercice : ## EXERCICE 1 (5 Points)
+→ Les sous-parties ont leurs points : **PHYSIQUE (2 Points)** / **CHIMIE (3 Points)**
+→ En bas de la page 1 (avant le saut) : *Tournez la feuille — Page 1/2*
+→ En bas de la dernière page : *Fin du sujet — Page 2/2*
+→ Pour les EXAMENS OFFICIELS (BEPC, BAC, blanc) → garder l'en-tête officiel complet avec RÉPUBLIQUE DE CÔTE D'IVOIRE
 
 [EXERCICES COMPLETS ICI — séparés par ════════════════════════════════════════════════════════]
 
@@ -3027,6 +3243,10 @@ if "current_user" not in st.session_state:
     st.session_state["current_user"] = None
 if "view" not in st.session_state:
     st.session_state["view"] = "home"
+if "cs_ready" not in st.session_state:
+    st.session_state["cs_ready"] = False
+if "cs_description" not in st.session_state:
+    st.session_state["cs_description"] = ""
 if "is_glowing" not in st.session_state:
     st.session_state["is_glowing"] = False
 if "show_premium_modal" not in st.session_state:
@@ -3712,6 +3932,491 @@ def inject_custom_css():
 
     if st.session_state["is_glowing"]:
         st.markdown('<style>.stApp { animation: glow-pulse 1.5s ease-in-out infinite; }</style>', unsafe_allow_html=True)
+
+
+
+def show_creation_sujet_page():
+    """Page dédiée à la création de sujets & examens — design inspiré de la page auth."""
+
+    user = st.session_state.get("current_user")
+    db   = st.session_state.get("db", {"users": {}, "demandes": [], "liens": {}})
+
+    st.markdown("""
+    <style>
+    @keyframes shimmer-gold {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+    }
+    @keyframes float-up {
+        0%   { opacity: 0; transform: translateY(24px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow-border {
+        0%,100% { box-shadow: 0 0 10px rgba(245,158,11,0.3); }
+        50%      { box-shadow: 0 0 30px rgba(245,158,11,0.7); }
+    }
+    @keyframes slide-in {
+        0%   { opacity: 0; transform: translateX(-20px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    .cs-hero {
+        text-align: center;
+        padding: 32px 20px 8px 20px;
+        animation: float-up 0.7s ease both;
+    }
+    .cs-icon-ring {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 16px auto;
+        background: radial-gradient(circle at 35% 35%, #fef3c7, #f59e0b 40%, #92400e);
+        box-shadow: 0 0 0 4px rgba(245,158,11,0.2), 0 0 40px rgba(245,158,11,0.5);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.2rem;
+        animation: glow-border 3s ease-in-out infinite;
+    }
+    .cs-title {
+        font-size: 2.2rem; font-weight: 900;
+        background: linear-gradient(90deg, #92400e, #f59e0b, #fef3c7, #f59e0b, #92400e);
+        background-size: 200% auto;
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        animation: shimmer-gold 3s linear infinite;
+        margin-bottom: 4px;
+    }
+    .cs-subtitle {
+        color: rgba(245,158,11,0.6);
+        font-size: 0.82rem; letter-spacing: 3px;
+        text-transform: uppercase;
+        animation: float-up 0.9s ease 0.3s both;
+    }
+    .cs-back-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: rgba(245,158,11,0.7); font-size: 0.82rem;
+        cursor: pointer; margin-bottom: 20px;
+        border: 1px solid rgba(245,158,11,0.2);
+        padding: 6px 14px; border-radius: 20px;
+        background: rgba(245,158,11,0.05);
+        transition: all 0.2s;
+    }
+    .cs-back-btn:hover { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .cs-section {
+        background: linear-gradient(145deg, rgba(20,15,5,0.97), rgba(35,25,5,0.92));
+        border: 1px solid rgba(245,158,11,0.25);
+        border-radius: 18px;
+        padding: 24px 22px;
+        margin-bottom: 16px;
+        position: relative; overflow: hidden;
+        animation: float-up 0.8s ease both;
+    }
+    .cs-section::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, #92400e, #f59e0b, #fef3c7, #f59e0b, #92400e);
+        background-size: 200% auto;
+        animation: shimmer-gold 2.5s linear infinite;
+    }
+    .cs-section-title {
+        font-size: 0.9rem; font-weight: 700;
+        color: #f59e0b; letter-spacing: 1px;
+        text-transform: uppercase; margin-bottom: 14px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .cs-type-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: 20px;
+        font-size: 0.78rem; font-weight: 600;
+        background: rgba(245,158,11,0.1);
+        border: 1px solid rgba(245,158,11,0.3);
+        color: #fbbf24; margin: 3px;
+        animation: slide-in 0.4s ease both;
+    }
+    .cs-exo-card {
+        background: rgba(245,158,11,0.04);
+        border: 1px solid rgba(245,158,11,0.15);
+        border-radius: 14px; padding: 16px;
+        margin-bottom: 10px;
+        border-left: 3px solid #f59e0b;
+        animation: slide-in 0.5s ease both;
+    }
+    .cs-exo-num {
+        font-size: 1rem; font-weight: 800;
+        color: #f59e0b; margin-bottom: 8px;
+    }
+    .cs-total-ok {
+        background: rgba(16,185,129,0.1);
+        border: 1px solid rgba(16,185,129,0.4);
+        border-radius: 10px; padding: 10px 16px;
+        color: #34d399; font-size: 0.88rem; font-weight: 700;
+        text-align: center;
+    }
+    .cs-total-warn {
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.4);
+        border-radius: 10px; padding: 10px 16px;
+        color: #f87171; font-size: 0.88rem; font-weight: 700;
+        text-align: center;
+    }
+    .cs-divider {
+        display: flex; align-items: center; gap: 12px;
+        margin: 18px 0;
+    }
+    .cs-divider-line { flex:1; height:1px; background: linear-gradient(90deg,transparent,rgba(245,158,11,0.4),transparent); }
+    .cs-divider-dot  { width:5px; height:5px; border-radius:50%; background:#f59e0b; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ── Hero ──────────────────────────────────────────────────────────────────
+    _, col_c, _ = st.columns([1,3,1])
+    with col_c:
+        st.markdown("""
+        <div class='cs-hero'>
+            <div class='cs-icon-ring'>📝</div>
+            <div class='cs-title'>Création de Sujet</div>
+            <div class='cs-subtitle'>Configurateur Nova Exam — Collège & Lycée CI</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Bouton retour ─────────────────────────────────────────────────────────
+    if st.button("← Retour au tableau de bord", key="cs_back"):
+        st.session_state["view"] = "home"
+        st.rerun()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 1 — Informations générales
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>📋 Informations générales</div>", unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        cs_niveau = st.selectbox("🎓 Niveau scolaire *", [
+            "── COLLÈGE ──","6ème","5ème","4ème","3ème / BEPC",
+            "── LYCÉE ──",
+            "2nde",
+            "1ère - Série A1","1ère - Série A2","1ère - Série B",
+            "1ère - Série C","1ère - Série D","1ère - Série E",
+            "Terminale - Série A1","Terminale - Série A2","Terminale - Série B",
+            "Terminale - Série C","Terminale - Série D","Terminale - Série E",
+            "Terminale - Série F","Terminale - Série G1","Terminale - Série G2",
+            "Terminale - Série G3","Terminale - Série H",
+        ], key="cs_niveau")
+
+        cs_matiere = st.selectbox("📚 Matière *", [
+            "── SCIENCES ──",
+            "Mathématiques","Sciences Physiques (PC)","SVT / Biologie",
+            "── LETTRES ──",
+            "Français / Lettres","Anglais","Espagnol","Philosophie",
+            "── AUTRES ──",
+            "Histoire-Géographie","Économie / Gestion","Comptabilité",
+            "Informatique / TIC","EDHC / Éducation Civique","EPS",
+        ], key="cs_matiere")
+
+    with col2:
+        cs_type_epreuve = st.selectbox("📄 Type d'épreuve *", [
+            "📝 Devoir Surveillé (DS)",
+            "🏆 Devoir Complet adapté à la classe",
+            "⚡ Interrogation Écrite (IE)",
+            "🏠 Devoir de Maison (DM)",
+            "📅 Devoir du 1er Trimestre",
+            "📅 Devoir du 2ème Trimestre",
+            "📅 Devoir du 3ème Trimestre",
+            "📋 Examen Blanc (BEPC / BAC)",
+            "🎯 Contrôle de chapitre",
+            "📌 Rattrapage / Remédiation",
+        ], key="cs_type_epreuve")
+
+        cs_duree = st.selectbox("⏱️ Durée", [
+            "30 minutes","1 heure","1 heure 30",
+            "2 heures","2 heures 30","3 heures","4 heures",
+            "Libre (DM)",
+        ], index=3, key="cs_duree")
+
+    col3, col4 = st.columns(2)
+    with col3:
+        cs_etablissement = st.text_input("🏢 Établissement", placeholder="Ex: Collège Sainte Famille de Bouaké", key="cs_etab")
+        cs_chapitre = st.text_input("📖 Chapitre / Notion", placeholder="Ex: La loi d'Ohm, Les fractions...", key="cs_chap")
+    with col4:
+        cs_coefficient = st.selectbox("📊 Coefficient", ["1","2","3","4","5"], index=1, key="cs_coef")
+        cs_avec_corrige = st.toggle("📋 Inclure le corrigé professeur", value=False, key="cs_corrige")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 2 — Format de réponse
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>✏️ Format de réponse</div>", unsafe_allow_html=True)
+
+    cs_reponse_copie = st.toggle(
+        "L'élève répond sur sa copie (standard CI — pas de lignes dans le sujet)",
+        value=True, key="cs_reponse_copie"
+    )
+    if cs_reponse_copie:
+        st.markdown("<span style='color:#34d399;font-size:0.82rem;'>✅ Sur la copie — Consignes : <em>'Écris sur ta feuille de copie...'</em> (format standard Collège/Lycée CI)</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span style='color:#fbbf24;font-size:0.82rem;'>📝 Sur le sujet — Lignes ___ ajoutées sous chaque question (fiche activité, IE primaire)</span>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 3 — Configurateur exercice par exercice
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>⚙️ Plan des exercices</div>", unsafe_allow_html=True)
+
+    # Détecter si c'est un "Devoir Complet adapté" → forcer la structure automatique
+    est_devoir_complet = "Devoir Complet" in cs_type_epreuve
+
+    if est_devoir_complet:
+        st.markdown("""
+        <div style='background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;color:#34d399;font-size:0.85rem;'>
+        🤖 <strong>Mode Devoir Complet</strong> — Nova va générer automatiquement la structure complète adaptée au niveau et à la matière.
+        Les exercices seront organisés selon le format réel des devoirs ivoiriens pour ce niveau.
+        Vous pouvez quand même choisir un thème spécifique ci-dessous.
+        </div>
+        """, unsafe_allow_html=True)
+        cs_theme_global = st.text_input("🎯 Thème / Chapitre spécifique (optionnel)", placeholder="Ex: La cinématique, Les probabilités, La colonisation...", key="cs_theme_global")
+        cs_nb_exos = 0
+        exercices_cs = []
+    else:
+        cs_nb_exos = st.slider("📏 Nombre d'exercices", 1, 5, 2, key="cs_nb_exos",
+            help="DS standard = 2 exercices (2 pages). Devoir trimestriel = 3-4 exercices.")
+        cs_theme_global = ""
+        exercices_cs = []
+
+        # Tous les types disponibles
+        TYPES_CS = {
+            "🤖 Automatique (Nova choisit)":                    ("AUTO",          "Nova sélectionne le meilleur format selon la matière et le niveau."),
+            "🔵 QCM — Questionnaire à choix unique":            ("QCM",           "Tableau N°/Affirmation/Réponse1/Réponse2/Réponse3. L'élève encercle la bonne réponse sur sa copie."),
+            "✅ Vrai ou Faux":                                   ("VRAI_FAUX",     "Affirmations numérotées à évaluer V ou F sur la copie. Justification si fausse."),
+            "🔤 Texte à Trous (lacunaire)":                     ("TEXTE_TROU",    "Texte avec blancs numérotés 1.___ 2.___ + liste de mots à placer."),
+            "✍️ Questions Ouvertes / Rédigées":                 ("QUESTIONS_OUVERTES", "Questions directes numérotées. Réponses rédigées sur la copie."),
+            "❓ Questions / Réponses courtes":                   ("QR",            "Questions ou affirmations courtes numérotées. Format PC / SVT ivoirien."),
+            "🔗 Exercice Relié (termes ↔ définitions)":         ("RELIE",         "Colonne A (termes ①②③) ↔ Colonne B (définitions •). L'élève recopie et trace des flèches."),
+            "🔀 Mots Désordonnés (remettre dans l'ordre)":      ("MOTS_DESORDRE", "Mots numérotés et mélangés. L'élève recopie et réécrit la phrase dans le bon ordre."),
+            "📊 Tableau à Classer":                             ("TABLEAU_CLASSER","Mots/expressions à placer dans les bonnes colonnes d'un tableau à recopier."),
+            "🔬 Schéma à Légender":                             ("SCHEMA",        "Schéma numéroté (cellule, circuit...) + liste de termes à placer."),
+            "📐 Problème de Calcul":                            ("CALCUL",        "Mise en situation + données + questions guidées (Données → Formule → Résultat)."),
+            "🗺️ Étude de Document":                            ("ETUDE_DOCUMENT","Document support (texte, tableau, graphe) + questions d'analyse progressives."),
+            "📋 Situation Complexe / Cas Pratique":             ("CAS_PRATIQUE",  "Contexte réel ivoirien + questions multi-niveaux. Recommandé en dernier exercice."),
+            "📝 Dissertation / Composition guidée":             ("DISSERTATION",  "Sujet formulé + consignes méthode + plan détaillé. Pour Français, Philo, HG."),
+            "🔀 Mixte (2 sous-parties A/ et B/)":               ("MIXTE",         "Combine 2 types différents en sous-parties A/ et B/."),
+        }
+
+        labels_cs  = list(TYPES_CS.keys())
+        codes_cs   = [v[0] for v in TYPES_CS.values()]
+        descs_cs   = {v[0]: v[1] for v in TYPES_CS.values()}
+
+        for i in range(cs_nb_exos):
+            st.markdown(f"<div class='cs-exo-card'>", unsafe_allow_html=True)
+            st.markdown(f"<div class='cs-exo-num'>EXERCICE {i+1}</div>", unsafe_allow_html=True)
+
+            col_ta, col_tb = st.columns([3, 1])
+            with col_ta:
+                lbl_sel = st.selectbox(
+                    "Type", labels_cs,
+                    index=0 if i == 0 else min(i+1, len(labels_cs)-1),
+                    key=f"cs_exo_type_{i}",
+                    label_visibility="collapsed"
+                )
+                code_sel = codes_cs[labels_cs.index(lbl_sel)]
+                st.caption(f"💡 {descs_cs.get(code_sel,'')}")
+
+                # Si MIXTE → 2 sous-sélecteurs
+                cs_sous_a, cs_sous_b = None, None
+                if code_sel == "MIXTE":
+                    labels_sans_mixte = [l for l in labels_cs if "Mixte" not in l and "Automatique" not in l]
+                    codes_sans_mixte  = [codes_cs[labels_cs.index(l)] for l in labels_sans_mixte]
+                    cola, colb = st.columns(2)
+                    with cola:
+                        st.markdown("**Sous-partie A/ :**")
+                        lbl_a = st.selectbox("Type A", labels_sans_mixte, key=f"cs_sa_{i}", label_visibility="collapsed")
+                        cs_sous_a = codes_sans_mixte[labels_sans_mixte.index(lbl_a)]
+                        st.caption(f"A/ : {descs_cs.get(cs_sous_a,'')[:60]}...")
+                    with colb:
+                        st.markdown("**Sous-partie B/ :**")
+                        lbl_b = st.selectbox("Type B", labels_sans_mixte, index=min(1,len(labels_sans_mixte)-1), key=f"cs_sb_{i}", label_visibility="collapsed")
+                        cs_sous_b = codes_sans_mixte[labels_sans_mixte.index(lbl_b)]
+                        st.caption(f"B/ : {descs_cs.get(cs_sous_b,'')[:60]}...")
+
+            with col_tb:
+                cs_pts = st.number_input("Points", 1, 20,
+                    value=10 if cs_nb_exos==1 else (7 if cs_nb_exos==2 else 5),
+                    key=f"cs_pts_{i}", help="Barème de cet exercice")
+                cs_nq  = st.number_input("Nb questions", 1, 20, value=4,
+                    key=f"cs_nq_{i}")
+
+            cs_th = st.text_input(
+                "Thème spécifique (optionnel)",
+                placeholder="Ex: La loi d'Ohm, Pythagore, La décolonisation...",
+                key=f"cs_th_{i}", label_visibility="visible"
+            )
+
+            exercices_cs.append({
+                "num": i+1,
+                "type": code_sel,
+                "sous_type_a": cs_sous_a,
+                "sous_type_b": cs_sous_b,
+                "points": cs_pts,
+                "nb_questions": cs_nq,
+                "theme": cs_th,
+            })
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Récapitulatif / total
+        if exercices_cs:
+            st.markdown("<div class='cs-divider'><div class='cs-divider-line'></div><div class='cs-divider-dot'></div><div class='cs-divider-line'></div></div>", unsafe_allow_html=True)
+            total_pts = sum(e["points"] for e in exercices_cs)
+            badges = "".join([
+                f"<span class='cs-type-badge'>Exo {e['num']} · {e['type']} · {e['points']}pts</span>"
+                for e in exercices_cs
+            ])
+            st.markdown(f"<div style='margin-bottom:10px;'>{badges}</div>", unsafe_allow_html=True)
+            if total_pts == 20:
+                st.markdown(f"<div class='cs-total-ok'>✅ Total : {total_pts}/20 — Barème correct !</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div class='cs-total-warn'>⚠️ Total actuel : {total_pts}/20 — Ajustez les points pour atteindre exactement /20</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SECTION 4 — Infos complémentaires + bouton générer
+    # ══════════════════════════════════════════════════════════════════════════
+    st.markdown("<div class='cs-section'>", unsafe_allow_html=True)
+    st.markdown("<div class='cs-section-title'>💬 Informations complémentaires</div>", unsafe_allow_html=True)
+
+    cs_notes = st.text_area(
+        "Précisions supplémentaires (optionnel)",
+        height=80,
+        placeholder="Ex: Avec corrigé détaillé, thème sur le cacao ivoirien, niveau difficile, chapitres 1 et 2...",
+        key="cs_notes"
+    )
+
+    default_wa = db["users"].get(user, {}).get("whatsapp", "") if user else ""
+    cs_wa = st.text_input("📞 WhatsApp de contact", value=default_wa, placeholder="225...", key="cs_wa")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # BOUTON GÉNÉRER
+    # ══════════════════════════════════════════════════════════════════════════
+    premium_actif = is_premium_actif(db["users"].get(user, {})) if user else False
+    SERVICE_SUJETS = "📝 Création de Sujets & Examens"
+
+    if st.button("⚡ GÉNÉRER LE SUJET AVEC NOVA IA", use_container_width=True, key="cs_generer"):
+        if not user:
+            st.session_state["view"] = "auth"
+            st.rerun()
+        elif not premium_actif:
+            st.warning("⭐ Cette fonctionnalité est réservée aux membres Premium. Contactez Nova pour activer votre accès.")
+        else:
+            # Vérification quota
+            user_data = db["users"].get(user, {})
+            restant = quota_restant(user_data)
+            if restant <= 0:
+                st.error("🚫 Limite de générations atteinte pour aujourd'hui. Votre quota se renouvelle demain.")
+            else:
+                # ── Construction du prompt ─────────────────────────────────
+                niveau_ok  = cs_niveau if not cs_niveau.startswith("──") else ""
+                matiere_ok = cs_matiere if not cs_matiere.startswith("──") else ""
+
+                if not niveau_ok or not matiere_ok:
+                    st.error("⚠️ Veuillez sélectionner un niveau et une matière.")
+                else:
+                    # Plan exercices
+                    TYPE_LABELS_PROMPT = {
+                        "AUTO": "AUTOMATIQUE (Nova choisit la structure optimale)",
+                        "QCM": "QCM — Tableau N°/Affirmation/Réponse1/Réponse2/Réponse3",
+                        "VRAI_FAUX": "VRAI ou FAUX — Affirmations numérotées, l'élève écrit V/F sur sa copie",
+                        "TEXTE_TROU": "TEXTE À TROUS — Blancs numérotés + liste de mots",
+                        "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES — Questions rédigées, réponses sur copie",
+                        "QR": "QUESTIONS/RÉPONSES COURTES — Format PC/SVT ivoirien",
+                        "RELIE": "EXERCICE RELIÉ — Colonne A (①②③ termes) ↔ Colonne B (• définitions). Consigne : 'Recopie sur ta copie et relie'",
+                        "MOTS_DESORDRE": "MOTS DÉSORDONNÉS — Mots numérotés et mélangés, l'élève réécrit la phrase correcte sur sa copie",
+                        "TABLEAU_CLASSER": "TABLEAU À CLASSER — Recopier le tableau et placer les mots dans les bonnes colonnes",
+                        "SCHEMA": "SCHÉMA À LÉGENDER — Numéros + liste de termes à placer",
+                        "CALCUL": "PROBLÈME DE CALCUL — Données + questions guidées (Données→Formule→Résultat)",
+                        "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT — Support + questions progressives",
+                        "CAS_PRATIQUE": "SITUATION COMPLEXE — Contexte réel + questions multi-niveaux",
+                        "DISSERTATION": "DISSERTATION GUIDÉE — Sujet + méthode + plan détaillé",
+                        "MIXTE": "MIXTE",
+                    }
+
+                    if est_devoir_complet:
+                        plan_prompt = f"DEVOIR COMPLET ADAPTÉ À LA CLASSE — Structure automatique optimale pour {niveau_ok} en {matiere_ok}"
+                        if cs_theme_global.strip():
+                            plan_prompt += f"\nThème imposé : {cs_theme_global}"
+                    else:
+                        lignes_plan = []
+                        for e in exercices_cs:
+                            t = TYPE_LABELS_PROMPT.get(e["type"], e["type"])
+                            if e["type"] == "MIXTE" and e.get("sous_type_a"):
+                                sa = TYPE_LABELS_PROMPT.get(e["sous_type_a"], "").split("—")[0]
+                                sb = TYPE_LABELS_PROMPT.get(e.get("sous_type_b",""), "").split("—")[0]
+                                t = f"MIXTE → A/ {sa.strip()} + B/ {sb.strip()}"
+                            th = f" — Thème : {e['theme']}" if e.get("theme","").strip() else ""
+                            lignes_plan.append(f"  EXERCICE {e['num']} ({e['points']} points, {e['nb_questions']} questions) : {t}{th}")
+                        plan_prompt = "\n".join(lignes_plan)
+                        plan_prompt += f"\n  TOTAL : {sum(e['points'] for e in exercices_cs)}/20"
+
+                    format_rep = "L'ÉLÈVE RÉPOND SUR SA COPIE — INTERDIT dans le sujet : lignes ___, espaces vides. Consignes : 'Écris sur ta feuille de copie...'" if cs_reponse_copie else "L'ÉLÈVE RÉPOND DIRECTEMENT SUR LE SUJET — Ajouter lignes ___ sous chaque question (proportionnel au barème)"
+
+                    notes_txt = f"\nInformations complémentaires : {cs_notes}" if cs_notes.strip() else ""
+                    corrige_txt = "\nINCLURE LE CORRIGÉ PROFESSEUR COMPLET après un saut de page." if cs_avec_corrige else ""
+
+                    description_finale = f"""
+🎓 NIVEAU : {niveau_ok}
+📚 MATIÈRE : {matiere_ok}
+📄 TYPE D'ÉPREUVE : {cs_type_epreuve}
+⏱️ DURÉE : {cs_duree}
+📊 COEFFICIENT : {cs_coefficient}
+🏢 ÉTABLISSEMENT : {cs_etablissement if cs_etablissement.strip() else 'Non précisé'}
+📖 CHAPITRE : {cs_chapitre if cs_chapitre.strip() else 'Non précisé'}
+
+📋 PLAN DES EXERCICES IMPOSÉ :
+{plan_prompt}
+
+✏️ FORMAT RÉPONSE : {format_rep}
+{notes_txt}{corrige_txt}
+"""
+
+                    # Sauvegarde en session pour le prompt principal
+                    st.session_state["cs_description"] = description_finale
+                    st.session_state["cs_service"] = SERVICE_SUJETS
+                    st.session_state["cs_wa"] = cs_wa
+                    st.session_state["cs_ready"] = True
+                    st.rerun()
+
+    # ── Génération effective si prête ─────────────────────────────────────────
+    if st.session_state.get("cs_ready") and st.session_state.get("cs_description"):
+        description_finale = st.session_state["cs_description"]
+        with st.spinner("⚡ Nova génère votre sujet... (30-60 secondes)"):
+            try:
+                import threading, time as _time
+                from supabase import create_client as _sc
+
+                # Récupère le prompt complet depuis le service sujets
+                # On réutilise generer_avec_gemini directement
+                contenu = generer_avec_gemini(SERVICE_SUJETS, description_finale, user)
+
+                if contenu.startswith("❌"):
+                    st.error(contenu)
+                else:
+                    buf = creer_docx(contenu, SERVICE_SUJETS, user)
+                    nom = f"{user}_Sujet_{cs_niveau[:10].strip()}.docx".replace(" ","_").replace("/","-")
+                    url_fichier = upload_fichier_client(user, f"cs_{int(__import__('time').time())}", buf, nom)
+
+                    if url_fichier.startswith("ERREUR"):
+                        st.error(f"❌ Erreur upload : {url_fichier}")
+                    else:
+                        save_lien(user, SERVICE_SUJETS, url_fichier, __import__('datetime').datetime.now().strftime("%d/%m/%Y"))
+                        st.session_state["cs_ready"] = False
+                        st.session_state["cs_description"] = ""
+                        st.session_state["db"] = load_db()
+                        st.success("✅ Sujet généré et livré dans vos livrables !")
+                        st.balloons()
+            except Exception as e:
+                st.error(f"Erreur génération : {e}")
+                st.session_state["cs_ready"] = False
 
 
 def show_auth_page():
@@ -4427,6 +5132,12 @@ def main_dashboard():
                     "📄 Conversion & Fichier PDF",
                 ]
             )
+            # Redirection vers la page dédiée si service Sujets sélectionné
+            if service == "📝 Création de Sujets & Examens":
+                st.markdown("")
+                if st.button("🚀 Ouvrir le Configurateur de Sujets", use_container_width=True, key="open_cs_page"):
+                    st.session_state["view"] = "creation_sujet"
+                    st.rerun()
         with col_wa:
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
@@ -4486,44 +5197,184 @@ def main_dashboard():
                     components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
                     st.rerun()
 
-        # ── SÉLECTION DU TYPE DE SUJET (uniquement pour le service Sujets/Examens) ──
+        # ══════════════════════════════════════════════════════════════════════
+        # ── CONFIGURATEUR EXERCICE PAR EXERCICE (service Sujets/Examens) ─────
+        # ══════════════════════════════════════════════════════════════════════
         type_sujet_selectionne = None
+        exercices_config = []  # liste des configs par exercice
+
         if "Sujets" in service or "Examens" in service:
-            st.markdown("#### 🎯 Type de sujet")
-            TYPES_SUJETS = {
-                "🔵 QCM — Questions à Choix Multiple": "QCM",
-                "✅ Vrai ou Faux (avec justification)": "VRAI_FAUX",
-                "🔤 Texte à Trous (lacunaire)": "TEXTE_TROU",
-                "✍️ Questions Ouvertes (rédigées)": "QUESTIONS_OUVERTES",
-                "🔀 Mixte (QCM + Vrai/Faux + Question ouverte)": "MIXTE",
-                "📋 Cas Pratique / Étude de Cas": "CAS_PRATIQUE",
-                "📐 Exercices de Calcul / Problèmes": "CALCUL",
-                "🗺️ Étude de Document (texte, tableau, carte)": "ETUDE_DOCUMENT",
-                "🔬 Schéma à Légender / Identification": "SCHEMA",
-                "📝 Composition / Dissertation guidée": "DISSERTATION",
+
+            # ── Détection niveau (secondaire vs post-BAC) ─────────────────────
+            NIVEAUX_POST_BAC = [
+                "Licence 1 (L1)","Licence 2 (L2)","Licence 3 (L3)",
+                "Master 1 (M1)","Master 2 (M2)","Doctorat",
+                "Concours ENS","Concours CAFOP","Concours INJS",
+                "Concours Fonction Publique","Concours Douane / Police / Armée",
+                "Autre concours professionnel",
+            ]
+            try:
+                _niv_tmp = st.session_state.get("exam_niveau_key","")
+            except:
+                _niv_tmp = ""
+            est_post_bac = any(p in _niv_tmp for p in NIVEAUX_POST_BAC)
+
+            # ── Dictionnaire complet de TOUS les types ────────────────────────
+            # Communs (tous niveaux)
+            TYPES_COMMUNS = {
+                "AUTO": ("🤖 Automatique (Nova choisit)", "Nova choisit le meilleur type selon le niveau et la matière"),
+                "QCM":  ("🔵 QCM — Questionnaire à choix unique/multiple", "Tableau 4 colonnes : N° / Affirmation incomplète / Réponse 1 / Réponse 2 / Réponse 3. L'élève encercle la bonne réponse."),
+                "VRAI_FAUX": ("✅ Vrai ou Faux", "Affirmations numérotées à évaluer V ou F. Justification si fausse."),
+                "TEXTE_TROU": ("🔤 Texte à Trous (lacunaire)", "Texte avec blancs numérotés 1.___ 2.___ + liste de mots à placer."),
+                "QUESTIONS_OUVERTES": ("✍️ Questions Ouvertes / Rédigées", "Questions directes numérotées. Réponses rédigées sur la copie."),
+                "QR": ("❓ Questions / Réponses courtes", "Affirmations ou questions courtes numérotées. Format PC / SVT ivoirien."),
+                "CALCUL": ("📐 Problème de Calcul", "Mise en situation + données + questions de calcul guidées (Données → Formule → Résultat)."),
+                "ETUDE_DOCUMENT": ("🗺️ Étude de Document", "Document support (texte, tableau, graphe, carte) + questions d'analyse progressives."),
+                "CAS_PRATIQUE": ("📋 Cas Pratique / Situation complexe", "Contexte réel ivoirien + questions d'analyse multi-niveaux. Dernier exercice recommandé."),
+                "DISSERTATION": ("📝 Dissertation / Composition guidée", "Sujet formulé + consignes méthode + plan détaillé. Pour Français, Philo, HG."),
             }
-            type_sujet_label = st.selectbox(
-                "Choisissez le type d'exercice que vous voulez dans votre sujet",
-                list(TYPES_SUJETS.keys()),
-                help="Sélectionnez précisément le type de sujet souhaité. Gemini adaptera 100% du contenu à ce format."
+            # Réservés secondaire (6ème → Terminale)
+            TYPES_SECONDAIRE = {
+                "RELIE": ("🔗 Exercice Relié", "Colonne A (termes numérotés ①②③) ↔ Colonne B (définitions •). L'élève trace des flèches."),
+                "MOTS_DESORDRE": ("🔀 Mots Désordonnés", "Mots numérotés et mélangés à remettre dans le bon ordre pour former une phrase correcte."),
+                "TABLEAU_CLASSER": ("📊 Tableau à Classer", "Mots ou expressions à placer dans les bonnes colonnes d'un tableau (ex: milieu hypo/iso/hypertonique)."),
+                "SCHEMA": ("🔬 Schéma à Légender", "Description d'un schéma numéroté (cellule, circuit, appareil...) + termes à placer + corrigé."),
+                "MIXTE": ("🔀 Mixte (2 mini-types)", "Combine 2 types en sous-parties A/ et B/ (ex: Relié A/ + Mots désordonnés B/)."),
+            }
+            # Post-BAC uniquement
+            TYPES_POST_BAC = {
+                "THESE_ANTITHESE": ("⚖️ Thèse / Antithèse / Synthèse", "Plan dialectique complet. Pour Philo, Éco, Droit, SES."),
+                "ETUDE_CAS_PRO": ("💼 Étude de Cas Professionnelle", "Dossier + annexes + questions d'analyse et de décision. Pour Gestion, Compta, Management."),
+                "COMMENTAIRE": ("📖 Commentaire de Texte / Œuvre", "Texte littéraire ou philosophique + axes d'analyse + commentaire structuré."),
+            }
+
+            if est_post_bac:
+                TOUS_TYPES = {**TYPES_COMMUNS, **TYPES_POST_BAC}
+            else:
+                TOUS_TYPES = {**TYPES_COMMUNS, **TYPES_SECONDAIRE}
+
+            # ── Séparateur visuel ─────────────────────────────────────────────
+            st.markdown("---")
+            st.markdown("""
+            <div style='background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px 20px;margin-bottom:16px;border-left:4px solid #f59e0b;'>
+                <h4 style='color:#f59e0b;margin:0 0 6px 0;font-size:1rem;'>🎯 Configurateur d'Exercices</h4>
+                <p style='color:#94a3b8;margin:0;font-size:0.85rem;'>Choisissez le type de chaque exercice. Le sujet sera structuré exactement selon votre plan.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # ── Nombre d'exercices ────────────────────────────────────────────
+            nb_exos = st.slider(
+                "📏 Nombre d'exercices dans le sujet",
+                min_value=1, max_value=5, value=2,
+                help="Un DS standard = 2 exercices (2 pages). Un devoir trimestriel = 3-4 exercices."
             )
-            type_sujet_selectionne = TYPES_SUJETS[type_sujet_label]
 
-            TYPE_SUJET_DESCRIPTIONS = {
-                "QCM": "**QCM sélectionné** — Gemini générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
-                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Gemini générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
-                "TEXTE_TROU": "**Texte à trous sélectionné** — Gemini rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
-                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Gemini formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
-                "MIXTE": "**Format Mixte sélectionné** — Gemini combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
-                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Gemini rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
-                "CALCUL": "**Exercices de Calcul sélectionnés** — Gemini rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
-                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
-                "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
-            }
-            st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
+            # ── Réponse sur copie ou sur sujet ───────────────────────────────
+            col_rep1, col_rep2 = st.columns([3,1])
+            with col_rep1:
+                reponse_sur_copie = st.toggle(
+                    "✏️ L'élève répond sur sa copie (standard CI — pas de lignes dans le sujet)",
+                    value=True, key="reponse_sur_copie_val",
+                    help="Activé = format standard collège/lycée CI (réponse sur copie). Désactivé = lignes de réponse imprimées dans le sujet (fiche activité, IE primaire)."
+                )
 
-        st.markdown("#### 📝 Spécifications de la mission")
+            if reponse_sur_copie:
+                st.caption("✅ **Sur la copie** — Consignes : *'Écris sur ta feuille de copie...'*")
+            else:
+                st.caption("📝 **Sur le sujet** — Lignes ___ ajoutées sous chaque question")
+
+            st.markdown("---")
+
+            # ── Boucle de configuration par exercice ─────────────────────────
+            labels_types = {k: v[0] for k, v in TOUS_TYPES.items()}
+            descriptions_types = {k: v[1] for k, v in TOUS_TYPES.items()}
+            liste_labels = list(labels_types.values())
+            liste_codes  = list(labels_types.keys())
+
+            exercices_config = []
+
+            for i in range(nb_exos):
+                num_romain = ["I","II","III","IV","V"][i]
+                with st.expander(f"⚙️ EXERCICE {i+1} — Configuration", expanded=(i < 2)):
+
+                    col_a, col_b = st.columns([2, 1])
+
+                    with col_a:
+                        type_label = st.selectbox(
+                            f"Type d'exercice",
+                            liste_labels,
+                            index=0,
+                            key=f"exo_type_{i}",
+                            help="Choisissez le format de cet exercice."
+                        )
+                        type_code = liste_codes[liste_labels.index(type_label)]
+                        st.caption(f"💡 {descriptions_types.get(type_code,'')}")
+
+                        # Si MIXTE → choisir les 2 sous-types
+                        sous_type_a, sous_type_b = None, None
+                        if type_code == "MIXTE":
+                            st.markdown("**Sous-partie A/ :**")
+                            sous_label_a = st.selectbox(
+                                "Type A/", [v[0] for k,v in TOUS_TYPES.items() if k not in ("AUTO","MIXTE")],
+                                key=f"exo_sous_a_{i}"
+                            )
+                            sous_type_a = [k for k,v in TOUS_TYPES.items() if v[0]==sous_label_a][0]
+                            st.markdown("**Sous-partie B/ :**")
+                            sous_label_b = st.selectbox(
+                                "Type B/", [v[0] for k,v in TOUS_TYPES.items() if k not in ("AUTO","MIXTE")],
+                                index=1,
+                                key=f"exo_sous_b_{i}"
+                            )
+                            sous_type_b = [k for k,v in TOUS_TYPES.items() if v[0]==sous_label_b][0]
+
+                    with col_b:
+                        pts = st.number_input(
+                            f"Points (/20)",
+                            min_value=1, max_value=20, value=5 if nb_exos <= 2 else 4,
+                            key=f"exo_pts_{i}",
+                            help="Barème de cet exercice."
+                        )
+                        nb_q = st.number_input(
+                            "Nb de questions",
+                            min_value=1, max_value=20, value=4,
+                            key=f"exo_nbq_{i}"
+                        )
+
+                    theme_exo = st.text_input(
+                        f"🎯 Thème / notion spécifique (optionnel)",
+                        placeholder="Ex: La loi d'Ohm, Les fractions, La colonisation...",
+                        key=f"exo_theme_{i}"
+                    )
+
+                    exercices_config.append({
+                        "num": i+1,
+                        "type": type_code,
+                        "sous_type_a": sous_type_a,
+                        "sous_type_b": sous_type_b,
+                        "points": pts,
+                        "nb_questions": nb_q,
+                        "theme": theme_exo,
+                    })
+
+            # Résumé du plan
+            if exercices_config:
+                total_pts = sum(e["points"] for e in exercices_config)
+                st.markdown("---")
+                st.markdown("**📋 Récapitulatif du plan :**")
+                plan_html = "<div style='display:flex;gap:8px;flex-wrap:wrap;'>"
+                for e in exercices_config:
+                    lbl = labels_types.get(e["type"],"?").split("—")[0].strip()
+                    plan_html += f"<span style='background:#1e3a5f;color:#60a5fa;padding:4px 10px;border-radius:20px;font-size:0.8rem;'>Exo {e['num']} : {lbl} ({e['points']}pts)</span>"
+                plan_html += f"<span style='background:#14532d;color:#86efac;padding:4px 10px;border-radius:20px;font-size:0.8rem;'>Total : {total_pts}/20</span></div>"
+                st.markdown(plan_html, unsafe_allow_html=True)
+                if total_pts != 20:
+                    st.warning(f"⚠️ Total actuel : **{total_pts}/20** — Ajustez les points pour atteindre exactement /20")
+
+            # Garder compatibilité avec l'ancien système (type_sujet_selectionne)
+            type_sujet_selectionne = exercices_config[0]["type"] if exercices_config else "AUTO"
+            st.markdown("")
+
+
 
         # Initialisations (re-évaluées à chaque run Streamlit)
         _niveau_val      = ""
@@ -4982,6 +5833,9 @@ NOTE : fichier original joint via lien ci-dessous.
                                     "VRAI_FAUX": "VRAI ou FAUX UNIQUEMENT (V/F + justification si faux, UN SEUL TYPE)",
                                     "TEXTE_TROU": "TEXTE À TROUS UNIQUEMENT (lacunaire + liste de mots, UN SEUL TYPE)",
                                     "QUESTIONS_OUVERTES": "QUESTIONS OUVERTES UNIQUEMENT (rédigées + lignes de réponse, UN SEUL TYPE)",
+                                    "RELIE": "EXERCICE RELIÉ UNIQUEMENT (colonne A : termes numérotés ① ② ③ ↔ colonne B : définitions avec puces •. Consigne : 'Reliez chaque élément de la colonne A à sa définition dans la colonne B'. Jamais d'autre type d'exercice.)",
+                                    "MOTS_DESORDRE": "MOTS DÉSORDONNÉS UNIQUEMENT (chaque phrase : mots numérotés et mélangés sur une ligne, puis 'Phrase correcte : _______________' pour que l'élève réécrive. Jamais d'autre type.)",
+                                    "QR": "QUESTIONS/RÉPONSES UNIQUEMENT (questions numérotées 1- 2- 3-... L'élève répond SUR SA COPIE — PAS de ___ dans le sujet. Format PC/SVT ivoirien.)",
                                     "MIXTE": "FORMAT MIXTE (Partie 1 QCM + Partie 2 Vrai/Faux + Partie 3 Question ouverte)",
                                     "CAS_PRATIQUE": "CAS PRATIQUE / ÉTUDE DE CAS (texte CI contextualisé + questions d'analyse)",
                                     "CALCUL": "EXERCICES DE CALCUL / PROBLÈMES (chiffrés, contextualisés CI, formules rappelées)",
@@ -4998,8 +5852,26 @@ TYPE UNIQUE SÉLECTIONNÉ : {label_fr}
 RÈGLE ABSOLUE : Génère UNIQUEMENT ce type d'exercice. Ne pas mélanger avec d'autres types sauf si MIXTE est sélectionné.
 Si QCM → QCM seulement. Si VRAI_FAUX → Vrai/Faux seulement. Si TEXTE_TROU → Texte à trous seulement.
 Si QUESTIONS_OUVERTES → Questions ouvertes seulement. Si CALCUL → Calculs seulement.
-Si ETUDE_DOCUMENT → Étude de document seulement. Si SCHEMA → Schéma à légender seulement.
-Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas pratique seulement."""
+Si RELIE → Exercice relié seulement (deux colonnes à relier). Si MOTS_DESORDRE → Mots désordonnés seulement.
+Si QR → Questions/Réponses numérotées seulement. Si ETUDE_DOCUMENT → Étude de document seulement.
+Si SCHEMA → Schéma à légender seulement. Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas pratique seulement."""
+
+                                # Injection du choix copie/sujet
+                                _rsc = st.session_state.get("reponse_sur_copie_val", True)
+                                if _rsc:
+                                    prompt_enrichi += """
+
+📄 FORMAT RÉPONSE : L'ÉLÈVE RÉPOND SUR SA COPIE
+→ INTERDIT dans le sujet : lignes ___________, espaces vides sous les questions
+→ Consignes : "Écris sur ta feuille de copie...", "Recopie sur ta copie et complète..."
+→ Seuls les blancs des textes lacunaires (1.______) sont autorisés dans le sujet"""
+                                else:
+                                    prompt_enrichi += """
+
+📄 FORMAT RÉPONSE : L'ÉLÈVE RÉPOND DIRECTEMENT SUR LE SUJET
+→ OBLIGATOIRE : lignes _______________ (min 15 underscores) sous chaque question
+→ Espace proportionnel : 1pt → 2 lignes / 2pts → 4 lignes / 3pts → 6 lignes
+→ Consignes : "Complète directement sur ce document", "Écris ta réponse sur les lignes ci-dessous" """
                             contenu = generer_avec_gemini(service, prompt_enrichi, user)
                             if contenu.startswith("❌"):
                                 result_holder["erreur"] = contenu
@@ -5572,5 +6444,7 @@ st.markdown("""
 
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
+elif st.session_state["view"] == "creation_sujet":
+    show_creation_sujet_page()
 else:
     main_dashboard()
