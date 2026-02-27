@@ -274,8 +274,8 @@ Vous n'avez rien à faire pour cette commande.
 
 PLANS_PREMIUM = {
     "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 2},
-    "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 5},
-    "30 Jours":   {"jours": 30, "prix": "2500 FC", "emoji": "👑", "generations": 9},
+    "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 9},
+    "30 Jours":   {"jours": 30, "prix": "2500 FC", "emoji": "👑", "generations": 999},
 }
 
 def get_gen_quota(user_data):
@@ -973,38 +973,78 @@ Un devoir complet ivoirien = mélange INTELLIGENT de types d'exercices DIFFÉREN
 JAMAIS deux exercices du même type à la suite. JAMAIS de "mise en situation" en exercice 1 ou 2.
 Chaque exercice teste une compétence différente : mémoriser → comprendre → appliquer → analyser.
 
-━━━ COLLÈGE (6ème, 5ème, 4ème, 3ème) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ 6ème / 5ème ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-STRUCTURE TYPE COLLÈGE (basée sur vrais devoirs ivoiriens observés) :
+EXERCICE 1 — VRAI / FAUX simple (2 pts)
+  Tableau : N° | Affirmations | V | F — l'élève coche, pas de justification exigée
+  Thèmes : définitions basiques, propriétés simples, vrai/faux du cours
+  NE PAS mettre de calculs ici.
 
-EXERCICE 1 — VRAI / FAUX ou TABLEAU À COMPLÉTER (2-3 pts)
-  Format observé : tableau N° | Affirmations | V | F
-  L'élève coche V ou F. Pas de justification obligatoire en collège bas (6e/5e).
-  En 4e/3e : "Écris V si vraie, F si fausse. JUSTIFIE si fausse. Ex : 5-F"
-  Thèmes : définitions du cours, propriétés, affirmations vraies/fausses sur le chapitre
-  NE PAS mettre de calculs complexes ici.
+EXERCICE 2 — QCM TABLEAU A/B/C (2-3 pts)
+  Tableau : N° | Affirmations incomplètes | A | B | C
+  "Une seule réponse est juste. Recopie le numéro suivi de la lettre de la bonne réponse."
+  3 à 4 lignes. Distracteurs = erreurs simples fréquentes à ce niveau.
 
-EXERCICE 2 — QCM TABLEAU (2-3 pts)
-  Format observé : tableau N° | Affirmations | A | B | C (parfois D)
-  "Pour chacune des affirmations, une seule réponse est juste. Recopie le numéro + la lettre."
-  3 à 5 lignes, 3 colonnes A/B/C ou 4 colonnes A/B/C/D
-  Distracteurs réalistes : erreurs classiques des élèves ivoiriens sur ce chapitre
-  NE PAS mettre de mise en situation ici.
+EXERCICE 3 — TEXTE À TROUS ou QUESTIONS COURTES (2-3 pts)
+  Option A : "Recopie et complète avec les mots suivants : [liste de mots]"
+  Option B : 3 questions courtes (Définir / Citer / Calculer directement)
+  Option C : Schéma à légender (SVT uniquement — liste de termes à placer)
 
-EXERCICE 3 — TEXTE À TROUS ou QUESTIONS COURTES DIRECTES (2-3 pts)
-  Option A : "Recopie et complète les phrases suivantes avec les mots de la liste : ..."
-  Option B : 3-4 questions courtes directes (Définir, Citer, Calculer simplement, Compléter)
-  Option C : Schéma à légender (SVT, PC, Géo) — description numérotée + liste de termes
+EXERCICE 4 — PROBLÈME SIMPLE CONTEXTE IVOIRIEN (3-4 pts)
+  Mise en situation courte et accessible (marché, maison, jardin ivoirien...)
+  3 sous-questions max : 1- lecture données → 2- calcul simple → 3- conclusion
+  Données chiffrées simples, opérations de base
 
-EXERCICE 4 — PROBLÈME / SITUATION COMPLEXE (4-6 pts)
-  ICI SEULEMENT → texte de mise en situation contextualisé Côte d'Ivoire
-  Sous-questions progressives : 1- observation → 2- calcul → 3- démonstration → 4- synthèse
-  Données chiffrées réelles, contexte ivoirien (PME, plantation, famille d'Abidjan...)
-  Numérotation : 1- puis 1.1 / 1.2 / 1.3 selon complexité
+━━━ 4ème / 3ème (pré-BEPC) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-EXERCICE 5 (si demandé, lycée ou 3e) — CONSTRUCTION ou RÉDACTION
-  Géométrie : construction avec données précises + justification
-  Lettres/HG : commentaire de document court (5-8 lignes)
+STRUCTURE EXACTE observée sur vrais devoirs ivoiriens 3ème (Collège Sainte Famille, Merlan-Adjamé...) :
+
+EXERCICE 1 — VRAI / FAUX avec instruction de justification (2-3 pts)
+  Consigne exacte : "Écris sur ta feuille de copie le numéro de chacune des affirmations
+  ci-dessous et fait suivre par V si l'affirmation est vraie ou F si elle est fausse.
+  JUSTIFIE si fausse. Exemple : 5-F"
+  5 affirmations dans un tableau : N° | Affirmations | [espace réponse]
+  Thèmes : propriétés du chapitre, définitions, théorèmes
+
+EXERCICE 2 — QCM TABLEAU A/B/C ou A/B/C/D (3 pts)
+  Consigne exacte : "Pour chacune des affirmations contenues dans le tableau ci-dessous,
+  une seule des réponses proposées est juste. Recopie le numéro de la ligne suivi de
+  la lettre de la réponse juste."
+  Tableau : N° | Affirmations | A | B | C (ou A | B | C | D)
+  4 à 5 lignes. Distracteurs = erreurs classiques de 3ème ivoirien.
+
+EXERCICE 3 — CONSTRUCTION GÉOMÉTRIQUE (3 pts)
+  Observé réel : "L'unité de longueur est le centimètre. Le segment ci-dessous n'est pas
+  en vraie grandeur. On donne le segment [EF] tel que EF = 7 cm."
+  Dessin schématique du segment E___F fourni
+  Questions : 1- Reproduis le segment sur ta feuille / 2- Construis le point M tel que EM = (3/5)EF
+  Peut aussi être : construction de triangle, de cercle, de médiatrice, de bissectrice
+
+EXERCICE 4 — CALCUL ALGÉBRIQUE PUR (4 pts)
+  Observé réel : Expression E = (x-3)² + 4(x-3) et R = (2x-1)(x+1)
+  1) Justifie que E = (x-3)(x+1)
+  2) Détermine les valeurs de x pour lesquelles R existe
+  3) Pour x ≠ 1/2 et x ≠ -1, simplifie R
+  4) Calcule la valeur numérique de R pour x = -1
+  Pas de mise en situation. Calcul algébrique direct : factoriser, simplifier, calculer.
+
+EXERCICE 5 — GÉOMÉTRIE ANALYTIQUE / VECTEURS / TRIGONOMÉTRIE (4 pts)
+  Observé réel : Repère orthonormé (O,I,J), points E(6;5) F(2;-3) G(-4;0) EG=5√5
+  1) a. Place les points / b. Construis le triangle
+  2) Vérifie par calcul que les vecteurs FE et FG ont pour coordonnées (4;8) et (-6;3)
+  3) Démontre que le triangle EFG est un triangle rectangle en F
+  4) a. Vérifie par calcul que la distance FE = 4√5 / b. Justifie sin(EGF)=0.8
+     c. Déduis-en un encadrement de mes EGF par deux entiers consécutifs
+        → Fournir une table trigonométrique : tableau a° | cos a° | sin a° avec 4-5 valeurs réelles
+
+EXERCICE 6 — PROBLÈME CONTEXTE IVOIRIEN COMPLEXE (4 pts)
+  Observé réel : "Pour la fête de fin d'année, le président de la coopérative du collège
+  Sainte Famille prend contact avec deux restaurants de Bouaké."
+  Restaurant A : 1000F/repas + 2000F transport | Restaurant B : 950F/repas + 3000F taxi
+  Questions : a) Exprime PA et PB en fonction de x / b) Résous l'inéquation / c) Conclus
+  TOUJOURS contexte ivoirien authentique : coopérative, école CI, marché, entreprise locale
+  Données en FCFA, villes ivoiriennes (Bouaké, Abidjan, Yamoussoukro...)
+  Questions : 1- modéliser → 2- résoudre équation/inéquation → 3- répondre à la question initiale
 
 ━━━ LYCÉE (2nde, 1ère, Terminale) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1682,7 +1722,7 @@ RÈGLE 9  — NIVEAU STRICT : vocabulaire, longueur, complexité EXACTEMENT adap
 RÈGLE 10 — VARIÉTÉ OBLIGATOIRE : jamais le même format deux fois dans un même sujet
 RÈGLE 11 — TEXTE ÉTUDE COMPLET : texte rédigé 150-250 mots, ancré en CI/Afrique, JAMAIS "[insérer texte]"
 RÈGLE 12 — LIGNES DE RÉPONSE PROPORTIONNELLES : 1 pt → 2 lignes / 2 pts → 4 lignes / 3+ pts → 6+ lignes
-RÈGLE 13 — BARÈME DANS TABLEAU EN-TÊTE : tableau récapitulatif avec tous les exercices et leurs points
+RÈGLE 13 — BARÈME SIMPLE : indiquer uniquement les points entre parenthèses après chaque titre d\'exercice. Ex : ## EXERCICE 1 : (3 points) — PAS de tableau récapitulatif, PAS de consignes générales
 RÈGLE 14 — CORRIGÉ SEULEMENT SI DEMANDÉ : n\'inclure le corrigé que si "corrigé/correction" est dans la demande
 RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
   • QCM → bonne lettre + explication pourquoi chaque distractor est FAUX
@@ -1694,33 +1734,8 @@ RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
 
 === STRUCTURE DU DOCUMENT À PRODUIRE ===
 
-###TITRE_ROUGE### SUJET — [MATIÈRE EN MAJUSCULES] — [NIVEAU]
-
-**RÉPUBLIQUE DE CÔTE D\'IVOIRE**
-Union — Discipline — Travail
-
-**Établissement :** [Nom complet]     **Année scolaire :** 2025 — 2026
-**Matière :** [Matière]     **Niveau / Série :** [Niveau]     **Type :** [DS / Examen blanc / IE / DM...]
-**Durée :** [Durée]     **Coefficient :** [Coef]     **Barème total :** /20
-
-**Nom et Prénoms :** ...........................................................     **N° de table :** .............
-**Salle :** ....................     **Signature du surveillant :** .......................................
-
-**CONSIGNES GÉNÉRALES :**
-- Lisez l\'intégralité du sujet avant de commencer — la lecture attentive évite les erreurs
-- Indiquez clairement le numéro de chaque question dans votre copie
-- Rédigez en français correct et lisible — la présentation et l\'expression sont évaluées
-- Tout document et téléphone portable sont strictement interdits
-- Fraude = exclusion immédiate et note zéro pour toutes les matières du jour
-
-**RÉPARTITION DES POINTS :**
-| Exercice | Contenu | Barème |
-|----------|---------|--------|
-| Exercice 1 | [Format + thème concret] | /[X] |
-| Exercice 2 | [Format + thème concret] | /[X] |
-| Exercice 3 | [Format + thème concret] | /[X] |
-| Exercice 4 | [si nécessaire] | /[X] |
-| **TOTAL** | | **/20** |
+[EN-TÊTE SIMPLE UNIQUEMENT — voir Section En-tête ci-dessus]
+[PAS de REPUBLIQUE DE CI, PAS de Nom/Prénom/Salle, PAS de consignes générales, PAS de tableau de répartition des points]
 
 ---SAUT_DE_PAGE---
 
@@ -4810,9 +4825,7 @@ Classe : {_niveau_val if _niveau_val else "___"}                              Du
 ┌─────────────────────────────────────────────┐
 │    DEVOIR DE {(_matiere_val.upper() if _matiere_val else "___")}    │
 └─────────────────────────────────────────────┘
-Cette épreuve comporte [X] page(s) numérotée(s).
-[Si calculatrice : "L'usage de la calculatrice scientifique est autorisé."]
-[Si interdit : "Les documents et calculatrices sont interdits."]
+
 
 RÈGLES EN-TÊTE :
 - Nom établissement répété 2 fois sur la même ligne séparé par *
@@ -5125,7 +5138,14 @@ NOTE : fichier original joint via lien ci-dessous.
             _plan_q   = _udata_q.get("premium_plan", "")
             _quota_q  = PLANS_PREMIUM.get(_plan_q, {}).get("generations", 0)
             _used_q, _ = get_gen_quota(_udata_q)
-            _couleur_quota = "#2ecc71" if _restant > 1 else ("#FFD700" if _restant == 1 else "#e74c3c")
+            _is_illimite = _quota_q >= 999
+            _couleur_quota = "#FFD700" if _is_illimite else ("#2ecc71" if _restant > 1 else ("#FFD700" if _restant == 1 else "#e74c3c"))
+            if _is_illimite:
+                _quota_txt = "♾️ Illimité"
+            elif _restant > 0:
+                _quota_txt = f"{_used_q}/{_quota_q} utilisées — ✅ {_restant} restante(s)"
+            else:
+                _quota_txt = f"{_used_q}/{_quota_q} utilisées — 🚫 Quota atteint"
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,140,0,.06));
                  border:1px solid rgba(255,215,0,.5);border-radius:12px;padding:12px 18px;margin:10px 0;">
@@ -5134,8 +5154,7 @@ NOTE : fichier original joint via lien ci-dessous.
                     Votre document sera généré et livré en moins d'1 minute.
                 </span>
                 <span style="color:{_couleur_quota};font-size:.85rem;font-weight:700;display:block;margin-top:6px;">
-                    📊 Générations aujourd'hui : {_used_q}/{_quota_q} utilisées — 
-                    {'✅ ' + str(_restant) + ' restante(s)' if _restant > 0 else '🚫 Quota atteint — demande manuelle uniquement'}
+                    📊 Générations aujourd'hui : {_quota_txt}
                 </span>
             </div>""", unsafe_allow_html=True)
 
@@ -5155,7 +5174,7 @@ NOTE : fichier original joint via lien ci-dessous.
                 quota_max = PLANS_PREMIUM.get(plan_actuel, {}).get("generations", 0)
                 used_auj, _ = get_gen_quota(user_data_frais)
 
-                if restant <= 0:
+                if restant <= 0 and quota_max < 999:
                     st.error(f"🚫 Limite de générations atteinte pour aujourd'hui ({used_auj}/{quota_max} utilisées).")
                     st.info("💡 Votre quota se renouvelle demain, ou contactez Nova pour upgrader votre plan.")
                     # Basculer en mode demande manuelle
@@ -5166,7 +5185,7 @@ NOTE : fichier original joint via lien ci-dessous.
                     processing_box.markdown(f"""
                     <div class="nova-processing">
                         <div class="nova-processing-title">⚡ GÉNÉRATION EN COURS</div>
-                        <div class="nova-processing-sub">Génération automatique · Quota restant après cette génération : {restant - 1}/{quota_max}</div>
+                        <div class="nova-processing-sub">Génération automatique · {'♾️ Illimité' if quota_max >= 999 else f'Quota restant après cette génération : {restant - 1}/{quota_max}'}</div>
                     </div>""", unsafe_allow_html=True)
 
                     barre = st.progress(0)
