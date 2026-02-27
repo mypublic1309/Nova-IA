@@ -71,6 +71,7 @@ def load_db():
         return {"users": {}, "demandes": [], "liens": {}}
 
 def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan=None, premium_expiry=None):
+    # Essai avec gen_used/gen_date (colonnes optionnelles)
     try:
         supabase.table("users").upsert({
             "uid": uid, "whatsapp": whatsapp,
@@ -80,6 +81,19 @@ def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan
         }).execute()
         return True
     except Exception as e:
+        err_str = str(e)
+        # Si l'erreur vient des colonnes gen_used/gen_date absentes, on réessaie sans elles
+        if "gen_used" in err_str or "gen_date" in err_str or "PGRST204" in err_str:
+            try:
+                supabase.table("users").upsert({
+                    "uid": uid, "whatsapp": whatsapp,
+                    "email": email, "joined": str(datetime.now()),
+                    "premium": premium, "premium_plan": premium_plan, "premium_expiry": premium_expiry,
+                }).execute()
+                return True
+            except Exception as e2:
+                st.error(f"Erreur sauvegarde utilisateur : {e2}")
+                return False
         st.error(f"Erreur sauvegarde utilisateur : {e}")
         return False
 
@@ -5142,6 +5156,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         </script>
                     """, height=0)
 
+                st.balloons()
                 time.sleep(20)
                 st.rerun()
             else:
