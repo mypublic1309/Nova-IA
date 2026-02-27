@@ -121,6 +121,24 @@ def save_lien(uid, name, url, date):
     except Exception as e:
         st.error(f"Erreur sauvegarde lien : {e}")
 
+def sanitize_nom_fichier(nom):
+    """Nettoie un nom de fichier pour le rendre compatible avec Supabase Storage.
+    - Supprime les accents (é→e, ç→c, etc.)
+    - Remplace espaces et caractères spéciaux par '_'
+    - Ne garde que : a-z, A-Z, 0-9, '_', '-', '.'
+    """
+    import unicodedata, re
+    # Normaliser les accents (NFD décompose é en e + accent, puis on supprime les accents)
+    nom = unicodedata.normalize("NFD", nom)
+    nom = "".join(c for c in nom if unicodedata.category(c) != "Mn")
+    # Remplacer espaces par underscore
+    nom = nom.replace(" ", "_")
+    # Ne garder que les caractères autorisés
+    nom = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", nom)
+    # Éviter les doubles underscores
+    nom = re.sub(r"_+", "_", nom)
+    return nom.strip("_")
+
 def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
     """Upload via API REST Supabase Storage — bucket créé auto si absent."""
     try:
@@ -141,8 +159,9 @@ def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
             _ur.urlopen(_r, timeout=10)
         except Exception:
             pass
-        # Uploader le fichier
-        chemin = f"fichiers_clients/{uid}_{req_id}_{fichier_nom}"
+        # Uploader le fichier (nom nettoyé pour éviter les erreurs Supabase)
+        fichier_nom_safe = sanitize_nom_fichier(fichier_nom)
+        chemin = f"fichiers_clients/{uid}_{req_id}_{fichier_nom_safe}"
         _ru = _ur.Request(
             f"{sb_url}/storage/v1/object/{BUCKET}/{chemin}",
             data=fichier_bytes,
