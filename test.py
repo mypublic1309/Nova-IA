@@ -941,6 +941,7 @@ IMPÉRATIFS ABSOLUS :
                     "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support : texte/tableau/carte + questions d'identification, analyse, interprétation)",
                     "SCHEMA": "SCHÉMA À LÉGENDER (schéma décrit textuellement avec numéros + termes à placer + corrigé légendes)",
                     "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet formulé + consignes de méthode + plan détaillé guidé)",
+                    "DEVOIR_COMPLET": "DEVOIR COMPLET AUTHENTIQUE IVOIRIEN (en-tête officiel + exercices variés progressifs adaptés au niveau)",
                 }
                 label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
                 type_sujet_inject = f"""
@@ -959,8 +960,9 @@ RÈGLE ABSOLUE : Tu dois générer UN SEUL TYPE D'EXERCICE correspondant EXACTEM
 - Si ETUDE_DOCUMENT → Document support + questions d'exploitation UNIQUEMENT
 - Si SCHEMA → Description du schéma numéroté + légendes UNIQUEMENT
 - Si DISSERTATION → Sujet + consignes de méthode + plan guidé UNIQUEMENT
+- Si DEVOIR_COMPLET → Vrai devoir ivoirien complet : en-tête officiel + structure progressive adaptée au niveau (voir Section Critique ci-dessus). Tous les types d'exercices mélangés intelligemment.
 
-NE PAS MÉLANGER LES TYPES sauf si MIXTE est explicitement sélectionné.
+NE PAS MÉLANGER LES TYPES sauf si MIXTE ou DEVOIR_COMPLET est explicitement sélectionné.
 """
 
             prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d\'examens numéro 1 du système scolaire ivoirien.
@@ -4501,6 +4503,7 @@ def main_dashboard():
                 "🗺️ Étude de Document (texte, tableau, carte)": "ETUDE_DOCUMENT",
                 "🔬 Schéma à Légender / Identification": "SCHEMA",
                 "📝 Composition / Dissertation guidée": "DISSERTATION",
+                "📄 Devoir Complet (comme sur les images)": "DEVOIR_COMPLET",
             }
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
@@ -4520,6 +4523,7 @@ def main_dashboard():
                 "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
                 "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
                 "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Gemini générera un vrai devoir ivoirien complet avec en-tête officiel + exercices variés progressifs (QCM → mise en situation → problème complexe) adaptés exactement au niveau et à la matière.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
@@ -5086,6 +5090,7 @@ NOTE : fichier original joint via lien ci-dessous.
                                     "ETUDE_DOCUMENT": "ÉTUDE DE DOCUMENT (document support + questions d'exploitation)",
                                     "SCHEMA": "SCHÉMA À LÉGENDER (description numérotée + termes à placer + corrigé)",
                                     "DISSERTATION": "COMPOSITION / DISSERTATION GUIDÉE (sujet + méthode + plan guidé)",
+                                    "DEVOIR_COMPLET": "DEVOIR COMPLET AUTHENTIQUE IVOIRIEN",
                                 }
                                 label_fr = TYPE_SUJET_LABELS_FR.get(type_sujet_selectionne, type_sujet_selectionne)
                                 prompt_enrichi = f"""{prompt}
@@ -5093,11 +5098,12 @@ NOTE : fichier original joint via lien ci-dessous.
 ⚠️ TYPE DE SUJET IMPOSÉ PAR L'UTILISATEUR — RESPECTER ABSOLUMENT :
 TYPE UNIQUE SÉLECTIONNÉ : {label_fr}
 
-RÈGLE ABSOLUE : Génère UNIQUEMENT ce type d'exercice. Ne pas mélanger avec d'autres types sauf si MIXTE est sélectionné.
+RÈGLE ABSOLUE : Génère UNIQUEMENT ce type d'exercice. Ne pas mélanger avec d'autres types sauf si MIXTE ou DEVOIR_COMPLET est sélectionné.
 Si QCM → QCM seulement. Si VRAI_FAUX → Vrai/Faux seulement. Si TEXTE_TROU → Texte à trous seulement.
 Si QUESTIONS_OUVERTES → Questions ouvertes seulement. Si CALCUL → Calculs seulement.
 Si ETUDE_DOCUMENT → Étude de document seulement. Si SCHEMA → Schéma à légender seulement.
-Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas pratique seulement."""
+Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas pratique seulement.
+Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Section Critique (en-tête officiel + structure progressive adaptée au niveau détecté). Mélange intelligent de tous les types adaptés au niveau."""
                             contenu = generer_avec_gemini(service, prompt_enrichi, user)
                             if contenu.startswith("❌"):
                                 result_holder["erreur"] = contenu
