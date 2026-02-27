@@ -143,12 +143,16 @@ def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
     """Upload via API REST Supabase Storage."""
     try:
         import requests as _req
-        BUCKET   = "nova-fichiers"
-        sb_url   = st.secrets["SUPABASE_URL"].rstrip("/")
-        sb_key   = st.secrets["SUPABASE_KEY"]
-        auth_hdrs = {
-            "apikey":        sb_key,
-            "Authorization": f"Bearer {sb_key}",
+        BUCKET      = "nova-fichiers"
+        sb_url      = st.secrets["SUPABASE_URL"].rstrip("/")
+        sb_key      = st.secrets["SUPABASE_KEY"]
+        # La service_role key bypasse le RLS — nécessaire pour les uploads Storage
+        # Ajoute SUPABASE_SERVICE_KEY dans tes secrets Streamlit
+        # Dashboard Supabase → Settings → API → service_role (secret)
+        sb_svc_key  = st.secrets.get("SUPABASE_SERVICE_KEY", sb_key)
+        auth_hdrs   = {
+            "apikey":        sb_svc_key,
+            "Authorization": f"Bearer {sb_svc_key}",
         }
 
         # — Nettoyage des composantes du chemin —
