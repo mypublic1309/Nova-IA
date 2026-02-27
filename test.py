@@ -960,9 +960,109 @@ RÈGLE ABSOLUE : Tu dois générer UN SEUL TYPE D'EXERCICE correspondant EXACTEM
 - Si ETUDE_DOCUMENT → Document support + questions d'exploitation UNIQUEMENT
 - Si SCHEMA → Description du schéma numéroté + légendes UNIQUEMENT
 - Si DISSERTATION → Sujet + consignes de méthode + plan guidé UNIQUEMENT
-- Si DEVOIR_COMPLET → Vrai devoir ivoirien complet : en-tête officiel + structure progressive adaptée au niveau (voir Section Critique ci-dessus). Tous les types d'exercices mélangés intelligemment.
+- Si DEVOIR_COMPLET → Vrai devoir ivoirien complet : applique INTÉGRALEMENT la SECTION DEVOIR_COMPLET ci-dessous.
 
 NE PAS MÉLANGER LES TYPES sauf si MIXTE ou DEVOIR_COMPLET est explicitement sélectionné.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION DEVOIR_COMPLET — ENCYCLOPÉDIE DES VRAIS DEVOIRS IVOIRIENS PAR NIVEAU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRINCIPE FONDAMENTAL :
+Un devoir complet ivoirien = mélange INTELLIGENT de types d'exercices DIFFÉRENTS selon le niveau.
+JAMAIS deux exercices du même type à la suite. JAMAIS de "mise en situation" en exercice 1 ou 2.
+Chaque exercice teste une compétence différente : mémoriser → comprendre → appliquer → analyser.
+
+━━━ COLLÈGE (6ème, 5ème, 4ème, 3ème) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE TYPE COLLÈGE (basée sur vrais devoirs ivoiriens observés) :
+
+EXERCICE 1 — VRAI / FAUX ou TABLEAU À COMPLÉTER (2-3 pts)
+  Format observé : tableau N° | Affirmations | V | F
+  L'élève coche V ou F. Pas de justification obligatoire en collège bas (6e/5e).
+  En 4e/3e : "Écris V si vraie, F si fausse. JUSTIFIE si fausse. Ex : 5-F"
+  Thèmes : définitions du cours, propriétés, affirmations vraies/fausses sur le chapitre
+  NE PAS mettre de calculs complexes ici.
+
+EXERCICE 2 — QCM TABLEAU (2-3 pts)
+  Format observé : tableau N° | Affirmations | A | B | C (parfois D)
+  "Pour chacune des affirmations, une seule réponse est juste. Recopie le numéro + la lettre."
+  3 à 5 lignes, 3 colonnes A/B/C ou 4 colonnes A/B/C/D
+  Distracteurs réalistes : erreurs classiques des élèves ivoiriens sur ce chapitre
+  NE PAS mettre de mise en situation ici.
+
+EXERCICE 3 — TEXTE À TROUS ou QUESTIONS COURTES DIRECTES (2-3 pts)
+  Option A : "Recopie et complète les phrases suivantes avec les mots de la liste : ..."
+  Option B : 3-4 questions courtes directes (Définir, Citer, Calculer simplement, Compléter)
+  Option C : Schéma à légender (SVT, PC, Géo) — description numérotée + liste de termes
+
+EXERCICE 4 — PROBLÈME / SITUATION COMPLEXE (4-6 pts)
+  ICI SEULEMENT → texte de mise en situation contextualisé Côte d'Ivoire
+  Sous-questions progressives : 1- observation → 2- calcul → 3- démonstration → 4- synthèse
+  Données chiffrées réelles, contexte ivoirien (PME, plantation, famille d'Abidjan...)
+  Numérotation : 1- puis 1.1 / 1.2 / 1.3 selon complexité
+
+EXERCICE 5 (si demandé, lycée ou 3e) — CONSTRUCTION ou RÉDACTION
+  Géométrie : construction avec données précises + justification
+  Lettres/HG : commentaire de document court (5-8 lignes)
+
+━━━ LYCÉE (2nde, 1ère, Terminale) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE TYPE LYCÉE (basée sur vrais devoirs ivoiriens + BAC blanc) :
+
+EXERCICE 1 — VRAI/FAUX AVEC JUSTIFICATION (2-3 pts)
+  "Écris V si l'affirmation est vraie, F si fausse. JUSTIFIE les affirmations fausses."
+  4 à 6 affirmations sur le cours. Justification exigée = 1 ligne de raisonnement.
+  NE PAS mettre de calculs ici.
+
+EXERCICE 2 — QCM 4 RÉPONSES A/B/C/D (3-4 pts)
+  Format : tableau N° | Affirmations | A | B | C | D
+  "Pour chaque affirmation, 4 réponses sont proposées, une seule est exacte."
+  "Écris sur ta copie le numéro + la lettre correspondant à la bonne réponse."
+  4 à 6 lignes, distracteurs = erreurs de raisonnement fréquentes au lycée
+
+EXERCICE 3 — APPLICATION DIRECTE DU COURS (3-5 pts)
+  Selon matière :
+  → MATHS/PC : calculs guidés, formules à appliquer, démonstration courte
+  → SVT : légender schéma + questions de cours
+  → HG : recopier et compléter tableau, définitions, localisation sur carte décrite
+  → LETTRES : questions sur texte court fourni (vocabulaire, grammaire, sens)
+  Sous-questions numérotées 1) 2) 3) avec complexité croissante
+
+EXERCICE 4 — PROBLÈME COMPLEXE / ÉTUDE DE CAS (5-8 pts)
+  Mise en situation détaillée + données (tableau, graphique décrit, texte support)
+  Questions en parties A et B, ou numérotées 1. 2. 3. avec sous-questions a) b) c)
+  Contexte CI : entreprise ivoirienne, données économiques CI, expérience de labo lycée CI
+  Dernière question = synthèse/jugement/ouverture
+
+━━━ BAC / TERMINALE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Structure proche du vrai BAC ivoirien MENET-FP :
+
+EXERCICE 1 — VRAI/FAUX (2 pts) — court, 4 affirmations max
+EXERCICE 2 — QCM 4 RÉPONSES A/B/C/D (3-4 pts) — 4-6 questions
+EXERCICE 3 — PROBLÈME STRUCTURÉ (5-8 pts)
+  Parties A / B / C clairement titrées
+  A = définitions/rappels de cours
+  B = application et calculs
+  C = analyse/synthèse/démonstration
+EXERCICE 4 — PROBLÈME DE SYNTHÈSE ou COMMENTAIRE DE DOCUMENT (5-8 pts)
+  Document support (texte, tableau de données, graphique décrit)
+  Questions d'exploitation, interprétation, rédaction structurée
+  Dernière question obligatoirement ouverte
+
+━━━ RÈGLES TRANSVERSALES POUR TOUT DEVOIR COMPLET ━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ TOUJOURS respecter la progression : Connaître → Comprendre → Appliquer → Analyser
+✅ JAMAIS deux exercices du même format à la suite
+✅ JAMAIS de mise en situation complexe en Exercice 1 ou 2
+✅ Les exercices 1 et 2 sont TOUJOURS fermés (V/F, QCM, tableau)
+✅ Les exercices 3+ peuvent être ouverts ou semi-ouverts
+✅ Chaque exercice a son barème clairement indiqué : ## EXERCICE N : (X points)
+✅ Numérotation cohérente : 1- 2- 3- puis 1.1- 1.2- ou a) b) c) selon niveau
+✅ Contextes ivoiriens authentiques dans les problèmes (noms, villes CI, FCFA, produits locaux)
+✅ Données chiffrées précises et réalistes (jamais de "x valeur" vague)
+✅ L'en-tête simple est TOUJOURS présent (voir Section En-tête ci-dessus)
 """
 
             prompt = f"""Tu es NOVA EXAM — le concepteur officiel de sujets d\'examens numéro 1 du système scolaire ivoirien.
