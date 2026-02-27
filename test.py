@@ -3767,135 +3767,87 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Bouton Google Identity Services ─────────────────────────────
+    # ── Bouton Google OAuth (redirect direct) ─────────────────────────────
     try:
         google_client_id = st.secrets["GOOGLE_CLIENT_ID"]
     except Exception:
         google_client_id = None
 
     if google_client_id:
-        components.html(f"""
-            <style>
-            #nova-google-btn {{
-                display:flex; align-items:center; justify-content:center; gap:12px;
-                background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.25);
-                border-radius:50px; padding:13px 32px; color:#fff;
-                font-family:inherit; font-weight:700; font-size:13px;
-                letter-spacing:1.5px; text-transform:uppercase;
-                cursor:pointer; width:100%; transition:all .3s ease; margin-bottom:4px;
-            }}
-            #nova-google-btn:hover {{
-                background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.5);
-                box-shadow:0 0 22px rgba(255,255,255,0.1); transform:translateY(-2px);
-            }}
-            #nova-google-btn:disabled {{ opacity:0.6; cursor:not-allowed; }}
-            .g-logo{{ width:20px; height:20px; }}
-            .or-line{{ display:flex; align-items:center; gap:10px; margin-top:14px;
-                color:rgba(255,215,0,0.4); font-size:11px; letter-spacing:2px; }}
-            .or-line hr{{ flex:1; border:none; border-top:1px solid rgba(255,215,0,0.2); }}
-            </style>
+        import urllib.parse
+        # URL de base de l'app (sans query params)
+        app_url = "https://espace-partage-8.streamlit.app"
+        redirect_uri = app_url
+        # Construire l'URL OAuth Google
+        oauth_params = urllib.parse.urlencode({
+            "client_id": google_client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "token",
+            "scope": "email profile",
+            "prompt": "select_account"
+        })
+        oauth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{oauth_params}"
 
-            <button id="nova-google-btn" onclick="startGoogle()">
-                <svg class="g-logo" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
-                    <path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/>
-                    <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/>
-                </svg>
-                Continuer avec Google
-            </button>
-            <div class="or-line"><hr>ou<hr></div>
+        st.markdown(f"""
+        <style>
+        .nova-google-link {{
+            display:flex; align-items:center; justify-content:center; gap:12px;
+            background:rgba(255,255,255,0.07); border:2px solid rgba(255,255,255,0.25);
+            border-radius:50px; padding:13px 32px; color:#fff !important;
+            font-weight:700; font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
+            text-decoration:none !important; width:100%; transition:all .3s ease;
+            margin-bottom:4px; box-sizing:border-box;
+        }}
+        .nova-google-link:hover {{
+            background:rgba(255,255,255,0.14) !important; border-color:rgba(255,255,255,0.5);
+            box-shadow:0 0 22px rgba(255,255,255,0.1); transform:translateY(-2px);
+            color:#fff !important; text-decoration:none !important;
+        }}
+        .g-logo-inline{{ width:20px; height:20px; vertical-align:middle; }}
+        .or-line{{ display:flex; align-items:center; gap:10px; margin:12px 0;
+            color:rgba(255,215,0,0.4); font-size:11px; letter-spacing:2px; }}
+        .or-line hr{{ flex:1; border:none; border-top:1px solid rgba(255,215,0,0.2); margin:0; }}
+        </style>
+        <a href="{oauth_url}" target="_self" class="nova-google-link">
+            <svg class="g-logo-inline" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/>
+                <path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/>
+                <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/>
+            </svg>
+            &nbsp; Continuer avec Google
+        </a>
+        <div class="or-line"><hr>&nbsp;ou&nbsp;<hr></div>
+        """, unsafe_allow_html=True)
 
-            <script>
-            var CLIENT_ID = '{google_client_id}';
-            var googleReady = false;
-
-            function handleGoogleToken(response) {{
-                try {{
-                    var parts = response.credential.split('.');
-                    var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-                    var email = payload.email;
-                    if (email) {{
-                        window.parent.postMessage({{type:'nova_google_login', email:email}}, '*');
-                    }}
-                }} catch(e) {{
-                    console.error('Erreur token Google:', e);
-                }}
-            }}
-
-            function startGoogle() {{
-                var btn = document.getElementById('nova-google-btn');
-                btn.disabled = true;
-                btn.innerHTML = '⏳ Connexion...';
-                if (googleReady) {{
-                    google.accounts.id.prompt(function(notification) {{
-                        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {{
-                            // One Tap bloqué, ouvrir popup OAuth classique
-                            var client = google.accounts.oauth2.initTokenClient({{
-                                client_id: CLIENT_ID,
-                                scope: 'email profile',
-                                callback: function(tokenResponse) {{
-                                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {{
-                                        headers: {{'Authorization': 'Bearer ' + tokenResponse.access_token}}
-                                    }}).then(r => r.json()).then(function(info) {{
-                                        if (info.email) {{
-                                            window.parent.postMessage({{type:'nova_google_login', email:info.email}}, '*');
-                                        }}
-                                    }});
-                                }}
-                            }});
-                            client.requestAccessToken({{prompt:'select_account'}});
-                        }}
-                        btn.disabled = false;
-                        btn.innerHTML = '<svg class="g-logo" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/></svg> Continuer avec Google';
-                    }});
-                }} else {{
-                    btn.disabled = false;
-                    btn.innerHTML = '<svg class="g-logo" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.9 6.1C12.8 13.2 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.9 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.4 10.6l8.5-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2.1 1.4-4.7 2.3-7.7 2.3-6.1 0-11.2-3.7-13.1-9l-7.9 6.1C6.9 42.6 14.8 48 24 48z"/></svg> Continuer avec Google';
-                    alert('Google pas encore chargé, réessayez dans 2 secondes.');
-                }}
-            }}
-
-            // Écouter la réponse depuis l'iframe parent
-            window.addEventListener('message', function(e) {{
-                if (e.data && e.data.type === 'nova_google_ready') {{
-                    googleReady = true;
-                }}
-            }});
-
-            // Charger GSI dynamiquement
-            var script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.onload = function() {{
-                google.accounts.id.initialize({{
-                    client_id: CLIENT_ID,
-                    callback: handleGoogleToken,
-                    auto_select: false,
-                    itp_support: true,
-                    use_fedcm_for_prompt: false
-                }});
-                googleReady = true;
-                // Auto One Tap discret
-                google.accounts.id.prompt();
-            }};
-            document.head.appendChild(script);
-            </script>
-        """, height=110)
-
-    # Recevoir le message postMessage de l'iframe Google
-    components.html(f"""
+        # Récupérer le token depuis le fragment d'URL (#access_token=...)
+        # Le fragment arrive via JS car Python ne peut pas le lire directement
+        components.html("""
         <script>
-        window.addEventListener('message', function(e) {{
-            if (e.data && e.data.type === 'nova_google_login' && e.data.email) {{
-                var email = e.data.email;
-                localStorage.setItem('nova_google_email', email);
-                var url = new URL(window.location.href);
-                url.searchParams.set('google_email', email);
-                window.location.href = url.toString();
-            }}
-        }});
+        (function() {
+            var hash = window.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                var params = new URLSearchParams(hash.substring(1));
+                var token = params.get('access_token');
+                if (token) {
+                    // Récupérer l'email via l'API Google
+                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    }).then(function(r) { return r.json(); })
+                    .then(function(info) {
+                        if (info.email) {
+                            // Nettoyer le fragment et rediriger avec google_email
+                            var url = new URL(window.location.href);
+                            url.hash = '';
+                            url.searchParams.set('google_email', info.email);
+                            window.location.replace(url.toString());
+                        }
+                    });
+                }
+            }
+        })();
         </script>
-    """, height=0)
+        """, height=0)
 
     col1, col2 = st.columns(2, gap="large")
 
