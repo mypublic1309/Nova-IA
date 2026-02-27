@@ -1070,6 +1070,10 @@ FORMULAIRE CHIMIE (prêt à l'emploi) :
     Zn + 2HCl → ZnCl_{{2}} + H_{{2}}
 
 INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
+INTERDIT ABSOLU : notation avec accolades vides comme _() ^() __ (indices/exposants vides)
+INTERDIT ABSOLU : notation _(x)(y) imbriquée — ecris directement les valeurs
+FORMULE CORRECTE : ###FORMULE### R = U/I = 50/0,5 = 100 Ohm
+FORMULE INCORRECTE : R_eq = (U_eq)/(I_eq) = (50)/(0,5) avec indices vides <- JAMAIS
 INTERDIT ABSOLU : Tableau à cheval sur deux pages. Si un tableau est long, place un ---SAUT_DE_PAGE--- AVANT lui. Un tableau doit TOUJOURS commencer et se terminer sur la MÊME page.
 
 SECTION 2 — MOTEUR DE DÉTECTION AUTOMATIQUE NOVA EXAM
@@ -2330,6 +2334,14 @@ def creer_docx(contenu, service, client_nom):
 
     def nettoyer_latex_complet(texte):
         """Convertit LaTeX complet + notation Nova ^{} _{} en texte normalisé."""
+
+        # 0. Pré-nettoyage des formules malformées produites par Gemini
+        # ex: __{} __{}  _{  }  {50 } {0,5 }
+        texte = _re.sub(r'_{2,}\{\s*\}', '',  texte)   # __{}  ___{}  → supprimé
+        texte = _re.sub(r'\^{2,}\{\s*\}', '', texte)   # ^^{}         → supprimé
+        texte = _re.sub(r'[_^]\{\s*\}',   '',  texte)  # _{}   ^{}    → supprimé
+        texte = _re.sub(r'_{2,}([^{])',  r'_\1', texte)  # __x   → _x
+        texte = _re.sub(r'\^{2,}([^{])', r'^\1', texte)  # ^^x   → ^x
         # 1. Blocs $$...$$ et formules $...$
         def conv_dollar(m):
             f = m.group(1)
