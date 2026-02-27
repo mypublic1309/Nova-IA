@@ -16,13 +16,7 @@ st.set_page_config(
 )
 
 DATA_FILE = "data_nova_v3.json"
-
-# ── Sécurité : ADMIN_CODE doit être défini dans les secrets Streamlit ──
-# Dashboard Streamlit → Settings → Secrets → ajoute : ADMIN_CODE = "ton_code_secret"
-try:
-    ADMIN_CODE = st.secrets["ADMIN_CODE"]
-except KeyError:
-    ADMIN_CODE = None  # Panel admin désactivé si secret manquant
+ADMIN_CODE = st.secrets.get("ADMIN_CODE", "02110240")
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -5059,7 +5053,22 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                     else:
                         # Incrémenter le compteur de générations
                         incrementer_gen(user)
-                        save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
+
+                        # ── Upload vers Supabase Storage pour que le client puisse télécharger ──
+                        req_id_gen = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
+                        url_supabase = upload_fichier_client(
+                            user, req_id_gen,
+                            result_holder["buf"],
+                            result_holder["nom"]
+                        )
+
+                        if url_supabase.startswith("ERREUR"):
+                            # Upload échoué → fallback session_state uniquement (téléchargement immédiat)
+                            save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
+                        else:
+                            # ✅ URL réelle → bouton téléchargement permanent
+                            save_lien(user, service, url_supabase, datetime.now().strftime("%d/%m/%Y"))
+
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
                         envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
@@ -5208,16 +5217,27 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             </div>
                         </div>""", unsafe_allow_html=True)
                     elif link["url"].startswith("__local__"):
+                        nom_local = link["url"].replace("__local__", "")
                         st.markdown(f"""
                         <div class="file-card" style="border-color:rgba(255,215,0,.5);">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <div>
                                     <h3 style="color:#FFD700;margin:0;">⭐ {link['name']}</h3>
-                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Généré le {link.get('date',"Aujourd'hui")} · Téléchargez depuis l'onglet Déployer</p>
+                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Généré le {link.get('date',"Aujourd'hui")}</p>
                                 </div>
                                 <span class="badge-premium">IA AUTO</span>
                             </div>
                         </div>""", unsafe_allow_html=True)
+                        lv = st.session_state.get("premium_livrable")
+                        if lv and lv.get("nom") == nom_local:
+                            st.download_button(
+                                "📥 Télécharger maintenant",
+                                data=lv["buf"], file_name=lv["nom"], mime=lv["mime"],
+                                key=f"dl_local_{nom_local}",
+                                use_container_width=True
+                            )
+                        else:
+                            st.warning("⚠️ Fichier temporaire expiré. Reconnecte-toi ou contacte le support Nova.", icon="⚠️")
                     else:
                         st.markdown(f"""
                         <div class="file-card">
@@ -5265,296 +5285,263 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                 st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">🙋 Agent Nova</a>', unsafe_allow_html=True)
 
     with st.expander("🛠 Console Admin Nova"):
-        # ── Protection brute-force ──
-        if "admin_attempts" not in st.session_state:
-            st.session_state["admin_attempts"] = 0
-        if "admin_locked_until" not in st.session_state:
-            st.session_state["admin_locked_until"] = None
+        if st.text_input("Master Key", type="password") == ADMIN_CODE:
 
-        # Vérif lock temporaire
-        locked = False
-        if st.session_state["admin_locked_until"]:
-            if datetime.now() < st.session_state["admin_locked_until"]:
-                remaining = int((st.session_state["admin_locked_until"] - datetime.now()).total_seconds())
-                st.error(f"🔒 Trop de tentatives. Réessaie dans {remaining}s.")
-                locked = True
-            else:
-                st.session_state["admin_attempts"] = 0
-                st.session_state["admin_locked_until"] = None
+            current_db = st.session_state["db"]
+            admin_tab1, admin_tab2 = st.tabs(["📋 MISSIONS", "👑 GESTION PREMIUM"])
 
-        if not locked:
-            if ADMIN_CODE is None:
-                st.error("⚠️ ADMIN_CODE non configuré dans les secrets Streamlit.")
-            else:
-                master_input = st.text_input("Master Key", type="password", key="admin_master_key")
-                if master_input:
-                    if master_input == ADMIN_CODE:
-                        st.session_state["admin_attempts"] = 0
+            with admin_tab1:
+                st.markdown("### 🛡️ Panneau de contrôle Nova")
 
-                        current_db = st.session_state["db"]
-                        admin_tab1, admin_tab2 = st.tabs(["📋 MISSIONS", "👑 GESTION PREMIUM"])
+                if not current_db["demandes"]:
+                    st.info("✅ Aucune mission en attente.")
 
-                        with admin_tab1:
-                            st.markdown("### 🛡️ Panneau de contrôle Nova")
+                def wa_url(numero, texte):
+                    encoded = texte.replace(" ", "%20").replace("'", "%27").replace("\n", "%0A")
+                    return f"https://wa.me/{numero}?text={encoded}"
 
-                            if not current_db["demandes"]:
-                                st.info("✅ Aucune mission en attente.")
+                for i, req in enumerate(current_db["demandes"]):
+                    client_wa_raw    = req.get("whatsapp", "(non renseigné)")
+                    client_wa        = normalize_wa(client_wa_raw)
+                    client_nom       = req.get("user", "Inconnu")
+                    service          = req.get("service", "—")
+                    description      = req.get("desc", "(aucune description)")
+                    req_id           = req.get("id", f"{i+1}")
+                    timestamp        = req.get("timestamp", "")[:16] if req.get("timestamp") else "—"
+                    est_incomplet    = req.get("incomplet", False)
+                    champs_manquants = req.get("champs_manquants", [])
+                    client_premium   = is_premium_actif(current_db["users"].get(client_nom, {}))
 
-                            def wa_url(numero, texte):
-                                encoded = texte.replace(" ", "%20").replace("'", "%27").replace("\n", "%0A")
-                                return f"https://wa.me/{numero}?text={encoded}"
+                    if i > 0:
+                        st.divider()
 
-                            for i, req in enumerate(current_db["demandes"]):
-                                client_wa_raw    = req.get("whatsapp", "(non renseigné)")
-                                client_wa        = normalize_wa(client_wa_raw)
-                                client_nom       = req.get("user", "Inconnu")
-                                service          = req.get("service", "—")
-                                description      = req.get("desc", "(aucune description)")
-                                req_id           = req.get("id", f"{i+1}")
-                                timestamp        = req.get("timestamp", "")[:16] if req.get("timestamp") else "—"
-                                est_incomplet    = req.get("incomplet", False)
-                                champs_manquants = req.get("champs_manquants", [])
-                                client_premium   = is_premium_actif(current_db["users"].get(client_nom, {}))
+                    col_info, col_badge = st.columns([4, 1])
+                    with col_info:
+                        st.markdown(f"**Mission `#{req_id}`** · {timestamp}" + (" — ⚠️ *Incomplet : " + ", ".join(champs_manquants) + "*" if est_incomplet else ""))
+                        st.markdown(f"👤 **Client :** {client_nom}")
+                        st.markdown(f"📱 **WhatsApp :** {client_wa}")
+                        st.markdown(f"🛠️ **Service demandé :** {service}")
+                        st.markdown(f"📝 **Détails de la demande :** {description}")
+                        if "Modifier" in service and "Fichier" in service:
+                            _url_dl = None
+                            _nom_dl = "fichier_client"
+                            for _l in description.split("\n"):
+                                if "📎 FICHIER CLIENT :" in _l:
+                                    _url_dl = _l.replace("📎 FICHIER CLIENT :", "").strip()
+                                if "FICHIER" in _l and ":" in _l and "MODIF" not in _l and "NOTE" not in _l and "📎 FICHIER CLIENT" not in _l:
+                                    _nom_dl = _l.split(":")[-1].strip()
+                            if _url_dl and _url_dl.startswith("http"):
+                                st.markdown(f'''<a href="{_url_dl}" target="_blank"
+                                   style="display:inline-flex;align-items:center;gap:8px;
+                                   background:rgba(0,210,255,0.12);border:1px solid rgba(0,210,255,0.5);
+                                   border-radius:10px;padding:10px 20px;color:#00d2ff;
+                                   font-weight:700;text-decoration:none;margin-top:6px;">
+                                   📥 TÉLÉCHARGER LE FICHIER — {_nom_dl}</a>''',
+                                   unsafe_allow_html=True)
+                            else:
+                                st.info("📎 Fichier non disponible")
+                    with col_badge:
+                        if client_premium:
+                            st.markdown('<span class="badge-premium">⭐ PREMIUM</span>', unsafe_allow_html=True)
+                        else:
+                            st.markdown('<span class="badge-free">🔓 Gratuit</span>', unsafe_allow_html=True)
 
-                                if i > 0:
-                                    st.divider()
+                    if est_incomplet and champs_manquants:
+                        champs_str = ", ".join(champs_manquants)
+                        msg_rejet = (f"Bonjour {client_nom}, nous avons reçu votre demande Nova AI "
+                                     f"concernant : {service}. Cependant, nous ne pouvons pas la traiter "
+                                     f"car les informations suivantes sont manquantes : {champs_str}. "
+                                     f"Merci de soumettre à nouveau votre demande en complétant tous les champs. "
+                                     f"— Équipe Nova AI ⚡")
+                    else:
+                        msg_rejet = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova AI "
+                                     f"concernant : {service}. Malheureusement, nous ne sommes pas en mesure "
+                                     f"de traiter cette mission pour le moment. Merci de nous recontacter. "
+                                     f"— Équipe Nova AI ⚡")
 
-                                col_info, col_badge = st.columns([4, 1])
-                                with col_info:
-                                    st.markdown(f"**Mission `#{req_id}`** · {timestamp}" + (" — ⚠️ *Incomplet : " + ", ".join(champs_manquants) + "*" if est_incomplet else ""))
-                                    st.markdown(f"👤 **Client :** {client_nom}")
-                                    st.markdown(f"📱 **WhatsApp :** {client_wa}")
-                                    st.markdown(f"🛠️ **Service demandé :** {service}")
-                                    st.markdown(f"📝 **Détails de la demande :** {description}")
-                                    if "Modifier" in service and "Fichier" in service:
-                                        _url_dl = None
-                                        _nom_dl = "fichier_client"
-                                        for _l in description.split("\n"):
-                                            if "📎 FICHIER CLIENT :" in _l:
-                                                _url_dl = _l.replace("📎 FICHIER CLIENT :", "").strip()
-                                            if "FICHIER" in _l and ":" in _l and "MODIF" not in _l and "NOTE" not in _l and "📎 FICHIER CLIENT" not in _l:
-                                                _nom_dl = _l.split(":")[-1].strip()
-                                        if _url_dl and _url_dl.startswith("http"):
-                                            st.markdown(f'''<a href="{_url_dl}" target="_blank"
-                                               style="display:inline-flex;align-items:center;gap:8px;
-                                               background:rgba(0,210,255,0.12);border:1px solid rgba(0,210,255,0.5);
-                                               border-radius:10px;padding:10px 20px;color:#00d2ff;
-                                               font-weight:700;text-decoration:none;margin-top:6px;">
-                                               📥 TÉLÉCHARGER LE FICHIER — {_nom_dl}</a>''',
-                                               unsafe_allow_html=True)
-                                        else:
-                                            st.info("📎 Fichier non disponible")
-                                with col_badge:
-                                    if client_premium:
-                                        st.markdown('<span class="badge-premium">⭐ PREMIUM</span>', unsafe_allow_html=True)
-                                    else:
-                                        st.markdown('<span class="badge-free">🔓 Gratuit</span>', unsafe_allow_html=True)
+                    msg_succes = (f"✅ Bonjour {client_nom} ! Votre mission Nova AI ({service}) est terminée ! "
+                                  f"Rendez-vous dans votre espace Nova pour récupérer votre livrable. "
+                                  f"Merci de votre confiance. — Équipe Nova AI ⚡")
 
-                                if est_incomplet and champs_manquants:
-                                    champs_str = ", ".join(champs_manquants)
-                                    msg_rejet = (f"Bonjour {client_nom}, nous avons reçu votre demande Nova AI "
-                                                 f"concernant : {service}. Cependant, nous ne pouvons pas la traiter "
-                                                 f"car les informations suivantes sont manquantes : {champs_str}. "
-                                                 f"Merci de soumettre à nouveau votre demande en complétant tous les champs. "
-                                                 f"— Équipe Nova AI ⚡")
+                    msg_recu = (f"📬 Bonjour {client_nom}, nous confirmons la réception de votre demande "
+                                f"Nova AI : {service}. Votre mission est en cours de traitement. "
+                                f"Vous serez notifié dès qu'elle sera finalisée. — Équipe Nova AI ⚡")
+
+                    col_rejet, col_recu, col_succes = st.columns(3)
+                    with col_rejet:
+                        if st.button("❌ Rejeter", key=f"rej_{i}", use_container_width=True):
+                            save_refus(client_nom, service, msg_rejet)
+                            delete_demande(req["id"])
+                            st.session_state["db"] = load_db()
+                            st.success(f"Mission refusée — notification envoyée dans les livrables de {client_nom}.")
+                            st.rerun()
+                    with col_recu:
+                        st.markdown(f'<a href="{wa_url(client_wa, msg_recu)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
+                    with col_succes:
+                        st.markdown(f'<a href="{wa_url(client_wa, msg_succes)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; font-weight:700; text-decoration:none;">✅ Succès</a>', unsafe_allow_html=True)
+
+                    if service in SERVICES_GEMINI:
+                        st.markdown("<br>", unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div class="gemini-card">
+                            <div class="gemini-title">🤖 GEMINI AI — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
+                            <div class="gemini-sub">Génère le document complet en .docx en 30-60 secondes</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
+                            with st.spinner("Interrogation de l'API Gemini..."):
+                                modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
+                            if modeles_dispo:
+                                st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
+                                for m in modeles_dispo:
+                                    st.code(m)
+                            else:
+                                st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
+
+                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
+                            with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
+                                modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
+                                if modeles_dispo:
+                                    st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
                                 else:
-                                    msg_rejet = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova AI "
-                                                 f"concernant : {service}. Malheureusement, nous ne sommes pas en mesure "
-                                                 f"de traiter cette mission pour le moment. Merci de nous recontacter. "
-                                                 f"— Équipe Nova AI ⚡")
+                                    st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
+                            with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
+                                contenu = generer_avec_gemini(service, description, client_nom)
 
-                                msg_succes = (f"✅ Bonjour {client_nom} ! Votre mission Nova AI ({service}) est terminée ! "
-                                              f"Rendez-vous dans votre espace Nova pour récupérer votre livrable. "
-                                              f"Merci de votre confiance. — Équipe Nova AI ⚡")
+                            if contenu.startswith("❌"):
+                                st.error(contenu)
+                            else:
+                                st.session_state["gemini_results"][req_id] = {
+                                    "contenu": contenu,
+                                    "service": service,
+                                    "client": client_nom
+                                }
+                                st.success("✅ Document généré avec succès !")
+                                st.rerun()
 
-                                msg_recu = (f"📬 Bonjour {client_nom}, nous confirmons la réception de votre demande "
-                                            f"Nova AI : {service}. Votre mission est en cours de traitement. "
-                                            f"Vous serez notifié dès qu'elle sera finalisée. — Équipe Nova AI ⚡")
+                        if req_id in st.session_state["gemini_results"]:
+                            result = st.session_state["gemini_results"][req_id]
 
-                                col_rejet, col_recu, col_succes = st.columns(3)
-                                with col_rejet:
-                                    if st.button("❌ Rejeter", key=f"rej_{i}", use_container_width=True):
-                                        save_refus(client_nom, service, msg_rejet)
+                            with st.expander("👁️ Aperçu du contenu généré", expanded=False):
+                                st.markdown(result["contenu"])
+
+                            if st.button("🚀 LIVRER DIRECTEMENT AU CLIENT", key=f"livrer_auto_{req_id}", use_container_width=True):
+                                try:
+                                    SERVICE_EXCEL = "📊 Data & Excel Analytics"
+                                    if result["service"] == SERVICE_EXCEL:
+                                        buf = creer_xlsx(result.get("desc", ""), result["client"])
+                                        nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
+                                        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    else:
+                                        buf = creer_docx(result["contenu"], result["service"], result["client"])
+                                        nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
+                                        mime_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+                                    with st.spinner("⬆️ Upload du fichier vers Supabase..."):
+                                        url_fichier = upload_fichier_client(client_nom, req_id, buf, nom_fichier)
+
+                                    if url_fichier.startswith("ERREUR"):
+                                        st.error(f"❌ Upload échoué : {url_fichier}")
+                                    else:
+                                        save_lien(client_nom, service, url_fichier, datetime.now().strftime("%d/%m/%Y"))
                                         delete_demande(req["id"])
-                                        st.session_state["db"] = load_db()
-                                        st.success(f"Mission refusée — notification envoyée dans les livrables de {client_nom}.")
-                                        st.rerun()
-                                with col_recu:
-                                    st.markdown(f'<a href="{wa_url(client_wa, msg_recu)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
-                                with col_succes:
-                                    st.markdown(f'<a href="{wa_url(client_wa, msg_succes)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.5); color:#2ecc71; font-weight:700; text-decoration:none;">✅ Succès</a>', unsafe_allow_html=True)
-
-                                if service in SERVICES_GEMINI:
-                                    st.markdown("<br>", unsafe_allow_html=True)
-                                    st.markdown(f"""
-                                    <div class="gemini-card">
-                                        <div class="gemini-title">🤖 GEMINI AI — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
-                                        <div class="gemini-sub">Génère le document complet en .docx en 30-60 secondes</div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-
-                                    if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
-                                        with st.spinner("Interrogation de l'API Gemini..."):
-                                            modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
-                                        if modeles_dispo:
-                                            st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
-                                            for m in modeles_dispo:
-                                                st.code(m)
-                                        else:
-                                            st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
-
-                                    if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
-                                        with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
-                                            modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
-                                            if modeles_dispo:
-                                                st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
-                                            else:
-                                                st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
-                                        with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
-                                            contenu = generer_avec_gemini(service, description, client_nom)
-
-                                        if contenu.startswith("❌"):
-                                            st.error(contenu)
-                                        else:
-                                            st.session_state["gemini_results"][req_id] = {
-                                                "contenu": contenu,
-                                                "service": service,
-                                                "client": client_nom
-                                            }
-                                            st.success("✅ Document généré avec succès !")
-                                            st.rerun()
-
-                                    if req_id in st.session_state["gemini_results"]:
-                                        result = st.session_state["gemini_results"][req_id]
-
-                                        with st.expander("👁️ Aperçu du contenu généré", expanded=False):
-                                            st.markdown(result["contenu"])
-
-                                        if st.button("🚀 LIVRER DIRECTEMENT AU CLIENT", key=f"livrer_auto_{req_id}", use_container_width=True):
-                                            try:
-                                                SERVICE_EXCEL = "📊 Data & Excel Analytics"
-                                                if result["service"] == SERVICE_EXCEL:
-                                                    buf = creer_xlsx(result.get("desc", ""), result["client"])
-                                                    nom_fichier = f"{client_nom}_Suivi_Depenses.xlsx".replace(" ", "_")
-                                                    mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                                else:
-                                                    buf = creer_docx(result["contenu"], result["service"], result["client"])
-                                                    nom_fichier = f"{client_nom}_{result['service'][:20].strip()}.docx".replace(" ", "_").replace("/", "-")
-                                                    mime_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-
-                                                with st.spinner("⬆️ Upload du fichier vers Supabase..."):
-                                                    url_fichier = upload_fichier_client(client_nom, req_id, buf, nom_fichier)
-
-                                                if url_fichier.startswith("ERREUR"):
-                                                    st.error(f"❌ Upload échoué : {url_fichier}")
-                                                else:
-                                                    save_lien(client_nom, service, url_fichier, datetime.now().strftime("%d/%m/%Y"))
-                                                    delete_demande(req["id"])
-                                                    if req_id in st.session_state["gemini_results"]:
-                                                        del st.session_state["gemini_results"][req_id]
-                                                    st.session_state["db"] = load_db()
-                                                    st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
-                                                    st.rerun()
-                                            except Exception as e:
-                                                st.error(f"Erreur livraison : {e}")
-
-                                st.markdown("<br>", unsafe_allow_html=True)
-                                url_dl = st.text_input("🔗 Lien de livraison manuel (optionnel)", key=f"url_{i}", placeholder="https://drive.google.com/...")
-                                if st.button("📦 LIVRER AVEC LIEN MANUEL", key=f"btn_{i}", use_container_width=True):
-                                    if url_dl:
-                                        save_lien(req['user'], req['service'], url_dl, datetime.now().strftime("%d/%m/%Y"))
-                                        delete_demande(req['id'])
                                         if req_id in st.session_state["gemini_results"]:
                                             del st.session_state["gemini_results"][req_id]
                                         st.session_state["db"] = load_db()
-                                        st.success(f"✅ Mission livrée à {client_nom} !")
+                                        st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
                                         st.rerun()
+                                except Exception as e:
+                                    st.error(f"Erreur livraison : {e}")
 
-                        with admin_tab2:
-                            st.markdown("### 👑 Gestion des membres Premium")
-                            total  = len(current_db["users"])
-                            prems  = [u for u, d in current_db["users"].items() if is_premium_actif(d)]
-                            c1, c2, c3 = st.columns(3)
-                            c1.metric("👥 Total membres", total)
-                            c2.metric("⭐ Premium actifs", len(prems))
-                            c3.metric("🔓 Gratuits", total - len(prems))
-                            st.divider()
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    url_dl = st.text_input("🔗 Lien de livraison manuel (optionnel)", key=f"url_{i}", placeholder="https://drive.google.com/...")
+                    if st.button("📦 LIVRER AVEC LIEN MANUEL", key=f"btn_{i}", use_container_width=True):
+                        if url_dl:
+                            save_lien(req['user'], req['service'], url_dl, datetime.now().strftime("%d/%m/%Y"))
+                            delete_demande(req['id'])
+                            if req_id in st.session_state["gemini_results"]:
+                                del st.session_state["gemini_results"][req_id]
+                            st.session_state["db"] = load_db()
+                            st.success(f"✅ Mission livrée à {client_nom} !")
+                            st.rerun()
 
-                            st.markdown("#### ➕ Activer / Gérer un Premium")
-                            co1, co2, co3 = st.columns([2, 2, 1])
-                            with co1:
-                                uid_target = st.selectbox("Membre", options=list(current_db["users"].keys()),
-                                    format_func=lambda u: f"{u} {'⭐' if is_premium_actif(current_db['users'][u]) else '🔓'}")
-                            with co2:
-                                plan_ch = st.selectbox("Plan", list(PLANS_PREMIUM.keys()),
-                                    format_func=lambda p: f"{PLANS_PREMIUM[p]['emoji']} {p} — {PLANS_PREMIUM[p]['prix']}")
-                            with co3:
-                                st.markdown("<br>", unsafe_allow_html=True)
-                                if st.button("⚡ ACTIVER", key="btn_act_global"):
-                                    activer_premium(uid_target, plan_ch)
+            with admin_tab2:
+                st.markdown("### 👑 Gestion des membres Premium")
+                total  = len(current_db["users"])
+                prems  = [u for u, d in current_db["users"].items() if is_premium_actif(d)]
+                c1, c2, c3 = st.columns(3)
+                c1.metric("👥 Total membres", total)
+                c2.metric("⭐ Premium actifs", len(prems))
+                c3.metric("🔓 Gratuits", total - len(prems))
+                st.divider()
+
+                st.markdown("#### ➕ Activer / Gérer un Premium")
+                co1, co2, co3 = st.columns([2, 2, 1])
+                with co1:
+                    uid_target = st.selectbox("Membre", options=list(current_db["users"].keys()),
+                        format_func=lambda u: f"{u} {'⭐' if is_premium_actif(current_db['users'][u]) else '🔓'}")
+                with co2:
+                    plan_ch = st.selectbox("Plan", list(PLANS_PREMIUM.keys()),
+                        format_func=lambda p: f"{PLANS_PREMIUM[p]['emoji']} {p} — {PLANS_PREMIUM[p]['prix']}")
+                with co3:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("⚡ ACTIVER", key="btn_act_global"):
+                        activer_premium(uid_target, plan_ch)
+                        st.session_state["db"] = load_db()
+                        st.success(f"✅ Premium **{plan_ch}** activé pour **{uid_target}** !")
+                        st.rerun()
+
+                st.divider()
+                filtre = st.radio("Afficher", ["Tous", "Premium uniquement", "Gratuits uniquement"], horizontal=True)
+
+                for uid_m, udata in current_db["users"].items():
+                    p_actif = is_premium_actif(udata)
+                    p_info  = get_premium_info(udata)
+                    if filtre == "Premium uniquement" and not p_actif: continue
+                    if filtre == "Gratuits uniquement" and p_actif:    continue
+
+                    col_m, col_a = st.columns([3, 2])
+                    with col_m:
+                        badge = f'<span class="badge-premium">⭐ {udata.get("premium_plan","—")}</span>' if p_actif else '<span class="badge-free">🔓 Gratuit</span>'
+                        exp_txt = f"<br><small style='color:rgba(255,215,0,.6);'>Expire : {p_info['expiry']} ({p_info['jours_restants']}j)</small>" if p_actif and p_info else ""
+                        st.markdown(f"""<div class="admin-premium-row">
+                            <div>
+                                <div class="admin-user-name">👤 {uid_m}</div>
+                                <div class="admin-user-meta">📱 {udata.get('whatsapp','—')} · {str(udata.get('joined',''))[:10]}</div>
+                                {exp_txt}
+                            </div>
+                            <div>{badge}</div>
+                        </div>""", unsafe_allow_html=True)
+                    with col_a:
+                        if p_actif:
+                            cp1, cp2 = st.columns(2)
+                            with cp1:
+                                ext_p = st.selectbox("", list(PLANS_PREMIUM.keys()), key=f"ext_{uid_m}",
+                                    format_func=lambda p: f"{PLANS_PREMIUM[p]['emoji']} {p}")
+                                if st.button("➕ Prolonger", key=f"pro_{uid_m}"):
+                                    curr_exp = datetime.fromisoformat(udata.get("premium_expiry", datetime.now().isoformat()))
+                                    new_exp  = max(curr_exp, datetime.now()) + timedelta(days=PLANS_PREMIUM[ext_p]["jours"])
+                                    update_premium_status(uid_m, True, ext_p, new_exp.isoformat())
                                     st.session_state["db"] = load_db()
-                                    st.success(f"✅ Premium **{plan_ch}** activé pour **{uid_target}** !")
+                                    st.success(f"✅ Prolongé jusqu'au {new_exp.strftime('%d/%m/%Y')} !")
                                     st.rerun()
-
-                            st.divider()
-                            filtre = st.radio("Afficher", ["Tous", "Premium uniquement", "Gratuits uniquement"], horizontal=True)
-
-                            for uid_m, udata in current_db["users"].items():
-                                p_actif = is_premium_actif(udata)
-                                p_info  = get_premium_info(udata)
-                                if filtre == "Premium uniquement" and not p_actif: continue
-                                if filtre == "Gratuits uniquement" and p_actif:    continue
-
-                                col_m, col_a = st.columns([3, 2])
-                                with col_m:
-                                    badge = f'<span class="badge-premium">⭐ {udata.get("premium_plan","—")}</span>' if p_actif else '<span class="badge-free">🔓 Gratuit</span>'
-                                    exp_txt = f"<br><small style='color:rgba(255,215,0,.6);'>Expire : {p_info['expiry']} ({p_info['jours_restants']}j)</small>" if p_actif and p_info else ""
-                                    st.markdown(f"""<div class="admin-premium-row">
-                                        <div>
-                                            <div class="admin-user-name">👤 {uid_m}</div>
-                                            <div class="admin-user-meta">📱 {udata.get('whatsapp','—')} · {str(udata.get('joined',''))[:10]}</div>
-                                            {exp_txt}
-                                        </div>
-                                        <div>{badge}</div>
-                                    </div>""", unsafe_allow_html=True)
-                                with col_a:
-                                    if p_actif:
-                                        cp1, cp2 = st.columns(2)
-                                        with cp1:
-                                            ext_p = st.selectbox("", list(PLANS_PREMIUM.keys()), key=f"ext_{uid_m}",
-                                                format_func=lambda p: f"{PLANS_PREMIUM[p]['emoji']} {p}")
-                                            if st.button("➕ Prolonger", key=f"pro_{uid_m}"):
-                                                curr_exp = datetime.fromisoformat(udata.get("premium_expiry", datetime.now().isoformat()))
-                                                new_exp  = max(curr_exp, datetime.now()) + timedelta(days=PLANS_PREMIUM[ext_p]["jours"])
-                                                update_premium_status(uid_m, True, ext_p, new_exp.isoformat())
-                                                st.session_state["db"] = load_db()
-                                                st.success(f"✅ Prolongé jusqu'au {new_exp.strftime('%d/%m/%Y')} !")
-                                                st.rerun()
-                                        with cp2:
-                                            st.markdown("<br>", unsafe_allow_html=True)
-                                            if st.button("🗑️ Révoquer", key=f"rev_{uid_m}"):
-                                                desactiver_premium(uid_m)
-                                                st.session_state["db"] = load_db()
-                                                st.warning(f"Premium révoqué pour {uid_m}.")
-                                                st.rerun()
-                                    else:
-                                        ap = st.selectbox("", list(PLANS_PREMIUM.keys()), key=f"act_{uid_m}",
-                                            format_func=lambda p: f"{PLANS_PREMIUM[p]['emoji']} {p}")
-                                        if st.button("⚡ Activer", key=f"actbtn_{uid_m}"):
-                                            activer_premium(uid_m, ap)
-                                            st.session_state["db"] = load_db()
-                                            st.success(f"✅ Premium activé pour {uid_m} !")
-                                            st.rerun()
-
-
-                    else:
-                        st.session_state["admin_attempts"] += 1
-                        if st.session_state["admin_attempts"] >= 5:
-                            st.session_state["admin_locked_until"] = datetime.now() + timedelta(minutes=5)
-                            st.error("🔒 5 tentatives échouées. Panel verrouillé 5 minutes.")
+                            with cp2:
+                                st.markdown("<br>", unsafe_allow_html=True)
+                                if st.button("🗑️ Révoquer", key=f"rev_{uid_m}"):
+                                    desactiver_premium(uid_m)
+                                    st.session_state["db"] = load_db()
+                                    st.warning(f"Premium révoqué pour {uid_m}.")
+                                    st.rerun()
                         else:
-                            remaining_tries = 5 - st.session_state["admin_attempts"]
-                            st.error(f"❌ Clé incorrecte. {remaining_tries} tentative(s) restante(s).")
+                            ap = st.selectbox("", list(PLANS_PREMIUM.keys()), key=f"act_{uid_m}",
+                                format_func=lambda p: f"{PLANS_PREMIUM[p]['emoji']} {p}")
+                            if st.button("⚡ Activer", key=f"actbtn_{uid_m}"):
+                                activer_premium(uid_m, ap)
+                                st.session_state["db"] = load_db()
+                                st.success(f"✅ Premium activé pour {uid_m} !")
+                                st.rerun()
+
 
 inject_custom_css()
 
