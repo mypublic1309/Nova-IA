@@ -4637,9 +4637,23 @@ def main_dashboard():
                     index=10
                 )
             with col_d:
+                exam_coefficient = st.selectbox(
+                    "🔢 Coefficient",
+                    ["1", "2", "3", "4", "5", "6", "7", "8"],
+                    index=1
+                )
+
+            col_e, col_f = st.columns(2)
+            with col_e:
                 exam_etablissement = st.text_input(
                     "🏢 Établissement / Institution",
                     placeholder="Ex: Lycée Moderne de Cocody, CEG Treichville, UFHB..."
+                )
+            with col_f:
+                exam_annee = st.text_input(
+                    "📅 Année scolaire",
+                    placeholder="Ex: 2024-2025",
+                    value="2024-2025"
                 )
 
             exam_chapitre = st.text_input(
@@ -4656,24 +4670,108 @@ def main_dashboard():
             _niveau_val = exam_niveau if not exam_niveau.startswith("──") else ""
             _matiere_val = exam_matiere if not exam_matiere.startswith("──") else ""
 
+            _etab_val = exam_etablissement.strip() if exam_etablissement.strip() else "Établissement non précisé"
+            _annee_val = exam_annee.strip() if exam_annee.strip() else "2024-2025"
+
             prompt = f"""FICHE DE COMMANDE NOVA EXAM — INFORMATIONS STRUCTURÉES :
 
-🎓 NIVEAU SCOLAIRE    : {_niveau_val if _niveau_val else "Non précisé"}
-📚 MATIÈRE            : {_matiere_val if _matiere_val else "Non précisée"}
-🎯 TYPE D'ÉPREUVE     : {exam_type_epreuve}
+🎓 NIVEAU SCOLAIRE     : {_niveau_val if _niveau_val else "Non précisé"}
+📚 MATIÈRE             : {_matiere_val if _matiere_val else "Non précisée"}
+🎯 TYPE D'ÉPREUVE      : {exam_type_epreuve}
 📏 EXERCICES/QUESTIONS : {exam_nb_exercices}
 ⏱️ DURÉE               : {exam_duree}
-🏢 ÉTABLISSEMENT      : {exam_etablissement if exam_etablissement.strip() else "Établissement non précisé"}
-📖 CHAPITRE/NOTION    : {exam_chapitre if exam_chapitre.strip() else "Choisir un chapitre cohérent avec le programme officiel du niveau"}
-💬 NOTES SUPP.        : {exam_notes.strip() if exam_notes.strip() else "Aucune"}
+🔢 COEFFICIENT         : {exam_coefficient}
+🏢 ÉTABLISSEMENT       : {_etab_val}
+📅 ANNÉE SCOLAIRE      : {_annee_val}
+📖 CHAPITRE/NOTION     : {exam_chapitre if exam_chapitre.strip() else "Choisir un chapitre cohérent avec le programme officiel du niveau"}
+💬 NOTES SUPP.         : {exam_notes.strip() if exam_notes.strip() else "Aucune"}
 
 INSTRUCTIONS NOVA EXAM :
 - Respecte EXACTEMENT le niveau "{_niveau_val}" — applique le programme officiel MENET-FP de cette classe
 - Génère UNIQUEMENT des notions au programme de ce niveau — rien hors-programme
 - Adapte le vocabulaire, la complexité et la longueur à l'âge de l'élève de ce niveau
-- Si l'établissement est précisé, l'indiquer dans l'en-tête officiel du document
 - Si un chapitre/notion est précisé, le sujet porte EXCLUSIVEMENT sur ce chapitre
 - Si "avec corrigé" dans les notes, inclure le corrigé complet après ---SAUT_DE_PAGE---
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION CRITIQUE — FORMAT AUTHENTIQUE DES DEVOIRS IVOIRIENS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+① EN-TÊTE OBLIGATOIRE — Reproduis ce modèle EXACTEMENT :
+
+{_etab_val}* {_etab_val}*
+Année Scolaire : {_annee_val}                    Coefficient : {exam_coefficient}
+Classe : {_niveau_val if _niveau_val else "___"}                              Durée : {exam_duree}
+[ligne vide]
+┌─────────────────────────────────────────────┐
+│    DEVOIR DE {(_matiere_val.upper() if _matiere_val else "___")}    │
+└─────────────────────────────────────────────┘
+Cette épreuve comporte [X] page(s) numérotée(s).
+[Si calculatrice : "L'usage de la calculatrice scientifique est autorisé."]
+[Si interdit : "Les documents et calculatrices sont interdits."]
+
+RÈGLES EN-TÊTE :
+- Nom établissement répété 2 fois sur la même ligne séparé par *
+- Année + Coefficient sur la MÊME ligne (gauche / droite)
+- Classe + Durée sur la MÊME ligne (gauche / droite)
+- Titre DEVOIR encadré ou en gras centré
+- NE JAMAIS ajouter REPUBLIQUE, MINISTERE, DIRECTION non demandés
+
+② STRUCTURE DES EXERCICES — ADAPTE-TOI INTELLIGEMMENT AU NIVEAU DÉTECTÉ :
+
+Le niveau demandé est : {_niveau_val}
+
+Tu es un expert du système éducatif ivoirien (MENET-FP). Tu connais parfaitement comment les devoirs sont structurés à CHAQUE niveau en Côte d'Ivoire. Adapte la structure, la complexité, le vocabulaire et les types d'exercices exactement comme le ferait un vrai professeur ivoirien de ce niveau.
+
+▶ PRIMAIRE (CP1 → CM2) :
+- Exercices courts, simples, directs
+- Pas de mise en situation complexe
+- Dictée, calcul mental, lecture, problèmes simples du quotidien ivoirien
+- Consignes en langage simple accessible à l'enfant
+- 3 à 4 exercices maximum, jamais de sous-questions complexes
+
+▶ COLLÈGE — 6ème / 5ème :
+- Exercice 1 : QCM ou Vrai/Faux ou tableau à compléter (facile)
+- Exercice 2 : Définitions, propriétés, applications directes du cours
+- Exercice 3 : Problème avec mise en situation simple, questions progressives 1- 2- 3-
+- Exercice 4 (si demandé) : Problème de la vie courante ivoirienne, niveau accessible
+- Langage simple, données concrètes, pas de démonstrations formelles
+
+▶ COLLÈGE — 4ème / 3ème (BEPC) :
+- Exercice 1 : QCM / Vrai-Faux / affirmations V ou F (mise en route)
+- Exercice 2 : Questions courtes directes (définitions, calculs simples, compléter)
+- Exercice 3 : TEXTE DE MISE EN SITUATION + 4-5 questions progressives avec sous-questions (1.1 / 1.2 / 1.3)
+- Exercice 4 : PROBLÈME COMPLEXE ancré dans la réalité ivoirienne (PME, plantation, lycée CI) — démonstrations, calculs multi-étapes
+- Barème : ex1-2 = 30%, ex3-4 = 70% des points
+
+▶ LYCÉE — 2nde / 1ère :
+- Structure plus libre, moins de QCM, plus de rédaction et démonstration
+- Exercice 1 : Questions de cours ou vérification des connaissances (définitions, théorèmes)
+- Exercice 2 : Application directe, calculs guidés
+- Exercice 3 : Problème ouvert avec situation complexe, plusieurs sous-parties (A, B, C)
+- Exercice 4 : Problème de synthèse liant plusieurs notions du programme
+- Attendu : justifications rigoureuses, raisonnement logique développé
+
+▶ LYCÉE — TERMINALE / BAC :
+- Format proche des épreuves officielles du BAC ivoirien
+- 3 à 4 exercices longs avec parties A / B / C
+- Chaque partie autonome mais liée au thème général
+- Calculs complexes, démonstrations formelles, analyse critique
+- Problèmes souvent en contexte scientifique ou socio-économique ivoirien
+- Barème précis sur /20, questions numérotées I- II- III- ou 1) 2) 3)
+
+▶ POST-BAC (BTS, Licence, Master) :
+- Format académique supérieur : énoncé dense, problème unique divisé en parties
+- Partie I / Partie II / Partie III avec sous-questions a) b) c)
+- Niveau de rigueur élevé, démonstrations formelles exigées
+- Mise en contexte professionnel ou scientifique sérieux
+- Pas de QCM — uniquement questions ouvertes et problèmes
+
+RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
+- Chaque exercice : ## EXERCICE N : (X points)
+- Données toujours précises avec vrais chiffres
+- Contextes ivoiriens authentiques : noms ivoiriens, villes CI (Abidjan, Bouaké, Yamoussoukro...), produits locaux (cacao, café, anacarde...), monnaie FCFA
+- NE JAMAIS inventer une structure générique — colle au vrai format du niveau
 """
             # Afficher un résumé de la commande
             if _niveau_val and _matiere_val and not _niveau_val.startswith("──") and not _matiere_val.startswith("──"):
