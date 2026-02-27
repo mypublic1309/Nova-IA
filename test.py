@@ -5142,6 +5142,8 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         </script>
                     """, height=0)
 
+                st.balloons()
+                time.sleep(20)
                 st.rerun()
             else:
                 st.session_state["view"] = "auth"
