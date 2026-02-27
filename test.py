@@ -156,7 +156,7 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
         corps = f"""
-✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+✅ NOVA IA A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
@@ -171,7 +171,7 @@ Vous n'avez rien à faire pour cette commande.
         resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
+            "subject": f"✅ Nova IA a généré automatiquement — {service} ({client_nom})",
             "text": corps
         })
     except Exception:
@@ -1325,6 +1325,81 @@ SECTION 3 — ENCYCLOPÉDIE COMPLÈTE : TOUTES CLASSES × TOUTES MATIÈRES
 
 ╚═══════════════════════════════════════════════════════════════════════════════════╝
 
+╔══ BTS (Brevet de Technicien Supérieur) — 1ère et 2ème année ════════════════════════╗
+
+── BTS IDA — Informatique et Développement d'Applications ──────────────────────────
+  Matières : Algorithmique & Programmation, Bases de données, Réseaux, Systèmes d'exploitation, Anglais technique, Mathématiques appliquées, Gestion de projet, Stage
+  BTS1 : algorithmique (tableaux, tris, fonctions), SQL (SELECT/INSERT/UPDATE/DELETE), HTML/CSS, Python/C de base
+    Ex Algo : "Écrire un algorithme qui saisit 10 notes et affiche la moyenne, le max et le min."
+    Ex SQL : "Créez la table Étudiant(id INT, nom VARCHAR(50), filière VARCHAR(30), note FLOAT). Insérez 3 enregistrements et affichez les étudiants ayant une note > 12."
+  BTS2 : POO (classes, héritage, polymorphisme), merise/UML (MCD, MLD, MPD), sécurité réseau, projet de fin d'études
+    Ex POO : "Créez une classe Compte avec attributs (numéro, solde, titulaire) et méthodes (déposer, retirer, afficher). Instanciez 2 objets."
+    Ex UML : "Réalisez le diagramme de cas d'utilisation d'un système de gestion de bibliothèque scolaire."
+    Ex Merise : "À partir des règles de gestion suivantes, proposez le MCD : un étudiant peut s'inscrire à plusieurs modules ; un module est enseigné par un seul enseignant."
+
+── BTS CG — Comptabilité et Gestion ─────────────────────────────────────────────────
+  Matières : Comptabilité générale, Comptabilité analytique, Gestion financière, Fiscalité CI, Droit des affaires (OHADA), Informatique de gestion, Anglais des affaires
+  BTS1 : journal comptable (achats, ventes, règlements), TVA 18% CI, balance de vérification
+    Ex : "Enregistrez au journal les opérations suivantes : 01/03 Achat marchandises 400 000 FCFA HT (TVA 18%) à crédit fournisseur Konan & Fils ; 05/03 Vente 600 000 FCFA HT (TVA 18%) au comptant ; 10/03 Règlement fournisseur par virement 472 000 FCFA."
+  BTS2 : bilan, compte de résultat, SIG (soldes intermédiaires de gestion), analyse financière (ratios), coûts (complet, marginal, variable), budget de trésorerie
+    Ex : "À partir des données suivantes, calculez l'EBE, le résultat d'exploitation et le résultat net. Calculez les ratios de liquidité et d'autonomie financière."
+    Ex fiscalité : "Une entreprise ivoirienne réalise un CA de 85 000 000 FCFA. Calculez la TVA collectée (18%), la TVA déductible sur achats (42 000 000 FCFA HT) et la TVA à reverser à la DGI."
+
+── BTS MUC — Management des Unités Commerciales ─────────────────────────────────────
+  Matières : Techniques commerciales, Marketing, Mercatique, Gestion de la relation client (GRC/CRM), Management d'équipe, Communication commerciale, Droit commercial
+  BTS1 : segmentation, ciblage, positionnement, mix marketing (4P), techniques de vente, prospection, argumentation
+    Ex : "Réalisez une analyse SWOT de la filière cacao en Côte d'Ivoire et proposez une stratégie marketing export."
+    Ex : "Rédigez un argumentaire de vente pour un smartphone à 75 000 FCFA en utilisant la méthode CAP (Caractéristique, Avantage, Preuve)."
+  BTS2 : plan marketing, gestion de portefeuille clients, tableaux de bord commerciaux, e-commerce en Afrique
+    Ex : "Calculez le chiffre d'affaires prévisionnel sachant que : parc clients = 2 500, taux de transformation = 35%, panier moyen = 45 000 FCFA."
+
+── BTS AM — Assistance de Manager / Secrétariat ─────────────────────────────────────
+  Matières : Communication professionnelle, Bureautique avancée, Organisation de l'entreprise, Anglais professionnel, Gestion administrative, Comptabilité de base
+  BTS1 : rédaction professionnelle (lettre, note, compte rendu, rapport), classement, gestion agenda, accueil
+    Ex : "Rédigez une lettre de relance à un client (Société TRAORE & Fils) pour un impayé de 250 000 FCFA arrivant à échéance le 30/11/N. Ton professionnel et courtois."
+    Ex : "Rédigez le compte rendu de la réunion du service commercial du 15/01/N. Participants : DG, Chef des ventes, 3 commerciaux. Ordre du jour : résultats S2, objectifs S1 N+1."
+  BTS2 : organisation d'événements, gestion de projets, communication interne/externe, veille documentaire
+
+── BTS TC — Technico-Commercial ─────────────────────────────────────────────────────
+  Matières : Techniques de vente industrielle, Connaissance produit, Chiffrage/Devis, Négociation, Logistique commerciale
+    Ex : "Un client commande 500 unités à 12 500 FCFA/u avec remise 8% et escompte 2% si paiement sous 10 jours. Calculez le montant net à payer HT, la TVA (18%) et le TTC."
+
+── BTS GRH — Gestion des Ressources Humaines ────────────────────────────────────────
+  Matières : Droit du travail CI (Code du travail ivoirien), Paie et charges sociales, Recrutement, Formation, Évaluation, SIRH (Système d'Information RH)
+    Ex paie CI : "Calculez le bulletin de paie de M. BAMBA : salaire brut 350 000 FCFA, CNPS salarié 6,3%, CAMU salarié 0,75%, ITS (impôt selon barème). Calculez le net à payer."
+    Ex droit : "Quelles sont les conditions de validité d'un contrat de travail en Côte d'Ivoire selon le Code du travail ? Distinguez CDI et CDD."
+
+── BTS BANQUE / FINANCE ─────────────────────────────────────────────────────────────
+  Matières : Économie monétaire et bancaire, Crédit, Marchés financiers, Gestion des risques, BCEAO/UEMOA, SYSCOHADA révisé
+    Ex : "La BCEAO fixe son taux directeur à 3,5%. Comment cela influence-t-il les taux des crédits accordés par les banques commerciales ivoiriennes ?"
+    Ex : "Calculez la mensualité d'un crédit immobilier de 10 000 000 FCFA à 8%/an sur 10 ans (amortissement constant)."
+
+── BTS LOGISTIQUE / TRANSPORT ───────────────────────────────────────────────────────
+  Matières : Gestion des stocks, Supply chain, Transport multimodal, Incoterms, Douane, Entreposage, ERP/WMS
+    Ex Incoterms : "Expliquez la différence entre FOB, CIF et DDP. Dans quel cas le vendeur ivoirien (exportateur de cacao) utilise-t-il FOB Abidjan ?"
+    Ex gestion stocks : "Stock initial 5 000 kg de cacao. Entrées : 12 000 kg. Sorties : 14 500 kg. Calculez le stock final. Si le stock de sécurité est 2 000 kg, faut-il commander ?"
+
+── BTS GÉNIE CIVIL / BTP ────────────────────────────────────────────────────────────
+  Matières : Topographie, Résistance des matériaux, Béton armé, Dessin de bâtiment, Métrés, Devis estimatif, Économie de la construction
+    Ex : "Une dalle rectangulaire de 6m × 4m × 0,15m doit être coulée en béton (densité 2 400 kg/m³). Calculez le volume de béton et la masse totale."
+    ###FORMULE### V = L × l × h   |   m = ρ × V
+
+── BTS ÉLECTRONIQUE / ÉLECTROTECHNIQUE ──────────────────────────────────────────────
+  Matières : Circuits électroniques (amplificateurs, filtres, oscillateurs), Machines électriques (moteurs, transformateurs), Automatismes industriels (GRAFCET, API)
+    Ex : "Un transformateur monophasé a N1 = 2 000 spires, N2 = 400 spires, V1 = 220 V. Calculez V2 et le rapport de transformation m."
+    ###FORMULE### V1/V2 = N1/N2 = m    (rapport de transformation)
+
+── FORMAT GÉNÉRAL ÉPREUVES BTS CI ───────────────────────────────────────────────────
+  En-tête BTS obligatoire :
+    MINISTÈRE DE L'ENSEIGNEMENT TECHNIQUE ET DE LA FORMATION PROFESSIONNELLE (METFP)
+    DIRECTION DE L'ENSEIGNEMENT TECHNIQUE (DET)
+    BTS — [FILIÈRE] — [ANNÉE : 1ère ou 2ème] — SESSION [ANNÉE]
+    Matière : [MATIÈRE]   Durée : [DURÉE]   Coefficient : [COEFF]   Barème : /20
+  Structure type BTS : Partie A Restitution des connaissances (/6) + Partie B Application (/8) + Partie C Étude de cas/Synthèse (/6)
+  Contexte professionnel ivoirien obligatoire : entreprises CI (SIFCA, Nestlé CI, MTN CI, Orange CI, BICICI, SIB, SGBCI, CFAO, ABIDJAN TERMINAL, Port d'Abidjan)
+
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
 ╔══ CONCOURS NATIONAUX CI ═══════════════════════════════════════════════════════════╗
 
 ── ENS (École Normale Supérieure) — Formation enseignants ───────────────────────────
@@ -1403,6 +1478,9 @@ COLLÈGE — 3ème/BEPC (15 ans) : format pré-examen, 3-4 exercices complets, 3
 LYCÉE — 2nde (16 ans) : terminologie disciplinaire assumée, concepts sans définitions de base, 4 exercices, 3h
 LYCÉE — 1ère (17 ans) : niveau intermédiaire BAC, exercices exigeants, liens interdisciplinaires, 3h30
 LYCÉE — Terminale/BAC (18 ans) : format examen officiel exact, programme annuel complet, 4h, sujets type BAC
+
+BTS 1ère année (18-20 ans) : post-BAC professionnel, exercices appliqués au monde du travail, contexte entreprise CI obligatoire, rédaction professionnelle, calculs avec données réelles
+BTS 2ème année (19-21 ans) : maîtrise complète de la filière, études de cas complexes, projets transversaux, préparation épreuve finale METFP, dossier professionnel
 
 UNIVERSITÉ — L1 (18-20 ans) : notions fondamentales du supérieur, rédaction structurée attendue
 UNIVERSITÉ — L2 (19-21 ans) : maîtrise des concepts, travaux appliqués, bibliographie
@@ -1753,7 +1831,7 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
 
         modeles = get_modeles_disponibles(api_key)
         if not modeles:
-            return "❌ Aucun modèle Gemini disponible pour generateContent avec cette clé API."
+            return "❌ Service Nova IA : aucun modèle disponible pour cette clé API."
         erreurs = []
 
         for modele in modeles:
@@ -1778,16 +1856,16 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
                 if e.code in [429, 503]:
                     time.sleep(2)
                     continue
-                return f"❌ Erreur Gemini ({modele}) HTTP {e.code} : {erreur_detail}"
+                return f"❌ Erreur Nova IA ({modele}) HTTP {e.code} : {erreur_detail}"
             except Exception as e:
                 erreurs.append(f"{modele} → {type(e).__name__}: {e}")
                 continue
 
         detail = " | ".join(erreurs)
-        return f"❌ Gemini indisponible. Détails : {detail}"
+        return f"❌ Nova IA indisponible. Détails : {detail}"
 
     except Exception as e:
-        return f"❌ Erreur Gemini : {e}"
+        return f"❌ Erreur Nova IA : {e}"
 
 
 def creer_docx(contenu, service, client_nom):
@@ -3246,7 +3324,7 @@ def inject_custom_css():
             background-image: linear-gradient(to right, #b8860b, #FFD700) !important;
         }
 
-        /* ── Gemini card ── */
+        /* ── Nova card ── */
         .gemini-card {
             background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.06)) !important;
             border: 2px solid rgba(255,215,0,0.5) !important;
@@ -4261,31 +4339,25 @@ def main_dashboard():
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
                 list(TYPES_SUJETS.keys()),
-                help="Sélectionnez précisément le type de sujet souhaité. Gemini adaptera 100% du contenu à ce format."
+                help="Sélectionnez précisément le type de sujet souhaité. Nova adaptera 100% du contenu à ce format."
             )
             type_sujet_selectionne = TYPES_SUJETS[type_sujet_label]
 
             TYPE_SUJET_DESCRIPTIONS = {
-                "QCM": "**QCM sélectionné** — Gemini générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
-                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Gemini générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
-                "TEXTE_TROU": "**Texte à trous sélectionné** — Gemini rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
-                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Gemini formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
-                "MIXTE": "**Format Mixte sélectionné** — Gemini combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
-                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Gemini rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
-                "CALCUL": "**Exercices de Calcul sélectionnés** — Gemini rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
-                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
-                "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "QCM": "**QCM sélectionné** — Nova générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
+                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Nova générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
+                "TEXTE_TROU": "**Texte à trous sélectionné** — Nova rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
+                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Nova formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
+                "MIXTE": "**Format Mixte sélectionné** — Nova combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
+                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Nova rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
+                "CALCUL": "**Exercices de Calcul sélectionnés** — Nova rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
+                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Nova créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
+                "SCHEMA": "**Schéma à légender sélectionné** — Nova décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
+                "DISSERTATION": "**Dissertation guidée sélectionnée** — Nova formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
         st.markdown("#### 📝 Spécifications de la mission")
-
-        # Initialisations toujours présentes (Streamlit re-évalue à chaque run)
-        _niveau_val     = ""
-        _matiere_val    = ""
-        _exp_niveau_val = ""
-        _exp_matiere_val = ""
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
@@ -4319,6 +4391,23 @@ def main_dashboard():
                         "Concours ENS", "Concours CAFOP", "Concours INJS",
                         "Concours Fonction Publique", "Concours Douane / Police / Armée",
                         "Autre concours professionnel",
+                        "── BTS ──",
+                        "BTS 1ère année", "BTS 2ème année",
+                        "BTS IDA (Informatique et Développement d'Applications)",
+                        "BTS CG (Comptabilité et Gestion)",
+                        "BTS MUC (Management des Unités Commerciales)",
+                        "BTS AM (Assistance de Manager / Secrétariat)",
+                        "BTS TC (Technico-Commercial)",
+                        "BTS GRH (Gestion des Ressources Humaines)",
+                        "BTS Banque / Finance",
+                        "BTS Logistique / Transport",
+                        "BTS Hôtellerie / Tourisme",
+                        "BTS Génie Civil / BTP",
+                        "BTS Électronique / Électrotechnique",
+                        "BTS Maintenance Industrielle",
+                        "BTS Agriculture / Agronomie",
+                        "BTS Communication / Journalisme",
+                        "Autre BTS (préciser dans les notes)",
                     ],
                     index=0
                 )
@@ -4438,174 +4527,6 @@ INSTRUCTIONS NOVA EXAM :
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
-        elif "Exposé" in service:
-            # ── FORMULAIRE STRUCTURÉ POUR EXPOSÉ SCOLAIRE ─────────────────────
-            st.markdown("""
-            <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.3);
-                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#2ecc71;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre exposé</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            col_a, col_b = st.columns(2)
-            with col_a:
-                exp_niveau = st.selectbox(
-                    "🎓 Niveau scolaire *",
-                    [
-                        "── PRIMAIRE ──",
-                        "CP1", "CP2", "CE1", "CE2", "CM1", "CM2 / CEPE",
-                        "── COLLÈGE ──",
-                        "6ème", "5ème", "4ème", "3ème / BEPC",
-                        "── LYCÉE ──",
-                        "2nde", "1ère - Série A1", "1ère - Série A2", "1ère - Série B",
-                        "1ère - Série C", "1ère - Série D", "1ère - Série E",
-                        "Terminale - Série A1", "Terminale - Série A2", "Terminale - Série B",
-                        "Terminale - Série C", "Terminale - Série D", "Terminale - Série E",
-                        "── UNIVERSITÉ ──",
-                        "Licence 1 (L1)", "Licence 2 (L2)", "Licence 3 (L3)",
-                        "Master 1 (M1)", "Master 2 (M2)", "Doctorat",
-                        "── PROFESSIONNEL ──",
-                        "BTS", "Concours ENS", "Concours CAFOP",
-                        "Concours Fonction Publique", "Formation professionnelle",
-                    ],
-                    index=0,
-                    key="exp_niveau"
-                )
-                exp_matiere = st.selectbox(
-                    "📚 Matière / Discipline *",
-                    [
-                        "── TOUTES MATIÈRES ──",
-                        "Français / Lettres", "Mathématiques",
-                        "Sciences Physiques (PC)", "SVT / Biologie",
-                        "Histoire-Géographie", "Économie / Gestion",
-                        "Comptabilité", "Philosophie",
-                        "EDHC / Éducation Civique",
-                        "Anglais (LV1)", "Espagnol (LV2)", "Allemand (LV2)",
-                        "Informatique / TIC", "Technologie industrielle",
-                        "EPS (Éducation Physique)", "Arts Plastiques",
-                        "Agronomie / Agriculture", "Droit",
-                        "Économie politique", "Sciences Sociales",
-                        "── PRIMAIRE ──",
-                        "Lecture / Écriture (primaire)", "Calcul (primaire)",
-                        "Sciences d'Éveil (primaire)",
-                        "Histoire-Géo (primaire)", "ECM (primaire)",
-                        "Autre matière (préciser dans les notes)",
-                    ],
-                    index=0,
-                    key="exp_matiere"
-                )
-            with col_b:
-                exp_type = st.selectbox(
-                    "📄 Type d'exposé *",
-                    [
-                        "Exposé classique (introduction + développement + conclusion)",
-                        "Exposé scientifique (problématique + hypothèses + résultats)",
-                        "Exposé littéraire (analyse d'œuvre ou de texte)",
-                        "Exposé historique (faits + causes + conséquences)",
-                        "Exposé géographique (contexte + enjeux + analyse)",
-                        "Exposé économique (analyse + données + perspectives)",
-                        "Rapport de stage / de mission",
-                        "Commentaire de texte / document",
-                        "Dissertation (plan dialectique)",
-                        "Synthèse de documents",
-                        "Fiche de lecture",
-                    ],
-                    index=0,
-                    key="exp_type"
-                )
-                exp_longueur = st.selectbox(
-                    "📏 Longueur souhaitée *",
-                    [
-                        "Court (1-2 pages — primaire / interrogation rapide)",
-                        "Moyen (3-5 pages — collège / lycée standard)",
-                        "Long (6-8 pages — lycée / BAC / BTS)",
-                        "Très long (9-15 pages — université / mémoire)",
-                        "Adapté automatiquement au niveau",
-                    ],
-                    index=4,
-                    key="exp_longueur"
-                )
-
-            col_c, col_d = st.columns(2)
-            with col_c:
-                exp_plan = st.selectbox(
-                    "🗂️ Structure / Plan souhaité",
-                    [
-                        "Plan classique (I. II. III. avec sous-parties)",
-                        "Plan thématique (par thèmes)",
-                        "Plan chronologique (par dates / périodes)",
-                        "Plan comparatif (avantages / inconvénients)",
-                        "Plan dialectique (thèse / antithèse / synthèse)",
-                        "Plan libre (Nova choisit le meilleur plan)",
-                    ],
-                    index=5,
-                    key="exp_plan"
-                )
-            with col_d:
-                exp_extras = st.multiselect(
-                    "✨ Éléments à inclure",
-                    [
-                        "Introduction soignée",
-                        "Conclusion avec ouverture",
-                        "Bibliographie / Sources",
-                        "Page de garde",
-                        "Résumé / Abstract",
-                        "Exemples ivoiriens / africains",
-                        "Données chiffrées / statistiques",
-                        "Citations d'auteurs",
-                        "Tableau récapitulatif",
-                        "Glossaire des termes clés",
-                    ],
-                    default=["Introduction soignée", "Conclusion avec ouverture", "Exemples ivoiriens / africains"],
-                    key="exp_extras"
-                )
-
-            exp_sujet = st.text_input(
-                "🎯 Sujet / Thème exact de l'exposé *",
-                placeholder="Ex: L'impact du cacao sur l'économie ivoirienne, La photosynthèse, La Première Guerre Mondiale...",
-                key="exp_sujet"
-            )
-            exp_notes = st.text_area(
-                "💬 Consignes supplémentaires (optionnel)",
-                height=70,
-                placeholder="Ex: Insister sur le contexte africain, Utiliser un vocabulaire simple, Inclure des exemples concrets, Prof demande 3 parties...",
-                key="exp_notes"
-            )
-
-            # ── CONSTRUCTION DU PROMPT STRUCTURÉ ──────────────────────────────
-            _exp_niveau_val = exp_niveau if not exp_niveau.startswith("──") else ""
-            _exp_matiere_val = exp_matiere if not exp_matiere.startswith("──") else ""
-            _exp_extras_str = ", ".join(exp_extras) if exp_extras else "Aucun élément spécifique demandé"
-
-            prompt = f"""FICHE DE COMMANDE NOVA EXPOSÉ — INFORMATIONS STRUCTURÉES :
-
-🎓 NIVEAU SCOLAIRE    : {_exp_niveau_val if _exp_niveau_val else "Non précisé"}
-📚 MATIÈRE            : {_exp_matiere_val if _exp_matiere_val else "Non précisée"}
-🎯 SUJET / THÈME      : {exp_sujet.strip() if exp_sujet.strip() else "À définir selon la matière et le niveau"}
-📄 TYPE D'EXPOSÉ      : {exp_type}
-📏 LONGUEUR           : {exp_longueur}
-🗂️ PLAN / STRUCTURE   : {exp_plan}
-✨ ÉLÉMENTS INCLURE   : {_exp_extras_str}
-💬 CONSIGNES SUPP.    : {exp_notes.strip() if exp_notes.strip() else "Aucune"}
-
-INSTRUCTIONS NOVA EXPOSÉ :
-- Respecte EXACTEMENT le niveau "{_exp_niveau_val}" — adapte le vocabulaire, la complexité et la profondeur d'analyse
-- Contextualise avec des exemples ivoiriens et africains en priorité
-- Respecte le type d'exposé demandé et le plan sélectionné
-- Inclure TOUS les éléments cochés dans la liste
-- Si le sujet n'est pas précisé, choisir un sujet pertinent et cohérent avec la matière et le niveau
-"""
-            # Résumé de la commande
-            if _exp_niveau_val and _exp_matiere_val and exp_sujet.strip():
-                st.success(f"✅ Commande prête : **{exp_sujet.strip()[:40]}...** · **{_exp_matiere_val}** · **{_exp_niveau_val}**")
-            elif _exp_niveau_val and _exp_matiere_val:
-                st.info("💡 Commande valide — pensez à préciser le sujet/thème pour un meilleur résultat")
-            else:
-                if not _exp_niveau_val or exp_niveau.startswith("──"):
-                    st.warning("⚠️ Sélectionnez un niveau scolaire précis")
-                if not _exp_matiere_val or exp_matiere.startswith("──"):
-                    st.warning("⚠️ Sélectionnez une matière précise")
-
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
@@ -4663,22 +4584,14 @@ INSTRUCTIONS NOVA EXPOSÉ :
         champs_manquants = []
         if not wa_display:
             champs_manquants.append("WhatsApp de contact")
+        if not prompt:
+            champs_manquants.append("Cahier des charges")
+        # Validation spécifique Sujets & Examens
         if "Sujets" in service or "Examens" in service:
-            # Formulaire structuré Sujets : vérifier niveau et matière
-            if not _niveau_val or _niveau_val.startswith("──"):
+            if '_niveau_val' in dir() and (not _niveau_val or _niveau_val.startswith("──")):
                 champs_manquants.append("Niveau scolaire")
-            if not _matiere_val or _matiere_val.startswith("──"):
+            if '_matiere_val' in dir() and (not _matiere_val or _matiere_val.startswith("──")):
                 champs_manquants.append("Matière")
-        elif "Exposé" in service:
-            # Formulaire structuré Exposé : vérifier niveau et matière
-            if not _exp_niveau_val or exp_niveau.startswith("──"):
-                champs_manquants.append("Niveau scolaire")
-            if not _exp_matiere_val or exp_matiere.startswith("──"):
-                champs_manquants.append("Matière")
-        else:
-            # Autres services : vérifier le champ texte libre
-            if not prompt:
-                champs_manquants.append("Cahier des charges")
         if champs_manquants:
             st.markdown(f"""
             <div style="
@@ -5085,7 +4998,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         """, unsafe_allow_html=True)
 
                         if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
-                            with st.spinner("Interrogation de l'API Gemini..."):
+                            with st.spinner("Nova génère votre document..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                             if modeles_dispo:
                                 st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
@@ -5094,14 +5007,14 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                             else:
                                 st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
 
-                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
+                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC NOVA IA", key=f"gemini_{req_id}", use_container_width=True):
                             with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                                 if modeles_dispo:
                                     st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
                                 else:
-                                    st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
-                            with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
+                                    st.error("❌ Service Nova IA temporairement indisponible.")
+                            with st.spinner("⚡ Nova génère le document... (30-60 secondes)"):
                                 contenu = generer_avec_gemini(service, description, client_nom)
 
                             if contenu.startswith("❌"):
