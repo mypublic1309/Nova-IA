@@ -121,19 +121,6 @@ def save_lien(uid, name, url, date):
     except Exception as e:
         st.error(f"Erreur sauvegarde lien : {e}")
 
-def upload_fichier_client(uid, req_id, fichier_bytes, fichier_nom):
-    """Upload le fichier client dans Supabase Storage et retourne l'URL publique."""
-    try:
-        chemin = f"fichiers_clients/{uid}_{req_id}_{fichier_nom}"
-        supabase.storage.from_("nova-ai").upload(
-            chemin, fichier_bytes,
-            {"content-type": "application/octet-stream", "x-upsert": "true"}
-        )
-        url = supabase.storage.from_("nova-ai").get_public_url(chemin)
-        return url
-    except Exception as e:
-        return f"ERREUR_UPLOAD:{e}"
-
 def save_db(data):
     pass
 
@@ -4193,8 +4180,7 @@ def main_dashboard():
                     "🎨 Création Design IA",
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
-                    "📄 Conversion & Fichier PDF",
-                    "📎 Modifier mon Fichier (Word / Excel / PPT)"
+                    "📄 Conversion & Fichier PDF"
                 ]
             )
         with col_wa:
@@ -4294,13 +4280,6 @@ def main_dashboard():
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
         st.markdown("#### 📝 Spécifications de la mission")
-
-        # Initialisations (Streamlit re-évalue à chaque run)
-        _niveau_val     = ""
-        _matiere_val    = ""
-        _fc_niveau_val  = ""
-        _fc_matiere_val = ""
-        mf_fichier      = None
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
@@ -4453,77 +4432,6 @@ INSTRUCTIONS NOVA EXAM :
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
-        elif "Modifier" in service and "Fichier" in service:
-            # ── FORMULAIRE UPLOAD FICHIER CLIENT ──────────────────────────────
-            st.markdown("""
-            <div style="background:rgba(0,210,255,0.07);border:1px solid rgba(0,210,255,0.3);
-                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#00d2ff;font-weight:700;">📎 Importez votre fichier et décrivez vos modifications — notre équipe s'en charge</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            mf_fichier = st.file_uploader(
-                "📂 Importer votre fichier *",
-                type=["docx", "xlsx", "xls", "pptx", "ppt", "doc", "pdf", "csv", "txt"],
-                help="Formats acceptés : Word (.docx/.doc), Excel (.xlsx/.xls), PowerPoint (.pptx/.ppt), PDF, CSV, TXT",
-                key="mf_fichier"
-            )
-
-            if mf_fichier:
-                taille_ko = round(mf_fichier.size / 1024, 1)
-                st.success(f"✅ Fichier reçu : **{mf_fichier.name}** · {taille_ko} Ko")
-
-            mf_type_modif = st.selectbox(
-                "🛠️ Type de modification souhaité *",
-                [
-                    "Correction et amélioration du contenu",
-                    "Mise en forme / Design professionnel",
-                    "Ajout de données / contenu supplémentaire",
-                    "Restructuration complète du document",
-                    "Traduction (Français ↔ Anglais)",
-                    "Fusion de plusieurs documents",
-                    "Extraction et réorganisation des données",
-                    "Création de graphiques / tableaux depuis les données",
-                    "Correction orthographique et grammaticale",
-                    "Adapter à un nouveau modèle / template",
-                    "Autre modification (préciser dans les instructions)",
-                ],
-                key="mf_type_modif"
-            )
-
-            mf_instructions = st.text_area(
-                "✍️ Décrivez précisément ce que vous voulez *",
-                height=130,
-                placeholder="Ex: Mettre le tableau en page 3 en format automatique, ajouter une colonne 'Total' avec formule, corriger les fautes, changer la police en Times New Roman 12pt, ajouter le logo en en-tête...",
-                key="mf_instructions"
-            )
-
-            mf_urgence = st.selectbox(
-                "⏱️ Délai souhaité",
-                ["Dès que possible (standard)", "Urgent — dans les 2 heures", "Très urgent — dans 1 heure"],
-                key="mf_urgence"
-            )
-
-            # Construction du prompt
-            _mf_fichier_nom = mf_fichier.name if mf_fichier else "Aucun fichier"
-            prompt = f"""FICHE DE COMMANDE NOVA MODIFICATION FICHIER :
-
-📎 FICHIER IMPORTÉ    : {_mf_fichier_nom}
-🛠️ TYPE MODIFICATION  : {mf_type_modif}
-⏱️ DÉLAI SOUHAITÉ     : {mf_urgence}
-✍️ INSTRUCTIONS       :
-{mf_instructions.strip() if mf_instructions.strip() else "(aucune instruction fournie)"}
-
-NOTE ÉQUIPE : Le fichier original est joint à cette demande.
-"""
-            if mf_fichier and mf_instructions.strip():
-                st.success("✅ Demande complète — votre fichier sera traité par notre équipe")
-            else:
-                if not mf_fichier:
-                    st.warning("⚠️ Importez votre fichier pour continuer")
-                if not mf_instructions.strip():
-                    st.warning("⚠️ Décrivez les modifications souhaitées")
-
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
@@ -4588,11 +4496,6 @@ NOTE ÉQUIPE : Le fichier original est joint à cette demande.
                 champs_manquants.append("Niveau scolaire")
             if not _matiere_val or _matiere_val.startswith("──"):
                 champs_manquants.append("Matière")
-        elif "Modifier" in service and "Fichier" in service:
-            if not mf_fichier:
-                champs_manquants.append("Fichier à modifier")
-            if not mf_instructions.strip() if 'mf_instructions' in dir() else True:
-                champs_manquants.append("Instructions de modification")
         else:
             # Pour les autres services : vérifier le champ texte libre
             if not prompt:
@@ -4777,29 +4680,11 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
 
             statut = "En attente de vérification (informations incomplètes)" if champs_manquants else "Traitement Nova en cours..."
 
-            req_id_new = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
-
-            # Upload du fichier client si présent (service Modifier Fichier)
-            fichier_info = ""
-            if "Modifier" in service and "Fichier" in service and mf_fichier:
-                url_fichier = upload_fichier_client(
-                    user if user else "guest",
-                    req_id_new,
-                    mf_fichier.getvalue(),
-                    mf_fichier.name
-                )
-                if url_fichier.startswith("ERREUR"):
-                    fichier_info = f"\n⚠️ Fichier non uploadé ({url_fichier})"
-                else:
-                    fichier_info = f"\n📎 FICHIER CLIENT : {url_fichier}"
-
-            desc_finale = (prompt if prompt else "(aucune description fournie)") + fichier_info
-
             new_req = {
-                "id": req_id_new,
+                "id": hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8],
                 "user": user if user else "guest",
                 "service": service,
-                "desc": desc_finale,
+                "desc": prompt if prompt else "(aucune description fournie)",
                 "whatsapp": normalize_wa(wa_display) if wa_display else "(non renseigné)",
                 "status": statut,
                 "incomplet": bool(champs_manquants),
@@ -4812,7 +4697,7 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                 client_nom  = user if user else "Visiteur",
                 client_wa   = normalize_wa(wa_display) if wa_display else "(non renseigné)",
                 service     = service,
-                description = desc_finale
+                description = prompt if prompt else "(aucune description fournie)"
             )
             st.session_state["db"] = load_db()
             st.session_state["is_glowing"] = False
@@ -4976,6 +4861,37 @@ Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas prati
                         st.markdown(f"📱 **WhatsApp :** {client_wa}")
                         st.markdown(f"🛠️ **Service demandé :** {service}")
                         st.markdown(f"📝 **Détails de la demande :** {description}")
+
+                        # ── BOUTON TÉLÉCHARGEMENT FICHIER CLIENT (Modifier Fichier) ──
+                        if "Modifier" in service and "Fichier" in service:
+                            # Extraire le lien du fichier depuis la description
+                            fichier_url = None
+                            fichier_nom = "fichier_client"
+                            for ligne in description.split("\n"):
+                                if "📎 FICHIER CLIENT :" in ligne:
+                                    fichier_url = ligne.replace("📎 FICHIER CLIENT :", "").strip()
+                                if "FICHIER IMPORTÉ" in ligne:
+                                    fichier_nom = ligne.split(":")[-1].strip()
+
+                            if fichier_url and fichier_url.startswith("http"):
+                                st.markdown(f"""
+                                <div style="margin-top:10px;">
+                                    <a href="{fichier_url}" target="_blank" download
+                                       style="display:inline-flex;align-items:center;gap:8px;
+                                              background:linear-gradient(135deg,rgba(0,210,255,0.15),rgba(0,180,220,0.08));
+                                              border:1px solid rgba(0,210,255,0.5);
+                                              border-radius:10px;padding:10px 20px;
+                                              color:#00d2ff;font-weight:700;text-decoration:none;
+                                              font-size:0.95rem;">
+                                        📥 TÉLÉCHARGER LE FICHIER CLIENT — {fichier_nom}
+                                    </a>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            elif fichier_url:
+                                st.warning(f"⚠️ Fichier non disponible : {fichier_url}")
+                            else:
+                                st.info("📎 Fichier client non joint à cette demande")
+
                     with col_badge:
                         if client_premium:
                             st.markdown('<span class="badge-premium">⭐ PREMIUM</span>', unsafe_allow_html=True)
