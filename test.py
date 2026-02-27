@@ -3252,6 +3252,39 @@ def inject_custom_css():
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
         }
+
+        /* ── Bouton Télécharger — style premium doré illuminé ── */
+        .stDownloadButton > button {
+            border-radius: 14px !important;
+            padding: 0.9rem 2rem !important;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 40%, #FFD700 70%, #FFEC6E 100%) !important;
+            background-size: 200% 200% !important;
+            border: none !important;
+            color: #1a1a1a !important;
+            font-weight: 800 !important;
+            font-size: 1.1rem !important;
+            width: 100% !important;
+            margin-top: 10px !important;
+            box-shadow:
+                0 0 12px rgba(255, 215, 0, 0.7),
+                0 0 28px rgba(255, 165, 0, 0.4),
+                0 4px 15px rgba(0, 0, 0, 0.3) !important;
+            animation: gold-download-glow 2.5s ease-in-out infinite !important;
+            transition: all 0.3s ease !important;
+            letter-spacing: 0.5px !important;
+        }
+        .stDownloadButton > button:hover {
+            transform: translateY(-3px) scale(1.02) !important;
+            box-shadow:
+                0 0 20px rgba(255, 215, 0, 0.95),
+                0 0 45px rgba(255, 165, 0, 0.6),
+                0 6px 25px rgba(0, 0, 0, 0.4) !important;
+        }
+        @keyframes gold-download-glow {
+            0%   { box-shadow: 0 0 10px rgba(255,215,0,0.6), 0 0 22px rgba(255,165,0,0.35), 0 4px 15px rgba(0,0,0,0.3); background-position: 0% 50%; }
+            50%  { box-shadow: 0 0 20px rgba(255,215,0,0.95), 0 0 40px rgba(255,165,0,0.6), 0 4px 15px rgba(0,0,0,0.3); background-position: 100% 50%; }
+            100% { box-shadow: 0 0 10px rgba(255,215,0,0.6), 0 0 22px rgba(255,165,0,0.35), 0 4px 15px rgba(0,0,0,0.3); background-position: 0% 50%; }
+        }
         .info-card {
             background: rgba(0, 0, 0, 0.4) !important;
             border-left: 4px solid #00d2ff;
