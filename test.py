@@ -4250,9 +4250,11 @@ def main_dashboard():
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
         audio_path = "intro.mp3"
+        audio_b64 = ""
         if os.path.exists(audio_path):
             with open(audio_path, "rb") as f:
                 audio_b64 = __import__('base64').b64encode(f.read()).decode()
+        if audio_b64:
             components.html(f"""
                 <script>
                 (function() {{
