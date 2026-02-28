@@ -5040,6 +5040,130 @@ NOTE : fichier original joint via lien ci-dessous.
                 if not mf_fichier: st.warning("⚠️ Importez votre fichier")
                 if not mf_instructions.strip(): st.warning("⚠️ Décrivez les modifications souhaitées")
 
+        elif "Conversion" in service:
+            st.markdown('''
+            <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.35);
+                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+                <span style="font-weight:700;color:#2ecc71;">🔄 Conversion instantanée — 100% automatique, aucune attente</span>
+                <span style="color:rgba(255,255,255,.5);font-size:.82rem;display:block;margin-top:4px;">
+                    Importez votre fichier, choisissez le format de sortie — votre fichier converti est prêt en quelques secondes.
+                </span>
+            </div>
+            ''', unsafe_allow_html=True)
+
+            conv_type = st.selectbox("🔄 Type de conversion *", [
+                "📝 Word (.docx) → PDF",
+                "📊 Excel (.xlsx) → PDF",
+                "📄 PDF → Word (.docx)",
+            ], key="conv_type")
+
+            # Définir les types acceptés selon la conversion
+            if "Word" in conv_type and "PDF" in conv_type and "→ PDF" in conv_type:
+                types_acceptes = ["docx", "doc"]
+                label_fichier = "📂 Importer votre fichier Word (.docx)"
+            elif "Excel" in conv_type:
+                types_acceptes = ["xlsx", "xls"]
+                label_fichier = "📂 Importer votre fichier Excel (.xlsx)"
+            else:
+                types_acceptes = ["pdf"]
+                label_fichier = "📂 Importer votre fichier PDF"
+
+            conv_fichier = st.file_uploader(label_fichier, type=types_acceptes, key="conv_fichier")
+
+            if conv_fichier:
+                st.success(f"✅ **{conv_fichier.name}** · {round(conv_fichier.size/1024, 1)} Ko importé")
+                if st.button("⚡ CONVERTIR MAINTENANT", use_container_width=True, key="btn_convertir"):
+                    with st.spinner("🔄 Conversion en cours..."):
+                        try:
+                            fichier_bytes = conv_fichier.read()
+
+                            # ── Word → PDF ──────────────────────────────────────
+                            if "Word" in conv_type and "→ PDF" in conv_type:
+                                import subprocess, tempfile, os
+                                with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_in:
+                                    tmp_in.write(fichier_bytes)
+                                    tmp_in_path = tmp_in.name
+                                tmp_out_dir = tempfile.mkdtemp()
+                                result = subprocess.run(
+                                    ["libreoffice", "--headless", "--convert-to", "pdf",
+                                     "--outdir", tmp_out_dir, tmp_in_path],
+                                    capture_output=True, text=True, timeout=60
+                                )
+                                nom_base = os.path.splitext(os.path.basename(tmp_in_path))[0]
+                                pdf_path = os.path.join(tmp_out_dir, nom_base + ".pdf")
+                                if os.path.exists(pdf_path):
+                                    with open(pdf_path, "rb") as f:
+                                        buf_out = f.read()
+                                    nom_sortie = conv_fichier.name.replace(".docx","").replace(".doc","") + ".pdf"
+                                    st.success("✅ Conversion réussie !")
+                                    st.download_button("📥 TÉLÉCHARGER LE PDF", data=buf_out,
+                                        file_name=nom_sortie, mime="application/pdf",
+                                        use_container_width=True, key="dl_conv_word")
+                                    os.unlink(tmp_in_path)
+                                else:
+                                    st.error(f"❌ Erreur conversion : {result.stderr}")
+
+                            # ── Excel → PDF ─────────────────────────────────────
+                            elif "Excel" in conv_type:
+                                import subprocess, tempfile, os
+                                suffix = ".xlsx" if conv_fichier.name.endswith(".xlsx") else ".xls"
+                                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_in:
+                                    tmp_in.write(fichier_bytes)
+                                    tmp_in_path = tmp_in.name
+                                tmp_out_dir = tempfile.mkdtemp()
+                                result = subprocess.run(
+                                    ["libreoffice", "--headless", "--convert-to", "pdf",
+                                     "--outdir", tmp_out_dir, tmp_in_path],
+                                    capture_output=True, text=True, timeout=60
+                                )
+                                nom_base = os.path.splitext(os.path.basename(tmp_in_path))[0]
+                                pdf_path = os.path.join(tmp_out_dir, nom_base + ".pdf")
+                                if os.path.exists(pdf_path):
+                                    with open(pdf_path, "rb") as f:
+                                        buf_out = f.read()
+                                    nom_sortie = conv_fichier.name.rsplit(".", 1)[0] + ".pdf"
+                                    st.success("✅ Conversion réussie !")
+                                    st.download_button("📥 TÉLÉCHARGER LE PDF", data=buf_out,
+                                        file_name=nom_sortie, mime="application/pdf",
+                                        use_container_width=True, key="dl_conv_excel")
+                                    os.unlink(tmp_in_path)
+                                else:
+                                    st.error(f"❌ Erreur conversion : {result.stderr}")
+
+                            # ── PDF → Word ──────────────────────────────────────
+                            elif "PDF → Word" in conv_type:
+                                import tempfile, os
+                                try:
+                                    from pdf2docx import Converter
+                                except ImportError:
+                                    import subprocess
+                                    subprocess.run(["pip", "install", "pdf2docx", "--break-system-packages", "-q"])
+                                    from pdf2docx import Converter
+                                with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_in:
+                                    tmp_in.write(fichier_bytes)
+                                    tmp_in_path = tmp_in.name
+                                tmp_out_path = tmp_in_path.replace(".pdf", ".docx")
+                                cv = Converter(tmp_in_path)
+                                cv.convert(tmp_out_path, start=0, end=None)
+                                cv.close()
+                                with open(tmp_out_path, "rb") as f:
+                                    buf_out = f.read()
+                                nom_sortie = conv_fichier.name.replace(".pdf", "") + ".docx"
+                                st.success("✅ Conversion réussie !")
+                                st.download_button("📥 TÉLÉCHARGER LE WORD", data=buf_out,
+                                    file_name=nom_sortie,
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    use_container_width=True, key="dl_conv_pdf")
+                                os.unlink(tmp_in_path)
+                                os.unlink(tmp_out_path)
+
+                        except Exception as e:
+                            st.error(f"❌ Erreur lors de la conversion : {e}")
+            else:
+                st.info("⬆️ Importez votre fichier pour démarrer la conversion")
+
+            prompt = "CONVERSION AUTOMATIQUE — traitement côté client"
+
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
@@ -5159,7 +5283,7 @@ NOTE : fichier original joint via lien ci-dessous.
             </div>""", unsafe_allow_html=True)
 
         label_btn = "⚡ GÉNÉRER MAINTENANT AVEC L'IA NOVA" if (premium_actif and service in SERVICES_GEMINI) else "ACTIVER L'ALGORITHME NOVA"
-        if st.button(label_btn):
+        if "Conversion" not in service and st.button(label_btn):
             if not user:
                 st.session_state["view"] = "auth"
                 st.rerun()
