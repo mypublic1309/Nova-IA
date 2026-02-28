@@ -7,3 +7,7 @@ resend
 google-generativeai
 
 python-docx
+
+pdf2docx
+
+openpyxl
