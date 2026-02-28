@@ -4144,7 +4144,6 @@ def show_auth_page():
     """, unsafe_allow_html=True)
 
     audio_path_login = "login.mp3"
-    audio_b64_login = ""
     if os.path.exists(audio_path_login):
         with open(audio_path_login, "rb") as f:
             audio_b64_login = __import__('base64').b64encode(f.read()).decode()
@@ -4251,7 +4250,6 @@ def main_dashboard():
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
         audio_path = "intro.mp3"
-        audio_b64 = ""
         if os.path.exists(audio_path):
             with open(audio_path, "rb") as f:
                 audio_b64 = __import__('base64').b64encode(f.read()).decode()
@@ -4582,11 +4580,9 @@ def main_dashboard():
 💡 *{info["note"]}*
 """)
             audio_file = SERVICE_AUDIO.get(service)
-            b64 = ""
             if audio_file and os.path.exists(audio_file):
                 with open(audio_file, "rb") as f:
                     b64 = __import__('base64').b64encode(f.read()).decode()
-            if b64:
                 components.html(f"""
                     <script>
                     (function() {{
@@ -4655,6 +4651,7 @@ def main_dashboard():
         _fc_matiere_val  = ""
         mf_fichier       = None
         mf_instructions  = ""
+        conv_fichier     = None
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
@@ -5044,6 +5041,120 @@ NOTE : fichier original joint via lien ci-dessous.
                 if not mf_fichier: st.warning("⚠️ Importez votre fichier")
                 if not mf_instructions.strip(): st.warning("⚠️ Décrivez les modifications souhaitées")
 
+        elif "Conversion" in service:
+            # ════════════════════════════════════════════════════════════════
+            # SERVICE CONVERSION — 100% Python, pas de Gemini, pas de WhatsApp
+            # ════════════════════════════════════════════════════════════════
+            st.markdown('''
+            <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.35);
+                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+                <span style="font-weight:700;color:#2ecc71;">🔄 Conversion instantanée — 100% automatique, aucune attente</span>
+                <span style="color:rgba(255,255,255,.5);font-size:.82rem;display:block;margin-top:4px;">
+                    Importez votre fichier ci-dessous, choisissez le format de sortie — votre fichier est prêt en quelques secondes.
+                </span>
+            </div>
+            ''', unsafe_allow_html=True)
+
+            conv_type = st.selectbox("🔄 Type de conversion *", [
+                "📝 Word (.docx) → PDF",
+                "📊 Excel (.xlsx) → PDF",
+                "📄 PDF → Word (.docx)",
+            ], key="conv_type")
+
+            if "Word" in conv_type and "→ PDF" in conv_type:
+                types_acceptes  = ["docx", "doc"]
+                label_upload    = "📂 Importer votre fichier Word (.docx / .doc)"
+                suffix_in       = ".docx"
+            elif "Excel" in conv_type:
+                types_acceptes  = ["xlsx", "xls"]
+                label_upload    = "📂 Importer votre fichier Excel (.xlsx / .xls)"
+                suffix_in       = ".xlsx"
+            else:
+                types_acceptes  = ["pdf"]
+                label_upload    = "📂 Importer votre fichier PDF"
+                suffix_in       = ".pdf"
+
+            conv_fichier = st.file_uploader(label_upload, type=types_acceptes, key="conv_fichier")
+
+            if conv_fichier:
+                st.success(f"✅ **{conv_fichier.name}** · {round(conv_fichier.size/1024, 1)} Ko importé")
+
+                if st.button("⚡ CONVERTIR MAINTENANT", use_container_width=True, key="btn_convertir"):
+                    with st.spinner("🔄 Conversion en cours..."):
+                        try:
+                            import tempfile, os as _os, subprocess as _sub
+                            fichier_bytes = conv_fichier.read()
+
+                            # ── Word / Excel → PDF via LibreOffice ──────────
+                            if "→ PDF" in conv_type:
+                                with tempfile.NamedTemporaryFile(suffix=suffix_in, delete=False) as tmp_in:
+                                    tmp_in.write(fichier_bytes)
+                                    tmp_in_path = tmp_in.name
+                                tmp_out_dir = tempfile.mkdtemp()
+                                res = _sub.run(
+                                    ["libreoffice", "--headless", "--convert-to", "pdf",
+                                     "--outdir", tmp_out_dir, tmp_in_path],
+                                    capture_output=True, text=True, timeout=60
+                                )
+                                nom_base   = _os.path.splitext(_os.path.basename(tmp_in_path))[0]
+                                pdf_path   = _os.path.join(tmp_out_dir, nom_base + ".pdf")
+                                if _os.path.exists(pdf_path):
+                                    with open(pdf_path, "rb") as f:
+                                        buf_out = f.read()
+                                    nom_sortie = conv_fichier.name.rsplit(".", 1)[0] + ".pdf"
+                                    st.success("✅ Conversion réussie !")
+                                    st.download_button(
+                                        "📥 TÉLÉCHARGER LE PDF",
+                                        data=buf_out,
+                                        file_name=nom_sortie,
+                                        mime="application/pdf",
+                                        use_container_width=True,
+                                        key="dl_conv_pdf_out"
+                                    )
+                                else:
+                                    st.error(f"❌ Erreur LibreOffice : {res.stderr or res.stdout}")
+                                try: _os.unlink(tmp_in_path)
+                                except: pass
+
+                            # ── PDF → Word via pdf2docx ──────────────────────
+                            else:
+                                try:
+                                    from pdf2docx import Converter as PdfConverter
+                                except ImportError:
+                                    _sub.run(["pip", "install", "pdf2docx",
+                                              "--break-system-packages", "-q"], check=True)
+                                    from pdf2docx import Converter as PdfConverter
+                                with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_in:
+                                    tmp_in.write(fichier_bytes)
+                                    tmp_in_path = tmp_in.name
+                                tmp_out_path = tmp_in_path.replace(".pdf", ".docx")
+                                cv = PdfConverter(tmp_in_path)
+                                cv.convert(tmp_out_path, start=0, end=None)
+                                cv.close()
+                                with open(tmp_out_path, "rb") as f:
+                                    buf_out = f.read()
+                                nom_sortie = conv_fichier.name.replace(".pdf", "") + ".docx"
+                                st.success("✅ Conversion réussie !")
+                                st.download_button(
+                                    "📥 TÉLÉCHARGER LE WORD",
+                                    data=buf_out,
+                                    file_name=nom_sortie,
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    use_container_width=True,
+                                    key="dl_conv_word_out"
+                                )
+                                try:
+                                    _os.unlink(tmp_in_path)
+                                    _os.unlink(tmp_out_path)
+                                except: pass
+
+                        except Exception as e:
+                            st.error(f"❌ Erreur lors de la conversion : {e}")
+            else:
+                st.info("⬆️ Importez votre fichier pour démarrer la conversion")
+
+            prompt = "CONVERSION_AUTO"  # Pas de prompt Gemini ni WhatsApp
+
         else:
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
@@ -5163,7 +5274,7 @@ NOTE : fichier original joint via lien ci-dessous.
             </div>""", unsafe_allow_html=True)
 
         label_btn = "⚡ GÉNÉRER MAINTENANT AVEC L'IA NOVA" if (premium_actif and service in SERVICES_GEMINI) else "ACTIVER L'ALGORITHME NOVA"
-        if st.button(label_btn):
+        if "Conversion" not in service and st.button(label_btn):
             if not user:
                 st.session_state["view"] = "auth"
                 st.rerun()
@@ -5348,7 +5459,6 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                 st.success("✅ Mission enregistrée ! L'équipe Nova examinera votre demande.")
 
                 audio_path_confirm = "confirmation.mp3"
-                audio_b64_confirm = ""
                 if os.path.exists(audio_path_confirm):
                     with open(audio_path_confirm, "rb") as f:
                         audio_b64_confirm = __import__('base64').b64encode(f.read()).decode()
