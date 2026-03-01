@@ -4138,7 +4138,10 @@ def show_auth_page():
             uid    = st.text_input("Identifiant Nova", placeholder="Votre identifiant...")
             wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
             if st.form_submit_button("⚡ S'IDENTIFIER"):
-                db = st.session_state["db"]
+                # Recharger depuis Supabase pour avoir les données fraîches
+                fresh_db = load_db()
+                st.session_state["db"] = fresh_db
+                db = fresh_db
                 if uid in db["users"] and db["users"][uid]["whatsapp"] == normalize_wa(wa_auth):
                     st.session_state["current_user"] = uid
                     st.session_state["view"] = "home"
