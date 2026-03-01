@@ -4715,136 +4715,188 @@ def main_dashboard():
 
         # ── FORMULAIRE STRUCTURÉ POUR SUJETS & EXAMENS ────────────────────────
         if "Sujets" in service or "Examens" in service:
+
+            # ── TOGGLE FICHIER EN PREMIER ──────────────────────────────────
             st.markdown("""
-            <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);
-                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-                <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre sujet</span>
+            <style>
+            @keyframes glowPulse2 {
+                0%   { box-shadow: 0 0 6px 2px rgba(46,204,113,0.4), 0 0 12px 4px rgba(46,204,113,0.2); }
+                50%  { box-shadow: 0 0 18px 6px rgba(46,204,113,0.9), 0 0 35px 12px rgba(46,204,113,0.4); }
+                100% { box-shadow: 0 0 6px 2px rgba(46,204,113,0.4), 0 0 12px 4px rgba(46,204,113,0.2); }
+            }
+            @keyframes textPulse2 {
+                0%   { opacity: 1; }
+                50%  { opacity: 0.75; }
+                100% { opacity: 1; }
+            }
+            .fichier-toggle-card2 {
+                background: linear-gradient(135deg, rgba(46,204,113,0.12), rgba(39,174,96,0.08));
+                border: 2px solid rgba(46,204,113,0.7);
+                border-radius: 14px;
+                padding: 16px 20px;
+                margin: 0 0 6px 0;
+                animation: glowPulse2 2s ease-in-out infinite;
+            }
+            .fichier-toggle-title2 {
+                color: #2ecc71;
+                font-weight: 800;
+                font-size: 1.05rem;
+                animation: textPulse2 2s ease-in-out infinite;
+                display: block;
+            }
+            .fichier-toggle-sub2 {
+                color: rgba(255,255,255,0.55);
+                font-size: 0.8rem;
+                margin-top: 4px;
+                display: block;
+            }
+            </style>
+            <div class="fichier-toggle-card2">
+                <span class="fichier-toggle-title2">📂 ✨ Créer le sujet à partir d'un de mes fichiers</span>
+                <span class="fichier-toggle-sub2">Importez votre cours ou leçon — Arsène AI génère un sujet basé uniquement sur votre document</span>
             </div>
             """, unsafe_allow_html=True)
-
-            col_a, col_b = st.columns(2)
-            with col_a:
-                exam_niveau = st.selectbox(
-                    "🎓 Niveau scolaire *",
-                    [
-                        "── PRIMAIRE ──",
-                        "CP1", "CP2", "CE1", "CE2", "CM1", "CM2 / CEPE",
-                        "── COLLÈGE ──",
-                        "6ème", "5ème", "4ème", "3ème / BEPC",
-                        "── LYCÉE ──",
-                        "2nde", "1ère - Série A1", "1ère - Série A2", "1ère - Série B",
-                        "1ère - Série C", "1ère - Série D", "1ère - Série E",
-                        "Terminale - Série A1", "Terminale - Série A2", "Terminale - Série B",
-                        "Terminale - Série C", "Terminale - Série D", "Terminale - Série E",
-                        "Terminale - Série F", "Terminale - Série G1", "Terminale - Série G2",
-                        "Terminale - Série G3", "Terminale - Série H",
-                        "── UNIVERSITÉ ──",
-                        "Licence 1 (L1)", "Licence 2 (L2)", "Licence 3 (L3)",
-                        "Master 1 (M1)", "Master 2 (M2)", "Doctorat",
-                        "── CONCOURS ──",
-                        "Concours ENS", "Concours CAFOP", "Concours INJS",
-                        "Concours Fonction Publique", "Concours Douane / Police / Armée",
-                        "Autre concours professionnel",
-                    ],
-                    index=0
-                )
-                exam_matiere = st.selectbox(
-                    "📚 Matière / Discipline *",
-                    [
-                        "── TOUTES MATIÈRES ──",
-                        "Français / Lettres", "Mathématiques",
-                        "Sciences Physiques (PC)", "SVT / Biologie",
-                        "Histoire-Géographie", "Économie / Gestion",
-                        "Comptabilité", "Philosophie",
-                        "EDHC / Éducation Civique",
-                        "Anglais (LV1)", "Espagnol (LV2)", "Allemand (LV2)",
-                        "Informatique / TIC",
-                        "Technologie industrielle",
-                        "EPS (Éducation Physique)",
-                        "Arts Plastiques",
-                        "Agronomie / Agriculture",
-                        "Droit", "Économie politique",
-                        "── PRIMAIRE ──",
-                        "Lecture / Écriture (primaire)", "Calcul (primaire)",
-                        "Sciences d'Éveil (primaire)",
-                        "Histoire-Géo (primaire)", "ECM (primaire)",
-                        "Autre matière (préciser dans les notes)",
-                    ],
-                    index=0
-                )
-            with col_b:
-                exam_type_epreuve = st.selectbox(
-                    "🎯 Type d'épreuve *",
-                    [
-                        "Devoir Surveillé (DS)",
-                        "Interrogation Écrite (IE)",
-                        "Devoir de Maison (DM)",
-                        "Devoir du 1er Trimestre",
-                        "Devoir du 2ème Trimestre",
-                        "Devoir du 3ème Trimestre",
-                        "Examen Blanc / Blanc CEPE",
-                        "Examen Blanc / Brevet Blanc (BEPC)",
-                        "Examen Blanc / BAC Blanc",
-                        "Épreuve de Rattrapage",
-                        "Sujet de Concours",
-                        "Épreuve de Passage",
-                        "Exercice de classe (rapide)",
-                    ],
-                    index=0
-                )
-                exam_duree = st.selectbox(
-                    "⏱️ Durée prévue *",
-                    [
-                        "15 minutes", "30 minutes", "1 heure",
-                        "1 heure 30", "2 heures", "2 heures 30",
-                        "3 heures", "3 heures 30", "4 heures",
-                        "Durée libre (DM / à domicile)",
-                    ],
-                    index=2
-                )
-
-            col_c, col_d = st.columns(2)
-            with col_c:
-                exam_nb_exercices = st.selectbox(
-                    "📏 Nombre d'exercices / questions *",
-                    [
-                        "1 exercice", "2 exercices", "3 exercices",
-                        "4 exercices", "5 exercices",
-                        "10 questions", "15 questions", "20 questions",
-                        "25 questions", "30 questions",
-                        "Adapté automatiquement au niveau et à la durée",
-                    ],
-                    index=10
-                )
-            with col_d:
-                exam_coefficient = st.selectbox(
-                    "🔢 Coefficient",
-                    ["1", "2", "3", "4", "5", "6", "7", "8"],
-                    index=1
-                )
-
-            col_e, col_f = st.columns(2)
-            with col_e:
-                exam_etablissement = st.text_input(
-                    "🏢 Établissement / Institution",
-                    placeholder="Ex: Lycée Moderne de Cocody, CEG Treichville, UFHB..."
-                )
-            with col_f:
-                exam_annee = st.text_input(
-                    "📅 Année scolaire",
-                    placeholder="Ex: 2024-2025",
-                    value="2024-2025"
-                )
-
-            exam_chapitre = st.text_input(
-                "📖 Chapitre / Notion spécifique (optionnel)",
-                placeholder="Ex: Les fractions, La cellule, La colonisation, La dérivation, La loi d'Ohm..."
+            use_fichier_source = st.toggle(
+                "✅ Activer cette option",
+                key="use_fichier_source",
+                help="Importez un fichier Word, PDF ou TXT — Arsène AI analysera son contenu."
             )
-            exam_notes = st.text_area(
-                "💬 Informations complémentaires (optionnel)",
-                height=80,
-                placeholder="Ex: Avec corrigé, thème ivoirien, niveau difficile, chapitres 1 et 2, 4 QCM + 2 ouvertes..."
-            )
+
+            if not use_fichier_source:
+                st.markdown("""
+                <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);
+                     border-radius:12px;padding:14px 18px;margin:14px 0;">
+                    <span style="color:#4285f4;font-weight:700;">📋 Remplissez les champs ci-dessous — Nova s'appuie sur ces informations précises pour générer votre sujet</span>
+                </div>
+                """, unsafe_allow_html=True)
+                col_a, col_b = st.columns(2)
+            if not use_fichier_source:
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    exam_niveau = st.selectbox(
+                        "🎓 Niveau scolaire *",
+                        [
+                            "── PRIMAIRE ──",
+                            "CP1", "CP2", "CE1", "CE2", "CM1", "CM2 / CEPE",
+                            "── COLLÈGE ──",
+                            "6ème", "5ème", "4ème", "3ème / BEPC",
+                            "── LYCÉE ──",
+                            "2nde", "1ère - Série A1", "1ère - Série A2", "1ère - Série B",
+                            "1ère - Série C", "1ère - Série D", "1ère - Série E",
+                            "Terminale - Série A1", "Terminale - Série A2", "Terminale - Série B",
+                            "Terminale - Série C", "Terminale - Série D", "Terminale - Série E",
+                            "Terminale - Série F", "Terminale - Série G1", "Terminale - Série G2",
+                            "Terminale - Série G3", "Terminale - Série H",
+                            "── UNIVERSITÉ ──",
+                            "Licence 1 (L1)", "Licence 2 (L2)", "Licence 3 (L3)",
+                            "Master 1 (M1)", "Master 2 (M2)", "Doctorat",
+                            "── CONCOURS ──",
+                            "Concours ENS", "Concours CAFOP", "Concours INJS",
+                            "Concours Fonction Publique", "Concours Douane / Police / Armée",
+                            "Autre concours professionnel",
+                        ],
+                        index=0
+                    )
+                    exam_matiere = st.selectbox(
+                        "📚 Matière / Discipline *",
+                        [
+                            "── TOUTES MATIÈRES ──",
+                            "Français / Lettres", "Mathématiques",
+                            "Sciences Physiques (PC)", "SVT / Biologie",
+                            "Histoire-Géographie", "Économie / Gestion",
+                            "Comptabilité", "Philosophie",
+                            "EDHC / Éducation Civique",
+                            "Anglais (LV1)", "Espagnol (LV2)", "Allemand (LV2)",
+                            "Informatique / TIC",
+                            "Technologie industrielle",
+                            "EPS (Éducation Physique)",
+                            "Arts Plastiques",
+                            "Agronomie / Agriculture",
+                            "Droit", "Économie politique",
+                            "── PRIMAIRE ──",
+                            "Lecture / Écriture (primaire)", "Calcul (primaire)",
+                            "Sciences d'Éveil (primaire)",
+                            "Histoire-Géo (primaire)", "ECM (primaire)",
+                            "Autre matière (préciser dans les notes)",
+                        ],
+                        index=0
+                    )
+                with col_b:
+                    exam_type_epreuve = st.selectbox(
+                        "🎯 Type d'épreuve *",
+                        [
+                            "Devoir Surveillé (DS)", "Interrogation Écrite (IE)",
+                            "Devoir de Maison (DM)", "Devoir du 1er Trimestre",
+                            "Devoir du 2ème Trimestre", "Devoir du 3ème Trimestre",
+                            "Examen Blanc / Blanc CEPE", "Examen Blanc / Brevet Blanc (BEPC)",
+                            "Examen Blanc / BAC Blanc", "Épreuve de Rattrapage",
+                            "Sujet de Concours", "Épreuve de Passage",
+                            "Exercice de classe (rapide)",
+                        ],
+                        index=0
+                    )
+                    exam_duree = st.selectbox(
+                        "⏱️ Durée prévue *",
+                        [
+                            "15 minutes", "30 minutes", "1 heure",
+                            "1 heure 30", "2 heures", "2 heures 30",
+                            "3 heures", "3 heures 30", "4 heures",
+                            "Durée libre (DM / à domicile)",
+                        ],
+                        index=2
+                    )
+                col_c, col_d = st.columns(2)
+                with col_c:
+                    exam_nb_exercices = st.selectbox(
+                        "📏 Nombre d'exercices / questions *",
+                        [
+                            "1 exercice", "2 exercices", "3 exercices",
+                            "4 exercices", "5 exercices",
+                            "10 questions", "15 questions", "20 questions",
+                            "25 questions", "30 questions",
+                            "Adapté automatiquement au niveau et à la durée",
+                        ],
+                        index=10
+                    )
+                with col_d:
+                    exam_coefficient = st.selectbox(
+                        "🔢 Coefficient",
+                        ["1", "2", "3", "4", "5", "6", "7", "8"],
+                        index=1
+                    )
+                col_e, col_f = st.columns(2)
+                with col_e:
+                    exam_etablissement = st.text_input(
+                        "🏢 Établissement / Institution",
+                        placeholder="Ex: Lycée Moderne de Cocody, CEG Treichville, UFHB..."
+                    )
+                with col_f:
+                    exam_annee = st.text_input(
+                        "📅 Année scolaire",
+                        placeholder="Ex: 2024-2025",
+                        value="2024-2025"
+                    )
+                exam_chapitre = st.text_input(
+                    "📖 Chapitre / Notion spécifique (optionnel)",
+                    placeholder="Ex: Les fractions, La cellule, La colonisation, La dérivation, La loi d'Ohm..."
+                )
+                exam_notes = st.text_area(
+                    "💬 Informations complémentaires (optionnel)",
+                    height=80,
+                    placeholder="Ex: Avec corrigé, thème ivoirien, niveau difficile, chapitres 1 et 2, 4 QCM + 2 ouvertes..."
+                )
+            else:
+                # Valeurs par défaut quand fichier actif
+                exam_niveau = "Non précisé"
+                exam_matiere = "── TOUTES MATIÈRES ──"
+                exam_type_epreuve = "Devoir Surveillé (DS)"
+                exam_duree = "1 heure"
+                exam_nb_exercices = "Adapté automatiquement au niveau et à la durée"
+                exam_coefficient = "2"
+                exam_etablissement = ""
+                exam_annee = "2024-2025"
+                exam_chapitre = ""
+                exam_notes = ""
 
             # ── OPTION : CRÉER À PARTIR D'UN FICHIER ─────────────────────────
             st.markdown("""
