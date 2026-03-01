@@ -4846,6 +4846,74 @@ def main_dashboard():
                 placeholder="Ex: Avec corrigé, thème ivoirien, niveau difficile, chapitres 1 et 2, 4 QCM + 2 ouvertes..."
             )
 
+            # ── OPTION : CRÉER À PARTIR D'UN FICHIER ─────────────────────────
+            st.markdown("---")
+            use_fichier_source = st.toggle(
+                "📂 Créer le sujet à partir d'un de mes fichiers (cours, leçon, document...)",
+                key="use_fichier_source",
+                help="Importez un fichier Word, PDF ou TXT — Arsène AI analysera son contenu et créera le sujet à partir de vos propres notions."
+            )
+
+            contenu_fichier_source = ""
+            if use_fichier_source:
+                st.markdown('''
+                <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.3);
+                     border-radius:10px;padding:12px 16px;margin:8px 0;">
+                    <span style="color:#2ecc71;font-weight:700;">📄 Arsène AI va scanner votre document et créer le sujet uniquement à partir de son contenu</span>
+                    <span style="color:rgba(255,255,255,.5);font-size:.82rem;display:block;margin-top:3px;">
+                        Formats acceptés : PDF, Word (.docx), Texte (.txt)
+                    </span>
+                </div>
+                ''', unsafe_allow_html=True)
+
+                fichier_source = st.file_uploader(
+                    "📂 Importer votre fichier *",
+                    type=["pdf", "docx", "txt"],
+                    key="fichier_source_exam"
+                )
+
+                if fichier_source:
+                    with st.spinner("🔍 Lecture du fichier en cours..."):
+                        try:
+                            import io
+                            fichier_bytes = fichier_source.read()
+
+                            if fichier_source.name.endswith(".txt"):
+                                contenu_fichier_source = fichier_bytes.decode("utf-8", errors="ignore")
+
+                            elif fichier_source.name.endswith(".docx"):
+                                from docx import Document as DocxDoc
+                                doc_tmp = DocxDoc(io.BytesIO(fichier_bytes))
+                                contenu_fichier_source = "\n".join([p.text for p in doc_tmp.paragraphs if p.text.strip()])
+
+                            elif fichier_source.name.endswith(".pdf"):
+                                try:
+                                    import fitz  # PyMuPDF
+                                    pdf_doc = fitz.open(stream=fichier_bytes, filetype="pdf")
+                                    contenu_fichier_source = "\n".join([page.get_text() for page in pdf_doc])
+                                except ImportError:
+                                    import subprocess
+                                    subprocess.run(["pip", "install", "PyMuPDF", "--break-system-packages", "-q"])
+                                    import fitz
+                                    pdf_doc = fitz.open(stream=fichier_bytes, filetype="pdf")
+                                    contenu_fichier_source = "\n".join([page.get_text() for page in pdf_doc])
+
+                            # Tronquer si trop long (max ~6000 caractères pour le prompt)
+                            if len(contenu_fichier_source) > 6000:
+                                contenu_fichier_source = contenu_fichier_source[:6000] + "\n...[document tronqué]"
+
+                            if contenu_fichier_source.strip():
+                                st.success(f"✅ **{fichier_source.name}** lu avec succès — {len(contenu_fichier_source)} caractères extraits")
+                            else:
+                                st.warning("⚠️ Le fichier semble vide ou illisible")
+                                contenu_fichier_source = ""
+
+                        except Exception as e_fic:
+                            st.error(f"❌ Erreur lecture fichier : {e_fic}")
+                            contenu_fichier_source = ""
+                else:
+                    st.info("⬆️ Importez votre fichier pour que Nova génère le sujet à partir de son contenu")
+
             # ── CONSTRUCTION AUTOMATIQUE DU PROMPT STRUCTURÉ ──────────────────
             _niveau_val = exam_niveau if not exam_niveau.startswith("──") else ""
             _matiere_val = exam_matiere if not exam_matiere.startswith("──") else ""
@@ -4950,6 +5018,17 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
 - Données toujours précises avec vrais chiffres
 - Contextes ivoiriens authentiques : noms ivoiriens, villes CI (Abidjan, Bouaké, Yamoussoukro...), produits locaux (cacao, café, anacarde...), monnaie FCFA
 - NE JAMAIS inventer une structure générique — colle au vrai format du niveau
+"""
+            # Injecter le contenu du fichier source si fourni
+            if contenu_fichier_source.strip():
+                prompt += """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 DOCUMENT SOURCE FOURNI PAR LE CLIENT — BASE DU SUJET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSTRUCTION CRITIQUE : Tu dois créer le sujet UNIQUEMENT a partir des notions, definitions, formules et contenus presents dans ce document. N'utilise PAS d'autres notions hors du document. Le sujet doit etre 100% base sur ce qui est ecrit ci-dessous.
+
+""" + contenu_fichier_source + """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
             # Afficher un résumé de la commande
             if _niveau_val and _matiere_val and not _niveau_val.startswith("──") and not _matiere_val.startswith("──"):
