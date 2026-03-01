@@ -12,6 +12,7 @@ pdf2docx
 
 openpyxl
 
-pdf
+pandas
 
 PyMuPDF
+
