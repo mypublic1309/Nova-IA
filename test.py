@@ -4953,12 +4953,30 @@ def main_dashboard():
                 else:
                     st.info("⬆️ Importez votre fichier pour que Nova génère le sujet à partir de son contenu")
 
+                # ── CAHIER DES CHARGES SPÉCIFIQUE FICHIER ─────────────────────
+                st.markdown("""
+                <div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.4);
+                     border-radius:10px;padding:12px 16px;margin:10px 0 4px 0;">
+                    <span style="color:#FFA500;font-weight:700;">📋 Instructions pour le sujet</span>
+                    <span style="color:rgba(255,255,255,.5);font-size:.8rem;display:block;margin-top:2px;">
+                        Arsène AI se base <b>uniquement sur votre fichier</b> — précisez ici ce que vous voulez comme sujet
+                    </span>
+                </div>
+                """, unsafe_allow_html=True)
+                fichier_instructions = st.text_area(
+                    "✍️ Décrivez le sujet que vous voulez *",
+                    height=110,
+                    placeholder="Ex: Fais un QCM de 10 questions sur les définitions...\nEx: Crée un devoir avec 2 exercices de calcul basés sur les formules du document...\nEx: Génère une interrogation sur la partie 2 du cours uniquement...",
+                    key="fichier_instructions"
+                )
+
             # ── CONSTRUCTION AUTOMATIQUE DU PROMPT STRUCTURÉ ──────────────────
             _niveau_val = exam_niveau if not exam_niveau.startswith("──") else ""
             _matiere_val = exam_matiere if not exam_matiere.startswith("──") else ""
 
             _etab_val = exam_etablissement.strip() if exam_etablissement.strip() else "Établissement non précisé"
             _annee_val = exam_annee.strip() if exam_annee.strip() else "2024-2025"
+            _fichier_instr = fichier_instructions.strip() if use_fichier_source and "fichier_instructions" in dir() else ""
 
             prompt = f"""FICHE DE COMMANDE NOVA EXAM — INFORMATIONS STRUCTURÉES :
 
@@ -4970,8 +4988,8 @@ def main_dashboard():
 🔢 COEFFICIENT         : {exam_coefficient}
 🏢 ÉTABLISSEMENT       : {_etab_val}
 📅 ANNÉE SCOLAIRE      : {_annee_val}
-📖 CHAPITRE/NOTION     : {exam_chapitre if exam_chapitre.strip() else "Choisir un chapitre cohérent avec le programme officiel du niveau"}
-💬 NOTES SUPP.         : {exam_notes.strip() if exam_notes.strip() else "Aucune"}
+📖 CHAPITRE/NOTION     : {"BASÉ SUR LE FICHIER FOURNI — voir document source ci-dessous" if use_fichier_source else (exam_chapitre if exam_chapitre.strip() else "Choisir un chapitre cohérent avec le programme officiel du niveau")}
+💬 INSTRUCTIONS CLIENT : {"" + _fichier_instr if use_fichier_source else (exam_notes.strip() if exam_notes.strip() else "Aucune")}
 
 INSTRUCTIONS NOVA EXAM :
 - Respecte EXACTEMENT le niveau "{_niveau_val}" — applique le programme officiel MENET-FP de cette classe
