@@ -245,28 +245,33 @@ Connectez-vous à la console admin pour traiter cette mission.
     except Exception as e:
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
-def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier):
-    """Email envoyé quand Gemini a généré le doc automatiquement — pour info admin."""
+def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, demande_complete=""):
+    """Email envoyé quand Arsène AI a généré le doc automatiquement — pour info admin."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
+        section_demande = f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 DEMANDE COMPLÈTE DU CLIENT :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{demande_complete.strip()}
+""" if demande_complete.strip() else ""
         corps = f"""
-✅ GEMINI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
+✅ ARSÈNE AI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
 🛠️ Service     : {service}
 📄 Fichier     : {nom_fichier}
-
-⏰ Généré automatiquement le {datetime.now().strftime("%d/%m/%Y à %H:%M")}
-
+⏰ Généré le   : {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+{section_demande}
 Le document a été livré directement au client via l'interface Nova.
 Vous n'avez rien à faire pour cette commande.
         """
         resend.Emails.send({
             "from": "Nova AI <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"✅ Gemini a répondu automatiquement — {service} ({client_nom})",
+            "subject": f"✅ Arsène AI — {service} ({client_nom})",
             "text": corps
         })
     except Exception:
@@ -4610,22 +4615,22 @@ def main_dashboard():
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
                 list(TYPES_SUJETS.keys()),
-                help="Sélectionnez précisément le type de sujet souhaité. Gemini adaptera 100% du contenu à ce format."
+                help="Sélectionnez précisément le type de sujet souhaité. Arsène AI adaptera 100% du contenu à ce format."
             )
             type_sujet_selectionne = TYPES_SUJETS[type_sujet_label]
 
             TYPE_SUJET_DESCRIPTIONS = {
-                "QCM": "**QCM sélectionné** — Gemini générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
-                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Gemini générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
-                "TEXTE_TROU": "**Texte à trous sélectionné** — Gemini rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
-                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Gemini formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
-                "MIXTE": "**Format Mixte sélectionné** — Gemini combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
-                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Gemini rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
-                "CALCUL": "**Exercices de Calcul sélectionnés** — Gemini rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
-                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Gemini créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
-                "SCHEMA": "**Schéma à légender sélectionné** — Gemini décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Gemini formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
-                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Gemini générera un vrai devoir ivoirien complet avec en-tête officiel + exercices variés progressifs (QCM → mise en situation → problème complexe) adaptés exactement au niveau et à la matière.",
+                "QCM": "**QCM sélectionné** — Arsène AI générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
+                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Arsène AI générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
+                "TEXTE_TROU": "**Texte à trous sélectionné** — Arsène AI rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
+                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Arsène AI formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
+                "MIXTE": "**Format Mixte sélectionné** — Arsène AI combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
+                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Arsène AI rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
+                "CALCUL": "**Exercices de Calcul sélectionnés** — Arsène AI rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
+                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Arsène AI créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
+                "SCHEMA": "**Schéma à légender sélectionné** — Arsène AI décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
+                "DISSERTATION": "**Dissertation guidée sélectionnée** — Arsène AI formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Arsène AI générera un vrai devoir ivoirien complet avec en-tête officiel + exercices variés progressifs (QCM → mise en situation → problème complexe) adaptés exactement au niveau et à la matière.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
@@ -4952,28 +4957,6 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                     placeholder="Ex: Lycée Moderne de Cocody, Université FHB...",
                     key="exp_etablissement")
 
-            exp_inclure = st.multiselect("✨ Éléments à inclure", [
-                "Page de garde professionnelle",
-                "Table des matières",
-                "Introduction développée",
-                "Sous-parties numérotées",
-                "Exemples et illustrations (contexte ivoirien / africain)",
-                "Schémas / Tableaux décrits",
-                "Citations et références bibliographiques",
-                "Conclusion avec ouverture",
-                "Résumé / Abstract",
-                "Glossaire des termes clés",
-                "Sources et webographie",
-            ], default=[
-                "Page de garde professionnelle",
-                "Table des matières",
-                "Introduction développée",
-                "Sous-parties numérotées",
-                "Exemples et illustrations (contexte ivoirien / africain)",
-                "Conclusion avec ouverture",
-                "Sources et webographie",
-            ], key="exp_inclure")
-
             exp_notes = st.text_area("💬 Instructions complémentaires (optionnel)", height=70,
                 placeholder="Ex: Insister sur le rôle de la Côte d'Ivoire, Niveau très basique, Inclure des statistiques récentes...",
                 key="exp_notes")
@@ -4981,8 +4964,6 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
             # Construire le prompt
             _exp_niveau_val  = exp_niveau  if not exp_niveau.startswith("──")  else ""
             _exp_matiere_val = exp_matiere if not exp_matiere.startswith("──") else ""
-            _exp_inclure_str = ", ".join(exp_inclure) if exp_inclure else "Éléments standards"
-
             prompt = f"""FICHE DE COMMANDE NOVA EXPOSÉ :
 🎯 SUJET            : {exp_sujet.strip() or "Non précisé"}
 🎓 NIVEAU           : {_exp_niveau_val or "Non précisé"}
@@ -4991,7 +4972,6 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
 📏 PAGES            : {exp_pages}
 🌍 LANGUE           : {exp_langue}
 🏢 ÉTABLISSEMENT    : {exp_etablissement.strip() or "Non précisé"}
-✨ ÉLÉMENTS         : {_exp_inclure_str}
 💬 INSTRUCTIONS     : {exp_notes.strip() or "Aucune"}
 """
             if _exp_niveau_val and _exp_matiere_val and exp_sujet.strip():
@@ -5561,7 +5541,7 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                         save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
-                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"])
+                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], demande_complete=prompt)
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
@@ -5861,13 +5841,13 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                         st.markdown("<br>", unsafe_allow_html=True)
                         st.markdown(f"""
                         <div class="gemini-card">
-                            <div class="gemini-title">🤖 GEMINI AI — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
+                            <div class="gemini-title">🤖 Arsène AI — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
                             <div class="gemini-sub">Génère le document complet en .docx en 30-60 secondes</div>
                         </div>
                         """, unsafe_allow_html=True)
 
                         if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
-                            with st.spinner("Interrogation de l'API Gemini..."):
+                            with st.spinner("Interrogation de l'API Arsène AI..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                             if modeles_dispo:
                                 st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
@@ -5876,14 +5856,14 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                             else:
                                 st.error("❌ Aucun modèle disponible — vérifiez votre clé API.")
 
-                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC GEMINI", key=f"gemini_{req_id}", use_container_width=True):
+                        if st.button(f"⚡ APPROUVER & GÉNÉRER AVEC ARSÈNE AI", key=f"gemini_{req_id}", use_container_width=True):
                             with st.spinner("🔍 Détection automatique du meilleur modèle disponible..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                                 if modeles_dispo:
                                     st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
                                 else:
                                     st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
-                            with st.spinner("🤖 Gemini génère le document... (30-60 secondes)"):
+                            with st.spinner("🤖 Arsène AI génère le document... (30-60 secondes)"):
                                 contenu = generer_avec_gemini(service, description, client_nom)
 
                             if contenu.startswith("❌"):
