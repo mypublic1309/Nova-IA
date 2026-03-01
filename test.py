@@ -70,6 +70,54 @@ def load_db():
         st.error(f"Erreur chargement Supabase : {e}")
         return {"users": {}, "demandes": [], "liens": {}}
 
+def get_auto_reply_setting():
+    """Charge le paramètre auto_reply depuis Supabase table config."""
+    try:
+        r = supabase.table("config").select("value").eq("key", "auto_reply_gratuit").execute().data
+        return r[0]["value"] == "true" if r else False
+    except:
+        return False
+
+def set_auto_reply_setting(enabled: bool):
+    """Sauvegarde le paramètre auto_reply dans Supabase table config."""
+    try:
+        supabase.table("config").upsert({
+            "key": "auto_reply_gratuit",
+            "value": "true" if enabled else "false"
+        }).execute()
+    except:
+        pass
+
+def envoyer_email_auto_gratuit(client_nom, client_wa, service, nom_fichier, demande):
+    """Email admin — Arsène AI a répondu automatiquement à un gratuit après 2h."""
+    try:
+        import resend
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        corps = f"""
+🤖 ARSÈNE AI — RÉPONSE AUTOMATIQUE PLAN GRATUIT (2H)
+
+👤 Client      : {client_nom}
+📱 WhatsApp    : {client_wa}
+🛠️ Service     : {service}
+📄 Fichier     : {nom_fichier}
+⏰ Généré le   : {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 DEMANDE COMPLÈTE :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{demande.strip()}
+
+Le document a été livré directement au client via l'interface Nova.
+        """
+        resend.Emails.send({
+            "from": "Nova AI <onboarding@resend.dev>",
+            "to": [st.secrets["EMAIL_RECEIVER"]],
+            "subject": f"🤖 Auto-Gratuit — {service} ({client_nom})",
+            "text": corps
+        })
+    except:
+        pass
+
 def save_user(uid, whatsapp, email="Non renseigné", premium=False, premium_plan=None, premium_expiry=None):
     try:
         supabase.table("users").upsert({
@@ -3155,6 +3203,8 @@ if "show_premium_modal" not in st.session_state:
     st.session_state["show_premium_modal"] = False
 if "show_service_warning" not in st.session_state:
     st.session_state["show_service_warning"] = False
+if "auto_reply_gratuit" not in st.session_state:
+    st.session_state["auto_reply_gratuit"] = get_auto_reply_setting()
 if "last_service_seen" not in st.session_state:
     st.session_state["last_service_seen"] = None
 if "warning_triggered" not in st.session_state:
@@ -4381,6 +4431,66 @@ def main_dashboard():
                 st.session_state["show_premium_modal"] = False
                 st.rerun()
 
+    # ── VÉRIFICATION AUTO-REPLY GRATUIT (tourne à chaque refresh) ──────
+    if st.session_state.get("auto_reply_gratuit", False) and user:
+        try:
+            _fresh_demandes = supabase.table("demandes").select("*").execute().data
+            _now = datetime.now()
+            for _req in _fresh_demandes:
+                # Services EXCLUS de l'auto-reply (premium obligatoire ou accord manuel)
+                SERVICES_EXCLUS_AUTO = [
+                    "📝 Exposé scolaire complet IA",
+                ]
+                if _req.get("service", "") in SERVICES_EXCLUS_AUTO:
+                    continue  # Exposé = premium obligatoire ou accord manuel uniquement
+
+                # Seulement les demandes des utilisateurs NON premium
+                _req_user = _req.get("uid", "")
+                _req_user_data = st.session_state["db"]["users"].get(_req_user, {})
+                _is_premium_req = is_premium_actif(_req_user_data)
+                if _is_premium_req:
+                    continue  # Ignorer les premium
+                # Vérifier si ça fait plus de 2 heures
+                _ts_str = _req.get("timestamp", "")
+                try:
+                    _ts = datetime.fromisoformat(_ts_str)
+                    _age_heures = (_now - _ts).total_seconds() / 3600
+                except:
+                    continue
+                if _age_heures < 2:
+                    continue  # Pas encore 2h
+                # Vérifier que le service est supporté par Arsène AI
+                _service_req = _req.get("service", "")
+                if _service_req not in SERVICES_GEMINI:
+                    continue
+                # Vérifier pas déjà traité (status != "auto_done")
+                if _req.get("status") == "auto_done":
+                    continue
+                # ── Générer automatiquement ──────────────────────────────
+                _desc_req   = _req.get("description", "")
+                _client_req = _req.get("uid", "")
+                _wa_req     = _req.get("whatsapp", "")
+                _req_id     = _req.get("id", "")
+                _contenu_auto = generer_avec_gemini(_service_req, _desc_req, _client_req)
+                if _contenu_auto.startswith("❌"):
+                    continue  # Erreur API — on réessaiera au prochain refresh
+                # Créer le fichier docx
+                _buf_auto = creer_docx(_contenu_auto, _service_req, _client_req)
+                _nom_auto = f"{_client_req}_{_service_req[:20].strip()}_auto.docx".replace(" ", "_").replace("/", "-")
+                # Upload vers Supabase Storage
+                _url_auto = upload_fichier_client(_client_req, _req_id, _buf_auto, _nom_auto)
+                if _url_auto.startswith("ERREUR"):
+                    continue
+                # Sauvegarder le lien dans les livrables
+                save_lien(_client_req, _service_req, _url_auto, _now.strftime("%d/%m/%Y"))
+                # Marquer la demande comme traitée et la supprimer
+                supabase.table("demandes").update({"status": "auto_done"}).eq("id", _req_id).execute()
+                delete_demande(_req_id)
+                # Email admin
+                envoyer_email_auto_gratuit(_client_req, _wa_req, _service_req, _nom_auto, _desc_req)
+        except Exception as _e_auto:
+            pass  # Silencieux — ne pas perturber l'interface
+
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
 
     SERVICES_GEMINI = [
@@ -4426,19 +4536,6 @@ def main_dashboard():
                     ("🔢", "Le nombre approximatif de lignes ou d'entrées"),
                 ],
                 "note": "Vous pouvez également joindre un fichier exemple via WhatsApp après la soumission."
-            },
-            "📖 Fiche de Cours Professeur IA": {
-                "icone": "📖",
-                "titre": "Fiche de Cours Professeur IA",
-                "intro": "Pour générer une fiche de cours complète et professionnelle, veuillez préciser :",
-                "items": [
-                    ("📚", "La matière ou discipline (Maths, SVT, Histoire, Français...)"),
-                    ("🎓", "Le niveau scolaire (CP, 6ème, Terminale, BTS...)"),
-                    ("🎯", "Le titre exact de la leçon ou du chapitre"),
-                    ("⏱️", "La durée de la séance prévue"),
-                    ("🏫", "L'établissement ou le contexte (public, privé, spécialité...)"),
-                ],
-                "note": "Plus le titre de la leçon est précis, plus la fiche sera exploitable directement en classe."
             },
             "⚙️ Pack Office (Word/Excel/PPT)": {
                 "icone": "⚙️",
@@ -4490,32 +4587,6 @@ def main_dashboard():
                 ],
                 "note": "Précisez si vous souhaitez uniquement le CV, la lettre, ou les deux."
             },
-            "📄 Conversion & Fichier PDF": {
-                "icone": "📄",
-                "titre": "Conversion & Fichier PDF",
-                "intro": "Pour traiter votre fichier correctement, indiquez-nous :",
-                "items": [
-                    ("📁", "Le format du fichier source (Word, Excel, image, autre...)"),
-                    ("🔄", "Le format de sortie souhaité (PDF, Word, Excel...)"),
-                    ("📋", "Le nombre de fichiers à convertir"),
-                    ("🔒", "Si le PDF doit être protégé par mot de passe"),
-                ],
-                "note": "Envoyez votre fichier directement via WhatsApp après la soumission."
-            },
-            "📝 Création de Sujets & Examens": {
-                "icone": "📝",
-                "titre": "Création de Sujets & Examens",
-                "intro": "Pour concevoir votre devoir ou examen sur mesure, veuillez nous préciser :",
-                "items": [
-                    ("🎓", "Le niveau scolaire (Primaire, Collège, Lycée, Université...)"),
-                    ("📚", "La matière ou discipline concernée"),
-                    ("🎯", "Le type de sujet (devoir surveillé, examen, contrôle, concours...)"),
-                    ("📏", "Le nombre de questions ou d'exercices souhaité"),
-                    ("⏱️", "La durée prévue pour l'épreuve"),
-                    ("🏢", "L'établissement scolaire ou l'institution"),
-                ],
-                "note": "Précisez si vous souhaitez un corrigé ou un barème de notation en accompagnement."
-            },
         }
 
         col_f, col_wa = st.columns(2)
@@ -4554,13 +4625,10 @@ def main_dashboard():
             info = SERVICE_PREREQUIS[service]
 
             SERVICE_AUDIO = {
-                "📝 Exposé scolaire complet IA":   "prerequis_expose.mp3",
-                "📝 Création de Sujets & Examens": "prerequis_examens.mp3",
                 "⚙️ Pack Office (Word/Excel/PPT)": "prerequis_office.mp3",
                 "🎨 Création Design IA":           "prerequis_design.mp3",
                 "📚 Affiches & Reçus":             "prerequis_affiches.mp3",
                 "👔 CV & Lettre de Motivation":    "prerequis_cv.mp3",
-                "📄 Conversion & Fichier PDF":     "prerequis_pdf.mp3",
             }
 
             st.info(f"""
@@ -5749,6 +5817,39 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
 
             with admin_tab1:
                 st.markdown("### 🛡️ Panneau de contrôle Nova")
+
+                # ── TOGGLE RÉPONSE AUTOMATIQUE PLAN GRATUIT ───────────────
+                col_toggle_l, col_toggle_r = st.columns([3, 1])
+                with col_toggle_l:
+                    _auto_status = "🟢 ACTIVÉ" if st.session_state["auto_reply_gratuit"] else "🔴 DÉSACTIVÉ"
+                    st.markdown(f"""
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
+                         border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+                        <span style="font-weight:700;color:#FFD700;">🤖 Réponse automatique — Plan Gratuit</span>
+                        <span style="color:rgba(255,255,255,0.5);font-size:0.82rem;display:block;margin-top:3px;">
+                            Si activé : Arsène AI répond automatiquement aux demandes gratuites après <b>2 heures</b> d'attente, sans validation manuelle.
+                        </span>
+                        <span style="font-weight:800;font-size:0.95rem;margin-top:6px;display:block;">
+                            Statut actuel : {_auto_status}
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_toggle_r:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.session_state["auto_reply_gratuit"]:
+                        if st.button("🔴 Désactiver", key="btn_toggle_auto", use_container_width=True):
+                            st.session_state["auto_reply_gratuit"] = False
+                            set_auto_reply_setting(False)
+                            st.success("✅ Réponse automatique désactivée")
+                            st.rerun()
+                    else:
+                        if st.button("🟢 Activer", key="btn_toggle_auto", use_container_width=True):
+                            st.session_state["auto_reply_gratuit"] = True
+                            set_auto_reply_setting(True)
+                            st.success("✅ Réponse automatique activée — Arsène AI répondra après 2h")
+                            st.rerun()
+
+                st.divider()
 
                 if not current_db["demandes"]:
                     st.info("✅ Aucune mission en attente.")
