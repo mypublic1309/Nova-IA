@@ -5102,13 +5102,22 @@ Le document ci-dessous est ta SEULE source de contenu — tu puises les notions,
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
             # Afficher un résumé de la commande
-            if _niveau_val and _matiere_val and not _niveau_val.startswith("──") and not _matiere_val.startswith("──"):
-                st.success(f"✅ Commande prête : **{_matiere_val}** · **{_niveau_val}** · **{exam_type_epreuve}** · **{exam_duree}**")
+            if use_fichier_source:
+                # Mode fichier : validation basée sur le fichier + instructions
+                if contenu_fichier_source.strip() and _fichier_instr.strip():
+                    st.success(f"✅ Commande prête — sujet généré à partir de votre fichier")
+                elif not contenu_fichier_source.strip():
+                    st.warning("⚠️ Importez votre fichier pour continuer")
+                else:
+                    st.warning("⚠️ Décrivez le sujet que vous voulez dans le cahier des charges")
             else:
-                if not _niveau_val or _niveau_val.startswith("──"):
-                    st.warning("⚠️ Sélectionnez un niveau scolaire précis (pas le titre de catégorie)")
-                if not _matiere_val or _matiere_val.startswith("──"):
-                    st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
+                if _niveau_val and _matiere_val and not _niveau_val.startswith("──") and not _matiere_val.startswith("──"):
+                    st.success(f"✅ Commande prête : **{_matiere_val}** · **{_niveau_val}** · **{exam_type_epreuve}** · **{exam_duree}**")
+                else:
+                    if not _niveau_val or _niveau_val.startswith("──"):
+                        st.warning("⚠️ Sélectionnez un niveau scolaire précis (pas le titre de catégorie)")
+                    if not _matiere_val or _matiere_val.startswith("──"):
+                        st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
         elif "Exposé" in service:
             st.markdown('''
@@ -5580,10 +5589,17 @@ NOTE : fichier original joint via lien ci-dessous.
         # Pour Sujets & Examens : le prompt est auto-construit via les selectbox
         # On ne vérifie PAS "Cahier des charges" mais les champs structurés
         if "Sujets" in service or "Examens" in service:
-            if not _niveau_val or _niveau_val.startswith("──"):
-                champs_manquants.append("Niveau scolaire")
-            if not _matiere_val or _matiere_val.startswith("──"):
-                champs_manquants.append("Matière")
+            if use_fichier_source:
+                # Mode fichier : vérifier fichier + instructions
+                if not contenu_fichier_source.strip():
+                    champs_manquants.append("Fichier source")
+                if not _fichier_instr.strip():
+                    champs_manquants.append("Description du sujet souhaité")
+            else:
+                if not _niveau_val or _niveau_val.startswith("──"):
+                    champs_manquants.append("Niveau scolaire")
+                if not _matiere_val or _matiere_val.startswith("──"):
+                    champs_manquants.append("Matière")
         elif "Fiche de Cours" in service:
             if not _fc_niveau_val or fc_niveau.startswith("──"):
                 champs_manquants.append("Niveau scolaire")
