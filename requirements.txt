@@ -11,3 +11,7 @@ python-docx
 pdf2docx
 
 openpyxl
+
+pdf
+
+PyMuPDF
