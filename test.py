@@ -4410,21 +4410,6 @@ def main_dashboard():
             st.stop()
 
         SERVICE_PREREQUIS = {
-            "📝 Exposé scolaire complet IA": {
-                "icone": "📝",
-                "titre": "Exposé Scolaire Complet IA",
-                "intro": "Pour concevoir votre exposé sur mesure avec précision et professionnalisme, veuillez nous préciser :",
-                "items": [
-                    ("🎯", "Le thème ou sujet exact de l'exposé"),
-                    ("🏫", "Le niveau scolaire (Primaire, Collège, Lycée, Université...)"),
-                    ("📚", "La matière ou discipline concernée (Histoire, SVT, Français...)"),
-                    ("📏", "Le nombre de pages ou de mots désiré"),
-                    ("⏱️", "La durée de présentation prévue (ex : 10 min, 20 min...)"),
-                    ("🔖", "Le type de plan souhaité (thématique, dialectique, chronologique...)"),
-                    ("🏢", "L'école ou l'établissement concerné"),
-                ],
-                "note": "Précisez si vous souhaitez un support de présentation (PowerPoint) ou des fiches résumé en accompagnement."
-            },
             "📊 Data & Excel Analytics": {
                 "icone": "📊",
                 "titre": "Data & Excel Analytics",
@@ -4901,6 +4886,122 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                     st.warning("⚠️ Sélectionnez un niveau scolaire précis (pas le titre de catégorie)")
                 if not _matiere_val or _matiere_val.startswith("──"):
                     st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
+
+        elif "Exposé" in service:
+            st.markdown('''
+            <div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.35);
+                 border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+                <span style="font-weight:700;color:#FFA500;">📝 Remplissez les champs — Nova génère votre exposé complet, structuré et prêt à présenter</span>
+            </div>
+            ''', unsafe_allow_html=True)
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                exp_niveau = st.selectbox("🎓 Niveau scolaire *", [
+                    "── PRIMAIRE ──","CP1","CP2","CE1","CE2","CM1","CM2",
+                    "── COLLÈGE ──","6ème","5ème","4ème","3ème",
+                    "── LYCÉE ──","2nde",
+                    "1ère - Série A1","1ère - Série A2","1ère - Série B",
+                    "1ère - Série C","1ère - Série D","1ère - Série E",
+                    "Terminale - Série A1","Terminale - Série A2","Terminale - Série B",
+                    "Terminale - Série C","Terminale - Série D","Terminale - Série E",
+                    "── UNIVERSITÉ / BTS ──",
+                    "Licence 1 (L1)","Licence 2 (L2)","Licence 3 (L3)",
+                    "Master 1 (M1)","Master 2 (M2)",
+                    "BTS 1ère année","BTS 2ème année",
+                ], index=0, key="exp_niveau")
+                exp_matiere = st.selectbox("📚 Matière / Discipline *", [
+                    "── TOUTES MATIÈRES ──",
+                    "Français / Lettres","Mathématiques","Sciences Physiques (PC)","SVT / Biologie",
+                    "Histoire-Géographie","Économie / Gestion","Comptabilité","Philosophie",
+                    "EDHC / Éducation Civique","Anglais (LV1)","Espagnol (LV2)","Allemand (LV2)",
+                    "Informatique / TIC","Technologie industrielle","EPS","Arts Plastiques",
+                    "Agronomie / Agriculture","Droit","Économie politique",
+                    "Sciences de la Vie et de la Terre","Chimie","Physique",
+                    "Autre (préciser dans les notes)",
+                ], index=0, key="exp_matiere")
+            with col_b:
+                exp_pages = st.selectbox("📏 Nombre de pages souhaité *", [
+                    "Adapté automatiquement au niveau",
+                    "2 - 3 pages (court)",
+                    "4 - 5 pages (standard collège)",
+                    "6 - 8 pages (standard lycée)",
+                    "8 - 12 pages (université)",
+                    "12 - 20 pages (mémoire / rapport)",
+                ], index=0, key="exp_pages")
+                exp_langue = st.selectbox("🌍 Langue de rédaction *", [
+                    "Français","Anglais","Français + résumé en anglais",
+                ], index=0, key="exp_langue")
+
+            exp_sujet = st.text_input("🎯 Thème / Sujet de l'exposé *",
+                placeholder="Ex: Le changement climatique en Afrique, La Révolution française, L'ADN et la génétique...",
+                key="exp_sujet")
+
+            col_c, col_d = st.columns(2)
+            with col_c:
+                exp_type = st.selectbox("📄 Type d'exposé *", [
+                    "Exposé scolaire classique (Introduction + Développement + Conclusion)",
+                    "Rapport de recherche structuré (Parties I, II, III)",
+                    "Exposé oral (plan + fiches de présentation)",
+                    "Compte-rendu de TP / Expérience scientifique",
+                    "Commentaire de texte / document",
+                    "Dissertation guidée",
+                ], index=0, key="exp_type")
+            with col_d:
+                exp_etablissement = st.text_input("🏢 Établissement (optionnel)",
+                    placeholder="Ex: Lycée Moderne de Cocody, Université FHB...",
+                    key="exp_etablissement")
+
+            exp_inclure = st.multiselect("✨ Éléments à inclure", [
+                "Page de garde professionnelle",
+                "Table des matières",
+                "Introduction développée",
+                "Sous-parties numérotées",
+                "Exemples et illustrations (contexte ivoirien / africain)",
+                "Schémas / Tableaux décrits",
+                "Citations et références bibliographiques",
+                "Conclusion avec ouverture",
+                "Résumé / Abstract",
+                "Glossaire des termes clés",
+                "Sources et webographie",
+            ], default=[
+                "Page de garde professionnelle",
+                "Table des matières",
+                "Introduction développée",
+                "Sous-parties numérotées",
+                "Exemples et illustrations (contexte ivoirien / africain)",
+                "Conclusion avec ouverture",
+                "Sources et webographie",
+            ], key="exp_inclure")
+
+            exp_notes = st.text_area("💬 Instructions complémentaires (optionnel)", height=70,
+                placeholder="Ex: Insister sur le rôle de la Côte d'Ivoire, Niveau très basique, Inclure des statistiques récentes...",
+                key="exp_notes")
+
+            # Construire le prompt
+            _exp_niveau_val  = exp_niveau  if not exp_niveau.startswith("──")  else ""
+            _exp_matiere_val = exp_matiere if not exp_matiere.startswith("──") else ""
+            _exp_inclure_str = ", ".join(exp_inclure) if exp_inclure else "Éléments standards"
+
+            prompt = f"""FICHE DE COMMANDE NOVA EXPOSÉ :
+🎯 SUJET            : {exp_sujet.strip() or "Non précisé"}
+🎓 NIVEAU           : {_exp_niveau_val or "Non précisé"}
+📚 MATIÈRE          : {_exp_matiere_val or "Non précisée"}
+📄 TYPE             : {exp_type}
+📏 PAGES            : {exp_pages}
+🌍 LANGUE           : {exp_langue}
+🏢 ÉTABLISSEMENT    : {exp_etablissement.strip() or "Non précisé"}
+✨ ÉLÉMENTS         : {_exp_inclure_str}
+💬 INSTRUCTIONS     : {exp_notes.strip() or "Aucune"}
+"""
+            if _exp_niveau_val and _exp_matiere_val and exp_sujet.strip():
+                st.success(f"✅ Commande prête : **{exp_sujet.strip()[:45]}** · **{_exp_matiere_val}** · **{_exp_niveau_val}**")
+            elif exp_sujet.strip():
+                st.info("💡 Précisez le niveau et la matière pour un meilleur résultat")
+            else:
+                if not exp_sujet.strip(): st.warning("⚠️ Entrez le thème / sujet de l'exposé")
+                if not _exp_niveau_val:   st.warning("⚠️ Sélectionnez un niveau scolaire précis")
+                if not _exp_matiere_val:  st.warning("⚠️ Sélectionnez une matière précise")
 
         elif "Fiche de Cours" in service:
             st.markdown('''
