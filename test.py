@@ -5080,10 +5080,16 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
             if contenu_fichier_source.strip():
                 prompt += """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📄 DOCUMENT SOURCE FOURNI PAR LE CLIENT — BASE DU SUJET
+🎯 DIRECTIVE PRINCIPALE — CE QUE LE CLIENT VEUT EXACTEMENT :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-INSTRUCTION CRITIQUE : Tu dois créer le sujet UNIQUEMENT a partir des notions, definitions, formules et contenus presents dans ce document. N'utilise PAS d'autres notions hors du document. Le sujet doit etre 100% base sur ce qui est ecrit ci-dessous.
+""" + (_fichier_instr if _fichier_instr else "Crée un sujet adapté au niveau et à la durée indiqués, basé sur le document ci-dessous.") + """
 
+⚠️ RÈGLE ABSOLUE : Exécute EXACTEMENT la demande ci-dessus. 
+Le document ci-dessous est ta SEULE source de contenu — tu puises les notions, définitions et formules UNIQUEMENT dans ce texte. N'invente rien hors du document.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 DOCUMENT SOURCE (contenu à utiliser) :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """ + contenu_fichier_source + """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
