@@ -4847,9 +4847,48 @@ def main_dashboard():
             )
 
             # ── OPTION : CRÉER À PARTIR D'UN FICHIER ─────────────────────────
-            st.markdown("---")
+            st.markdown("""
+            <style>
+            @keyframes glowPulse {
+                0%   { box-shadow: 0 0 6px 2px rgba(46,204,113,0.4), 0 0 12px 4px rgba(46,204,113,0.2); }
+                50%  { box-shadow: 0 0 18px 6px rgba(46,204,113,0.9), 0 0 35px 12px rgba(46,204,113,0.4); }
+                100% { box-shadow: 0 0 6px 2px rgba(46,204,113,0.4), 0 0 12px 4px rgba(46,204,113,0.2); }
+            }
+            @keyframes textPulse {
+                0%   { opacity: 1; }
+                50%  { opacity: 0.75; }
+                100% { opacity: 1; }
+            }
+            .fichier-toggle-card {
+                background: linear-gradient(135deg, rgba(46,204,113,0.12), rgba(39,174,96,0.08));
+                border: 2px solid rgba(46,204,113,0.7);
+                border-radius: 14px;
+                padding: 16px 20px;
+                margin: 14px 0 6px 0;
+                animation: glowPulse 2s ease-in-out infinite;
+                cursor: pointer;
+            }
+            .fichier-toggle-title {
+                color: #2ecc71;
+                font-weight: 800;
+                font-size: 1.05rem;
+                animation: textPulse 2s ease-in-out infinite;
+                display: block;
+            }
+            .fichier-toggle-sub {
+                color: rgba(255,255,255,0.55);
+                font-size: 0.8rem;
+                margin-top: 4px;
+                display: block;
+            }
+            </style>
+            <div class="fichier-toggle-card">
+                <span class="fichier-toggle-title">📂 ✨ Créer le sujet à partir d'un de mes fichiers</span>
+                <span class="fichier-toggle-sub">Importez votre cours ou leçon — Arsène AI génère un sujet basé uniquement sur votre document</span>
+            </div>
+            """, unsafe_allow_html=True)
             use_fichier_source = st.toggle(
-                "📂 Créer le sujet à partir d'un de mes fichiers (cours, leçon, document...)",
+                "✅ Activer cette option",
                 key="use_fichier_source",
                 help="Importez un fichier Word, PDF ou TXT — Arsène AI analysera son contenu et créera le sujet à partir de vos propres notions."
             )
