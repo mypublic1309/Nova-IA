@@ -4413,15 +4413,17 @@ def main_dashboard():
             "📝 Exposé scolaire complet IA": {
                 "icone": "📝",
                 "titre": "Exposé Scolaire Complet IA",
-                "intro": "Pour que nous puissions générer votre exposé avec précision et professionnalisme, veuillez nous fournir les informations suivantes dans votre cahier des charges :",
+                "intro": "Pour concevoir votre exposé sur mesure avec précision et professionnalisme, veuillez nous préciser :",
                 "items": [
-                    ("🎯", "Le thème ou sujet de l'exposé"),
-                    ("🏫", "Le niveau scolaire (Collège, Lycée, Université...)"),
-                    ("📏", "Le nombre de pages désiré"),
+                    ("🎯", "Le thème ou sujet exact de l'exposé"),
+                    ("🏫", "Le niveau scolaire (Primaire, Collège, Lycée, Université...)"),
+                    ("📚", "La matière ou discipline concernée (Histoire, SVT, Français...)"),
+                    ("📏", "Le nombre de pages ou de mots désiré"),
+                    ("⏱️", "La durée de présentation prévue (ex : 10 min, 20 min...)"),
+                    ("🔖", "Le type de plan souhaité (thématique, dialectique, chronologique...)"),
                     ("🏢", "L'école ou l'établissement concerné"),
-                    ("📚", "La matière ou discipline concernée"),
                 ],
-                "note": "Plus vos informations sont précises, plus le résultat sera adapté à vos attentes."
+                "note": "Précisez si vous souhaitez un support de présentation (PowerPoint) ou des fiches résumé en accompagnement."
             },
             "📊 Data & Excel Analytics": {
                 "icone": "📊",
