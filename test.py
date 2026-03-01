@@ -3205,6 +3205,8 @@ if "show_service_warning" not in st.session_state:
     st.session_state["show_service_warning"] = False
 if "auto_reply_gratuit" not in st.session_state:
     st.session_state["auto_reply_gratuit"] = get_auto_reply_setting()
+if "contenu_fichier_source" not in st.session_state:
+    st.session_state["contenu_fichier_source"] = ""
 if "last_service_seen" not in st.session_state:
     st.session_state["last_service_seen"] = None
 if "warning_triggered" not in st.session_state:
@@ -4889,6 +4891,9 @@ def main_dashboard():
                     placeholder="Ex: Avec corrigé, thème ivoirien, niveau difficile, chapitres 1 et 2, 4 QCM + 2 ouvertes..."
                 )
             else:
+                # Réinitialiser le contenu fichier si toggle désactivé
+                st.session_state["contenu_fichier_source"] = ""
+                contenu_fichier_source = ""
                 # Valeurs par défaut quand fichier actif
                 exam_niveau = "Non précisé"
                 exam_matiere = "── TOUTES MATIÈRES ──"
@@ -4950,16 +4955,24 @@ def main_dashboard():
                                 contenu_fichier_source = contenu_fichier_source[:6000] + "\n...[document tronqué]"
 
                             if contenu_fichier_source.strip():
+                                st.session_state["contenu_fichier_source"] = contenu_fichier_source
                                 st.success(f"✅ **{fichier_source.name}** lu avec succès — {len(contenu_fichier_source)} caractères extraits")
                             else:
                                 st.warning("⚠️ Le fichier semble vide ou illisible")
                                 contenu_fichier_source = ""
+                                st.session_state["contenu_fichier_source"] = ""
 
                         except Exception as e_fic:
                             st.error(f"❌ Erreur lecture fichier : {e_fic}")
                             contenu_fichier_source = ""
+                            st.session_state["contenu_fichier_source"] = ""
                 else:
-                    st.info("⬆️ Importez votre fichier pour que Nova génère le sujet à partir de son contenu")
+                    # Récupérer depuis session_state si déjà chargé
+                    if st.session_state["contenu_fichier_source"]:
+                        contenu_fichier_source = st.session_state["contenu_fichier_source"]
+                        st.success(f"✅ Fichier en mémoire — {len(contenu_fichier_source)} caractères")
+                    else:
+                        st.info("⬆️ Importez votre fichier pour que Nova génère le sujet à partir de son contenu")
 
                 # ── CAHIER DES CHARGES SPÉCIFIQUE FICHIER ─────────────────────
                 st.markdown("""
