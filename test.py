@@ -6185,7 +6185,9 @@ Action requise si le problème n'est pas résolu.
                 wa_relance = f"https://wa.me/{WHATSAPP_NUMBER}?text={relance_msg.replace(' ', '%20')}"
                 st.markdown(f'<a href="{wa_relance}" target="_blank" class="support-btn" style="border-color:#f1c40f; color:#f1c40f !important;">🔔 Relancer Nova</a>', unsafe_allow_html=True)
             with col_sup:
-                st.markdown(f'<a href="{whatsapp_support_url}" target="_blank" class="support-btn">🙋 Agent Nova</a>', unsafe_allow_html=True)
+                if st.button("🙋 Arsène IA", key="btn_arsene_page", use_container_width=True):
+                    st.session_state["view"] = "arsene_ia"
+                    st.rerun()
 
     with st.expander("🛠 Console Admin Nova"):
         if st.text_input("Master Key", type="password") == ADMIN_CODE:
@@ -6506,7 +6508,198 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def show_arsene_ia_page():
+    user = st.session_state.get("current_user", "")
+    st.markdown("""
+    <style>
+    @keyframes arseneGlow {
+        0%   { box-shadow: 0 0 10px 3px rgba(66,133,244,0.4); }
+        50%  { box-shadow: 0 0 25px 8px rgba(66,133,244,0.8); }
+        100% { box-shadow: 0 0 10px 3px rgba(66,133,244,0.4); }
+    }
+    .arsene-header {
+        background: linear-gradient(135deg, rgba(66,133,244,0.15), rgba(66,133,244,0.05));
+        border: 2px solid rgba(66,133,244,0.6);
+        border-radius: 20px;
+        padding: 28px 24px;
+        text-align: center;
+        animation: arseneGlow 2.5s ease-in-out infinite;
+        margin-bottom: 20px;
+    }
+    .arsene-avatar {
+        font-size: 4rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+    .arsene-name {
+        color: #4285f4;
+        font-size: 1.8rem;
+        font-weight: 900;
+        display: block;
+    }
+    .arsene-desc {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        margin-top: 6px;
+        display: block;
+    }
+    </style>
+    <div class="arsene-header">
+        <span class="arsene-avatar">🤖</span>
+        <span class="arsene-name">Arsène IA</span>
+        <span class="arsene-desc">Assistant officiel Nova AI · Disponible 24h/24</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("← Retour", key="retour_arsene"):
+        st.session_state["view"] = "home"
+        st.rerun()
+
+    st.markdown("---")
+
+    # Initialiser chat
+    if "arsene_chat" not in st.session_state:
+        st.session_state["arsene_chat"] = [{
+            "role": "assistant",
+            "content": f"Salut, moi c'est Arsène IA, ton assistant Nova ! 👋 Je connais tous les services, les abonnements et je suis là pour t'aider. Comment puis-je t'aider aujourd'hui{', ' + user if user else ''} ?"
+        }]
+    if "arsene_resolu" not in st.session_state:
+        st.session_state["arsene_resolu"] = False
+
+    # Afficher historique
+    for msg in st.session_state["arsene_chat"]:
+        align = "flex-end" if msg["role"] == "user" else "flex-start"
+        bg = "rgba(255,255,255,0.07)" if msg["role"] == "user" else "rgba(66,133,244,0.12)"
+        color = "#eee" if msg["role"] == "user" else "#4285f4"
+        icon = "🧑" if msg["role"] == "user" else "🤖"
+        label = "Vous" if msg["role"] == "user" else "Arsène IA"
+        st.markdown(f"""
+        <div style="display:flex;justify-content:{align};margin:8px 0;">
+            <div style="background:{bg};border-radius:14px;padding:12px 16px;max-width:80%;border:1px solid rgba(255,255,255,0.05);">
+                <span style="color:{color};font-size:.8rem;font-weight:700;">{icon} {label}</span>
+                <p style="color:#eee;margin:5px 0 0 0;font-size:.92rem;line-height:1.5;">{msg["content"]}</p>
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+    if not st.session_state["arsene_resolu"]:
+        with st.form("arsene_form", clear_on_submit=True):
+            msg_user = st.text_input(
+                "Message",
+                placeholder="Pose ta question à Arsène IA...",
+                label_visibility="collapsed"
+            )
+            col_s, col_t = st.columns([4, 1])
+            with col_s:
+                envoyer = st.form_submit_button("📨 Envoyer", use_container_width=True)
+            with col_t:
+                terminer = st.form_submit_button("✅ Fin", use_container_width=True)
+
+        if envoyer and msg_user.strip():
+            st.session_state["arsene_chat"].append({"role": "user", "content": msg_user.strip()})
+            db = st.session_state["db"]
+            user_data = db["users"].get(user, {}) if user else {}
+            premium_actif = is_premium_actif(user_data)
+            historique_txt = "\n".join([
+                f"{'Client' if m['role']=='user' else 'Arsène IA'}: {m['content']}"
+                for m in st.session_state["arsene_chat"]
+            ])
+            prompt_arsene = f"""Tu es ARSÈNE IA, l'assistant officiel de Nova AI.
+Tu t'appelles Arsène IA — jamais Gemini, jamais ChatGPT, jamais Claude.
+Tu parles toujours en français, avec bienveillance et clarté.
+
+TOUT CE QUE TU SAIS SUR NOVA AI :
+
+SERVICES :
+- 📊 Data & Excel Analytics : tableaux de bord, graphiques, analyse de données
+- 📖 Fiche de Cours Professeur IA : fiches pédagogiques pour enseignants
+- 📎 Modifier mon Fichier : modification Word, Excel, PowerPoint
+- 📝 Exposé scolaire complet IA : exposés du CP au Master (PREMIUM)
+- 📝 Création de Sujets & Examens : devoirs, QCM, contrôles (PREMIUM = auto)
+- ⚙️ Pack Office : documents Word, Excel, PowerPoint professionnels
+- 🎨 Création Design IA : affiches, flyers, bannières, logos
+- 📚 Affiches & Reçus : supports visuels entreprises
+- 👔 CV & Lettre de Motivation : CV et lettres percutants
+- 🔄 Conversion & Fichier PDF : conversion entre formats
+
+PLANS PREMIUM :
+- 🌅 Journalier (1 jour) : 600 FC → 2 générations IA automatiques
+- 🔟 10 Jours : 1000 FC → 9 générations IA automatiques
+- 👑 30 Jours : 2500 FC → Générations ILLIMITÉES
+- Abonnement via WhatsApp : {WHATSAPP_NUMBER}
+
+CONNEXION :
+- Identifiant = nom choisi à l'inscription
+- Mot de passe = numéro WhatsApp (ex: 2250XXXXXXXX)
+- Problème connexion → vérifier le numéro avec 225 au début
+
+FONCTIONNEMENT :
+- Gratuit : demande soumise → Nova traite → livraison par lien (quelques heures)
+- Premium : génération automatique en moins d'1 minute → onglet "Mes Livrables"
+- Quota premium se renouvelle chaque jour à minuit
+
+SUPPORT HUMAIN : WhatsApp {WHATSAPP_NUMBER}
+
+RÈGLE IMPORTANTE : Si le problème est grave (paiement, compte bloqué, fichier perdu, bug critique) ou si tu n'arrives pas à le résoudre toi-même, propose TOUJOURS au client de contacter Nova directement sur WhatsApp : {WHATSAPP_NUMBER}. Formule-le ainsi : "Pour ce problème, je te recommande de contacter Nova directement sur WhatsApp : {WHATSAPP_NUMBER} 📲"
+
+CLIENT : {user if user else "visiteur"} | Premium : {"OUI" if premium_actif else "NON"}
+
+Historique :
+{historique_txt}
+
+Réponds UNIQUEMENT au dernier message. 3-5 phrases max. Tu es Arsène IA."""
+
+            with st.spinner("🤖 Arsène IA réfléchit..."):
+                reponse = generer_avec_gemini("Support Arsène IA", prompt_arsene, user or "visiteur")
+            if reponse.startswith("❌"):
+                reponse = f"Désolé, je rencontre une difficulté. Contacte Nova directement sur WhatsApp : {WHATSAPP_NUMBER}"
+            st.session_state["arsene_chat"].append({"role": "assistant", "content": reponse})
+            st.rerun()
+
+        if terminer and len(st.session_state["arsene_chat"]) > 1:
+            try:
+                import resend
+                resend.api_key = st.secrets["RESEND_API_KEY"]
+                db = st.session_state["db"]
+                historique_email = "\n".join([
+                    f"{'🧑 Client' if m['role']=='user' else '🤖 Arsène IA'} : {m['content']}"
+                    for m in st.session_state["arsene_chat"]
+                ])
+                resend.Emails.send({
+                    "from": "Nova AI <onboarding@resend.dev>",
+                    "to": [st.secrets["EMAIL_RECEIVER"]],
+                    "subject": f"🤖 Arsène IA — Conversation {user or 'visiteur'}",
+                    "text": f"""RÉSUMÉ CONVERSATION ARSÈNE IA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Client   : {user or "visiteur"}
+📱 WhatsApp : {db["users"].get(user, {}).get("whatsapp", "—") if user else "—"}
+⏰ Date     : {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{historique_email}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Intervenir si problème non résolu.
+"""
+                })
+                st.session_state["arsene_resolu"] = True
+                st.success("✅ Conversation envoyée à Nova. Nous revenons vers toi rapidement !")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Erreur envoi : {e}")
+    else:
+        st.success("✅ Ta demande a été transmise à Nova. Nous te répondrons bientôt.")
+        if st.button("🔄 Nouvelle conversation", key="reset_arsene"):
+            st.session_state["arsene_chat"] = [{
+                "role": "assistant",
+                "content": f"Salut, moi c'est Arsène IA ! 👋 Comment puis-je t'aider ?"
+            }]
+            st.session_state["arsene_resolu"] = False
+            st.rerun()
+
+
 if st.session_state["view"] == "auth" and st.session_state["current_user"] is None:
     show_auth_page()
+elif st.session_state["view"] == "arsene_ia":
+    show_arsene_ia_page()
 else:
     main_dashboard()
