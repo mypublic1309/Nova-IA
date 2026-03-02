@@ -4619,6 +4619,61 @@ def main_dashboard():
 
         SERVICE_SAISIE = "📊 Data & Excel Analytics"
 
+        # ── BOUTON AIDE FLOTTANT ────────────────────────────────────────
+        SERVICE_AIDE = {
+            "📊 Data & Excel Analytics": ("📊 Data & Excel Analytics", "Soumettez vos données brutes et décrivez l'analyse souhaitée. Arsène IA génère tableaux croisés, graphiques et rapports Excel.\n\n✅ Idéal pour : bilans, stats, dashboards\n📎 Collez vos données dans le cahier des charges"),
+            "📖 Fiche de Cours Professeur IA": ("📖 Fiche de Cours", "Indiquez la matière, le niveau, le chapitre et l'objectif. Arsène IA rédige une fiche complète avec notions, exemples et exercices.\n\n✅ Idéal pour : enseignants, formateurs\n💡 Précisez le programme (MENET-FP, LMD...)"),
+            "📎 Modifier mon Fichier (Word / Excel / PPT)": ("📎 Modifier mon Fichier", "Importez votre fichier et décrivez précisément les modifications souhaitées.\n\n✅ Formats : Word, Excel, PowerPoint\n⚠️ Soyez précis sur ce que vous voulez changer"),
+            "📝 Exposé scolaire complet IA": ("📝 Exposé scolaire", "Remplissez le formulaire : niveau, matière, sujet, pages. Arsène IA rédige un exposé structuré complet.\n\n✅ Idéal pour : collège, lycée, université\n⭐ Service PREMIUM uniquement"),
+            "📝 Création de Sujets & Examens": ("📝 Sujets & Examens", "Choisissez niveau, matière, type d'épreuve et durée. Importez votre cours pour baser le sujet dessus.\n\n✅ Types : QCM, Vrai/Faux, Cas pratique, Devoir complet\n⭐ Génération auto avec Premium"),
+            "⚙️ Pack Office (Word/Excel/PPT)": ("⚙️ Pack Office", "Décrivez le document voulu (contrat, rapport, présentation...). Précisez style, langue et contenu.\n\n✅ Tout format Office professionnel\n📝 Plus vous êtes précis, meilleur le résultat"),
+            "🎨 Création Design IA": ("🎨 Création Design", "Décrivez votre visuel : type, couleurs, textes, style souhaité.\n\n✅ Livraison en image ou PDF\n💡 Mentionnez votre secteur d'activité"),
+            "📚 Affiches & Reçus": ("📚 Affiches & Reçus", "Précisez le type (affiche, reçu, bon de commande...) et les infos à afficher.\n\n✅ Idéal pour : commerces, associations, événements\n📋 Fournissez les données exactes"),
+            "👔 CV & Lettre de Motivation": ("👔 CV & Lettre", "Indiquez votre parcours, le poste visé et l'entreprise cible.\n\n✅ Formats modernes et professionnels\n💡 Précisez si vous avez déjà un CV à améliorer"),
+            "📄 Conversion & Fichier PDF": ("📄 Conversion PDF", "Importez votre fichier et choisissez le format cible.\n\n✅ Formats : Word↔PDF, Excel↔CSV, PPT↔PDF\n⚡ Résultat immédiat"),
+        }
+
+        if service in SERVICE_AIDE:
+            _aide_titre, _aide_texte = SERVICE_AIDE[service]
+            if f"aide_open_{service}" not in st.session_state:
+                st.session_state[f"aide_open_{service}"] = False
+
+            st.markdown("""
+            <style>
+            .aide-btn-float {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,140,0,0.1));
+                border: 1px solid rgba(255,193,7,0.5);
+                border-radius: 20px;
+                padding: 4px 12px;
+                font-size: 0.78rem;
+                color: #FFD700;
+                font-weight: 700;
+                cursor: pointer;
+                margin-bottom: 8px;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+            col_aide_l, col_aide_r = st.columns([6, 1])
+            with col_aide_r:
+                _key_aide = f"btn_aide_{service[:10]}"
+                if st.button("❓ Aide", key=_key_aide, help=f"Comment utiliser : {_aide_titre}"):
+                    st.session_state[f"aide_open_{service}"] = not st.session_state[f"aide_open_{service}"]
+
+            if st.session_state[f"aide_open_{service}"]:
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg,rgba(255,193,7,0.08),rgba(255,140,0,0.05));
+                     border:1px solid rgba(255,193,7,0.35);border-left:3px solid #FFD700;
+                     border-radius:10px;padding:14px 18px;margin:4px 0 12px 0;">
+                    <span style="color:#FFD700;font-weight:800;font-size:.95rem;">💡 {_aide_titre}</span>
+                    <pre style="color:rgba(255,255,255,0.85);font-family:inherit;font-size:.88rem;
+                         margin:8px 0 0 0;white-space:pre-wrap;line-height:1.6;">{_aide_texte}</pre>
+                </div>
+                """, unsafe_allow_html=True)
+
         if service != st.session_state["last_service_seen"]:
             st.session_state["last_service_seen"] = service
             st.session_state["warning_triggered"] = False
@@ -6744,7 +6799,8 @@ CLIENT : {user if user else "visiteur"} | Premium : {"OUI" if premium_actif else
 Historique :
 {historique_txt}
 
-Réponds UNIQUEMENT au dernier message. 3-5 phrases max. Tu es Arsène IA."""
+Réponds UNIQUEMENT au dernier message. 3-5 phrases max. Tu es Arsène IA.
+RÈGLE IMPORTANTE : Ne commence JAMAIS tes réponses par "Bonjour [nom]" ou en te présentant à nouveau. Tu l'as déjà fait au début. Reste naturel, direct, comme dans une vraie conversation. Réponds directement à ce que le client dit."""
 
             with st.spinner("🤖 Arsène IA réfléchit..."):
                 reponse = generer_avec_gemini("Support Arsène IA", prompt_arsene, user or "visiteur")
