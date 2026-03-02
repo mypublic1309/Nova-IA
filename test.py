@@ -110,7 +110,7 @@ def envoyer_email_auto_gratuit(client_nom, client_wa, service, nom_fichier, dema
 Le document a été livré directement au client via l'interface Nova.
         """
         resend.Emails.send({
-            "from": "Nova AI <onboarding@resend.dev>",
+            "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"🤖 Auto-Gratuit — {service} ({client_nom})",
             "text": corps
@@ -272,7 +272,7 @@ def envoyer_notification(client_nom, client_wa, service, description):
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
         corps = f"""
-🔔 NOUVELLE COMMANDE NOVA AI
+🔔 NOUVELLE COMMANDE NOVA PLATFORM
 
 👤 Client      : {client_nom}
 📱 WhatsApp    : {client_wa}
@@ -284,9 +284,9 @@ def envoyer_notification(client_nom, client_wa, service, description):
 Connectez-vous à la console admin pour traiter cette mission.
         """
         resend.Emails.send({
-            "from": "Nova AI <onboarding@resend.dev>",
+            "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"🔔 Nouvelle commande Nova AI — {service}",
+            "subject": f"🔔 Nouvelle commande Nova Platform — {service}",
             "text": corps
         })
         st.toast("📧 Notification email envoyée !", icon="✅")
@@ -317,7 +317,7 @@ Le document a été livré directement au client via l'interface Nova.
 Vous n'avez rien à faire pour cette commande.
         """
         resend.Emails.send({
-            "from": "Nova AI <onboarding@resend.dev>",
+            "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"✅ Arsène AI — {service} ({client_nom})",
             "text": corps
@@ -448,7 +448,7 @@ def generer_avec_gemini(service, description, client_nom):
 Tu as été formé sur des milliers d'exposés scolaires primés et tu maîtrises parfaitement chaque aspect : typographie, structure, rhétorique académique, contextualisation culturelle et rendu Word via python-docx.
 
 ╔══════════════════════════════════════════════════════════════════╗
-║     ENCYCLOPÉDIE EXPERTE — GÉNÉRATION DOCUMENT WORD NOVA AI     ║
+║     ENCYCLOPÉDIE EXPERTE — GÉNÉRATION DOCUMENT WORD NOVA PLATFORM     ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1987,7 +1987,7 @@ RÈGLES ABSOLUES :
 Rédige en français avec une structure claire : titres, sous-titres, paragraphes détaillés. Sois exhaustif et professionnel."""
 
         system_instruction = (
-            "Tu es NOVA AI, un moteur de génération documentaire d'élite francophone africain.\n"
+            "Tu es NOVA PLATFORM, un moteur de génération documentaire d'élite francophone africain.\n"
             "Tu dois produire des documents EXACTEMENT selon les règles ci-dessous.\n\n"
 
             "══ RÈGLE 1 : FORMATAGE MARKDOWN → WORD ══\n"
@@ -2177,7 +2177,7 @@ def envoyer_escalade_support(client_nom, whatsapp_client, historique_msgs, sourc
             f"{'Client' if m['role']=='user' else 'Arsène IA'}: {m['content']}"
             for m in historique_msgs if m["role"] == "user"
         ])
-        prompt_resume = f"""Voici les messages d'un client Nova AI qui a un problème grave.
+        prompt_resume = f"""Voici les messages d'un client Nova Platform qui a un problème grave.
 Rédige un email de signalement professionnel et concis pour le service client Nova.
 Formule clairement : le problème rencontré, ce que le client a essayé, et ce qu'il attend.
 Ne dépasse pas 8 lignes. Sois factuel et précis.
@@ -2188,7 +2188,7 @@ Messages du client :
         if resume.startswith("❌"):
             resume = hist_txt  # fallback brut
         resend.Emails.send({
-            "from": "Nova AI <onboarding@resend.dev>",
+            "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"🆘 PROBLÈME GRAVE — {client_nom} ({source})",
             "text": f"""ESCALADE CLIENT — PROBLÈME GRAVE
@@ -3231,7 +3231,7 @@ def creer_xlsx(description, client_nom):
 
 WHATSAPP_NUMBER = st.secrets.get("WHATSAPP_NUMBER", "2250171542505")
 PREMIUM_MSG = "J'aimerais passer à la version Nova Premium pour bénéficier de la puissance 10^10 et de l'IA de pointe."
-SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova AI."
+SUPPORT_MSG = "Bonjour, j'ai besoin d'assistance sur mon espace Nova Platform."
 whatsapp_premium_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={PREMIUM_MSG.replace(' ', '%20')}"
 whatsapp_support_url = f"https://wa.me/{WHATSAPP_NUMBER}?text={SUPPORT_MSG.replace(' ', '%20')}"
 
@@ -3604,7 +3604,7 @@ def inject_custom_css():
             animation: gold-glow-pulse 5s ease-in-out infinite !important;
         }
 
-        /* ── Titre principal NOVA AI PLATFORM ── */
+        /* ── Titre principal NOVA PLATFORM PLATFORM ── */
         .main-title {
             background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500) !important;
             background-size: 300% auto !important;
@@ -4145,7 +4145,7 @@ def show_auth_page():
     </style>
     """, unsafe_allow_html=True)
 
-    letters = list("NOVA AI")
+    letters = list("NOVA PLATFORM")
     letter_spans = "".join(
         f'<span class="auth-letter" style="animation-delay:{i*0.07:.2f}s">'
         f'{"&nbsp;" if c == " " else c}</span>'
@@ -4204,7 +4204,7 @@ def show_auth_page():
                 <div class="auth-card-icon">✨</div>
                 <div>
                     <div class="auth-card-title">Nouveau Compte</div>
-                    <div class="auth-card-desc">Rejoignez l'élite Nova AI dès maintenant</div>
+                    <div class="auth-card-desc">Rejoignez l'élite Nova Platform dès maintenant</div>
                 </div>
             </div>
         </div>
@@ -4212,7 +4212,7 @@ def show_auth_page():
         with st.form("signup"):
             new_uid = st.text_input("Identifiant au choix", placeholder="Choisissez un identifiant...")
             new_wa  = st.text_input("Votre WhatsApp (clé d'accès)", placeholder="Ex: 22507...")
-            if st.form_submit_button("💎 REJOINDRE NOVA AI"):
+            if st.form_submit_button("💎 REJOINDRE NOVA PLATFORM"):
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
@@ -4243,7 +4243,7 @@ def show_auth_page():
 
     st.markdown("""
     <div class="auth-secure-badge">
-        <span>🔒</span> Connexion sécurisée &nbsp;·&nbsp; <span>⚡</span> Nova AI &nbsp;·&nbsp; <span>🛡️</span> Données protégées
+        <span>🔒</span> Connexion sécurisée &nbsp;·&nbsp; <span>⚡</span> Nova Platform &nbsp;·&nbsp; <span>🛡️</span> Données protégées
     </div>
     """, unsafe_allow_html=True)
 
@@ -4362,7 +4362,7 @@ def show_auth_page():
                     f"{'Client' if m['role']=='user' else 'Arsène IA'}: {m['content']}"
                     for m in st.session_state["auth_chat"]
                 ])
-                prompt_auth = f"""Tu es ARSÈNE IA, l'assistant support de Nova AI (Côte d'Ivoire).
+                prompt_auth = f"""Tu es ARSÈNE IA, l'assistant support de Nova Platform (Côte d'Ivoire).
 Tu aides les visiteurs sur la PAGE DE CONNEXION — ils ne sont pas encore connectés.
 Réponds en français, avec bienveillance et concision.
 
@@ -4409,7 +4409,7 @@ __ESCALADE_CONFIRMEE__"""
                         for m in st.session_state["auth_chat"]
                     ])
                     resend.Emails.send({
-                        "from": "Nova AI <onboarding@resend.dev>",
+                        "from": "Nova Platform <onboarding@resend.dev>",
                         "to": [st.secrets["EMAIL_RECEIVER"]],
                         "subject": "🆘 Support Auth Nova — Visiteur",
                         "text": f"""SIGNALEMENT PAGE CONNEXION
@@ -4527,7 +4527,7 @@ def main_dashboard():
                 font-size: 3.5rem !important;
                 font-weight: 800 !important;
                 margin-top: 0;
-            ">NOVA AI PLATFORM</h1>
+            ">NOVA PLATFORM PLATFORM</h1>
             <div style="
                 color: rgba(255,215,0,0.6);
                 font-size: 0.75rem;
@@ -4538,7 +4538,7 @@ def main_dashboard():
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("<h1 class='main-title'>NOVA AI PLATFORM</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 class='main-title'>NOVA PLATFORM PLATFORM</h1>", unsafe_allow_html=True)
 
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
@@ -6353,16 +6353,16 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                         for m in st.session_state["support_chat"]
                     ])
 
-                    prompt_support = f"""Tu es ARSÈNE IA, l'assistant support officiel de Nova AI.
+                    prompt_support = f"""Tu es ARSÈNE IA, l'assistant support officiel de Nova Platform.
 Tu t'appelles Arsène IA. Tu ne t'appelles pas Gemini, pas ChatGPT, pas Claude. Tu es Arsène IA.
 Tu parles toujours en français, avec bienveillance, de façon claire et directe.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📚 CE QUE TU SAIS SUR NOVA AI :
+📚 CE QUE TU SAIS SUR NOVA PLATFORM :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 IDENTITÉ :
-- Nova AI est une plateforme de services IA basée en Côte d'Ivoire
+- Nova Platform est une plateforme de services IA basée en Côte d'Ivoire
 - Le WhatsApp Nova pour les commandes et le support humain : {WHATSAPP_NUMBER}
 - Tu es l'assistant virtuel intégré dans l'application
 
@@ -6450,7 +6450,7 @@ __ESCALADE_CONFIRMEE__"""
                             for m in st.session_state["support_chat"]
                         ])
                         resend.Emails.send({
-                            "from": "Nova AI <onboarding@resend.dev>",
+                            "from": "Nova Platform <onboarding@resend.dev>",
                             "to": [st.secrets["EMAIL_RECEIVER"]],
                             "subject": f"🆘 Support Nova — {user}",
                             "text": f"""RÉSUMÉ CONVERSATION SUPPORT
@@ -6586,24 +6586,24 @@ Action requise si le problème n'est pas résolu.
 
                     if est_incomplet and champs_manquants:
                         champs_str = ", ".join(champs_manquants)
-                        msg_rejet = (f"Bonjour {client_nom}, nous avons reçu votre demande Nova AI "
+                        msg_rejet = (f"Bonjour {client_nom}, nous avons reçu votre demande Nova Platform "
                                      f"concernant : {service}. Cependant, nous ne pouvons pas la traiter "
                                      f"car les informations suivantes sont manquantes : {champs_str}. "
                                      f"Merci de soumettre à nouveau votre demande en complétant tous les champs. "
-                                     f"— Équipe Nova AI ⚡")
+                                     f"— Équipe Nova Platform ⚡")
                     else:
-                        msg_rejet = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova AI "
+                        msg_rejet = (f"Bonjour {client_nom}, nous avons bien reçu votre demande Nova Platform "
                                      f"concernant : {service}. Malheureusement, nous ne sommes pas en mesure "
                                      f"de traiter cette mission pour le moment. Merci de nous recontacter. "
-                                     f"— Équipe Nova AI ⚡")
+                                     f"— Équipe Nova Platform ⚡")
 
-                    msg_succes = (f"✅ Bonjour {client_nom} ! Votre mission Nova AI ({service}) est terminée ! "
+                    msg_succes = (f"✅ Bonjour {client_nom} ! Votre mission Nova Platform ({service}) est terminée ! "
                                   f"Rendez-vous dans votre espace Nova pour récupérer votre livrable. "
-                                  f"Merci de votre confiance. — Équipe Nova AI ⚡")
+                                  f"Merci de votre confiance. — Équipe Nova Platform ⚡")
 
                     msg_recu = (f"📬 Bonjour {client_nom}, nous confirmons la réception de votre demande "
-                                f"Nova AI : {service}. Votre mission est en cours de traitement. "
-                                f"Vous serez notifié dès qu'elle sera finalisée. — Équipe Nova AI ⚡")
+                                f"Nova Platform : {service}. Votre mission est en cours de traitement. "
+                                f"Vous serez notifié dès qu'elle sera finalisée. — Équipe Nova Platform ⚡")
 
                     col_rejet, col_recu, col_succes = st.columns(3)
                     with col_rejet:
@@ -7001,11 +7001,11 @@ def show_arsene_ia_page():
                 f"{'Client' if m['role']=='user' else 'Arsène IA'}: {m['content']}"
                 for m in st.session_state["arsene_chat"]
             ])
-            prompt_arsene = f"""Tu es ARSÈNE IA, l'assistant officiel de Nova AI.
+            prompt_arsene = f"""Tu es ARSÈNE IA, l'assistant officiel de Nova Platform.
 Tu t'appelles Arsène IA — jamais Gemini, jamais ChatGPT, jamais Claude.
 Tu parles toujours en français, avec bienveillance et clarté.
 
-TOUT CE QUE TU SAIS SUR NOVA AI :
+TOUT CE QUE TU SAIS SUR NOVA PLATFORM :
 
 SERVICES :
 - 📊 Data & Excel Analytics : tableaux de bord, graphiques, analyse de données
@@ -7078,7 +7078,7 @@ __ESCALADE_CONFIRMEE__"""
                     for m in st.session_state["arsene_chat"]
                 ])
                 resend.Emails.send({
-                    "from": "Nova AI <onboarding@resend.dev>",
+                    "from": "Nova Platform <onboarding@resend.dev>",
                     "to": [st.secrets["EMAIL_RECEIVER"]],
                     "subject": f"🤖 Arsène IA — Conversation {user or 'visiteur'}",
                     "text": f"""RÉSUMÉ CONVERSATION ARSÈNE IA
