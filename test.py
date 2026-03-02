@@ -6006,6 +6006,179 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
             
             st.write("---")
             st.markdown("### 🆘 Support Nova Direct")
+
+            # ── CHAT SUPPORT IA ────────────────────────────────────────────
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,rgba(66,133,244,0.1),rgba(66,133,244,0.05));
+                 border:1px solid rgba(66,133,244,0.4);border-radius:14px;padding:14px 18px;margin-bottom:12px;">
+                <span style="color:#4285f4;font-weight:800;font-size:1rem;">🤖 Assistant Support Nova</span>
+                <span style="color:rgba(255,255,255,.5);font-size:.82rem;display:block;margin-top:3px;">
+                    Décrivez votre problème — Arsène AI vous aide et envoie un résumé à Nova
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Initialiser historique chat support
+            if "support_chat" not in st.session_state:
+                st.session_state["support_chat"] = [{
+                    "role": "assistant",
+                    "content": f"Salut, moi c'est Arsène IA, ton assistant Nova ! 👋 Comment puis-je t'aider aujourd'hui, {user} ?"
+                }]
+            if "support_resolu" not in st.session_state:
+                st.session_state["support_resolu"] = False
+
+            # Afficher l'historique
+            for msg in st.session_state["support_chat"]:
+                role_icon = "🧑" if msg["role"] == "user" else "🤖"
+                role_color = "#eee" if msg["role"] == "user" else "#4285f4"
+                align = "flex-end" if msg["role"] == "user" else "flex-start"
+                bg = "rgba(255,255,255,0.07)" if msg["role"] == "user" else "rgba(66,133,244,0.12)"
+                st.markdown(f"""
+                <div style="display:flex;justify-content:{align};margin:6px 0;">
+                    <div style="background:{bg};border-radius:12px;padding:10px 14px;max-width:80%;">
+                        <span style="color:{role_color};font-size:.82rem;font-weight:700;">{role_icon} {"Vous" if msg["role"]=="user" else "Arsène AI"}</span>
+                        <p style="color:#eee;margin:4px 0 0 0;font-size:.9rem;">{msg["content"]}</p>
+                    </div>
+                </div>""", unsafe_allow_html=True)
+
+            # Zone de saisie
+            if not st.session_state["support_resolu"]:
+                with st.form("support_chat_form", clear_on_submit=True):
+                    msg_client = st.text_input(
+                        "Votre message",
+                        placeholder="Ex: Mon fichier n'a pas été livré, je ne peux pas me connecter...",
+                        label_visibility="collapsed"
+                    )
+                    col_send, col_fin = st.columns([3, 1])
+                    with col_send:
+                        envoyer = st.form_submit_button("📨 Envoyer", use_container_width=True)
+                    with col_fin:
+                        terminer = st.form_submit_button("✅ Terminer", use_container_width=True)
+
+                if envoyer and msg_client.strip():
+                    # Ajouter message client
+                    st.session_state["support_chat"].append({"role": "user", "content": msg_client.strip()})
+
+                    # Construire historique pour Gemini
+                    historique_txt = "\n".join([
+                        f"{'Client' if m['role']=='user' else 'Assistant'}: {m['content']}"
+                        for m in st.session_state["support_chat"]
+                    ])
+
+                    prompt_support = f"""Tu es ARSÈNE IA, l'assistant support officiel de Nova AI.
+Tu t'appelles Arsène IA. Tu ne t'appelles pas Gemini, pas ChatGPT, pas Claude. Tu es Arsène IA.
+Tu parles toujours en français, avec bienveillance, de façon claire et directe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 CE QUE TU SAIS SUR NOVA AI :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IDENTITÉ :
+- Nova AI est une plateforme de services IA basée en Côte d'Ivoire
+- Le WhatsApp Nova pour les commandes et le support humain : {WHATSAPP_NUMBER}
+- Tu es l'assistant virtuel intégré dans l'application
+
+SERVICES DISPONIBLES :
+- 📊 Data & Excel Analytics : tableaux de bord, graphiques, analyse de données
+- 📖 Fiche de Cours Professeur IA : fiches pédagogiques complètes pour enseignants
+- 📎 Modifier mon Fichier : modification de fichiers Word, Excel, PowerPoint
+- 📝 Exposé scolaire complet IA : exposés structurés du CP au Master (PREMIUM uniquement)
+- 📝 Création de Sujets & Examens : devoirs, contrôles, QCM, examens (PREMIUM auto-généré)
+- ⚙️ Pack Office : création de documents Word, Excel, PowerPoint professionnels
+- 🎨 Création Design IA : affiches, flyers, bannières, logos (décrits en texte)
+- 📚 Affiches & Reçus : supports visuels pour entreprises et associations
+- 👔 CV & Lettre de Motivation : CV et lettres percutants
+- 🔄 Conversion & Fichier PDF : conversion entre formats (Word↔PDF, Excel↔CSV, etc.)
+
+PLANS PREMIUM :
+- 🌅 Journalier (1 jour) : 600 FC → 2 générations IA automatiques
+- 🔟 10 Jours : 1000 FC → 9 générations IA automatiques
+- 👑 30 Jours : 2500 FC → Générations ILLIMITÉES
+- Pour s'abonner : contacter Nova sur WhatsApp {WHATSAPP_NUMBER}
+
+FONCTIONNEMENT :
+- Compte GRATUIT : le client soumet sa demande → Nova traite manuellement → livraison par lien
+- Compte PREMIUM : génération automatique par Arsène IA en moins d'1 minute → disponible dans "Mes Livrables"
+- Délai moyen pour les gratuits : quelques heures selon la charge
+- Les livrables sont disponibles dans l'onglet "📂 MES LIVRABLES (CLOUD)"
+
+CONNEXION / COMPTE :
+- L'identifiant c'est le nom choisi à l'inscription
+- Le mot de passe c'est le numéro WhatsApp (format : 225XXXXXXXX)
+- Si le client oublie son WhatsApp d'inscription → contacter Nova pour récupération
+- Si le client ne peut pas se connecter → vérifier que le numéro est exact avec le préfixe 225
+
+PROBLÈMES FRÉQUENTS ET SOLUTIONS :
+- "Je ne reçois pas mon fichier" → vérifier l'onglet "Mes Livrables", rafraîchir la page, ou attendre si demande récente
+- "Je ne peux pas me connecter" → vérifier identifiant exact + numéro WhatsApp avec 225 au début
+- "Mon quota est épuisé" → le quota se renouvelle chaque jour à minuit
+- "Le fichier généré ne correspond pas" → soumettre à nouveau avec plus de détails dans le cahier des charges
+- "Je veux upgrader mon plan" → contacter Nova sur WhatsApp {WHATSAPP_NUMBER}
+
+RÈGLES QUE TU DOIS RESPECTER :
+- Ne jamais promettre un remboursement sans l'accord de Nova
+- Ne jamais promettre un délai précis que tu ne peux pas garantir
+- Si le problème nécessite une intervention humaine, dire au client de contacter Nova sur WhatsApp {WHATSAPP_NUMBER}
+- Toujours rester positif et rassurant
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CLIENT ACTUEL : {user}
+Premium actif : {"OUI" if premium_actif else "NON — compte gratuit"}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Historique de la conversation :
+{historique_txt}
+
+Réponds UNIQUEMENT au dernier message du client. Sois concis (3-5 phrases max). Tu es Arsène IA, pas Gemini."""
+
+                    with st.spinner("🤖 Arsène AI répond..."):
+                        reponse_ia = generer_avec_gemini("Support", prompt_support, user)
+
+                    if reponse_ia.startswith("❌"):
+                        reponse_ia = "Désolé, je rencontre une difficulté technique. Contactez Nova directement via WhatsApp."
+
+                    st.session_state["support_chat"].append({"role": "assistant", "content": reponse_ia})
+                    st.rerun()
+
+                if terminer and st.session_state["support_chat"]:
+                    # Envoyer résumé par email
+                    try:
+                        import resend
+                        resend.api_key = st.secrets["RESEND_API_KEY"]
+                        historique_email = "\n".join([
+                            f"{'🧑 Client' if m['role']=='user' else '🤖 Arsène AI'} : {m['content']}"
+                            for m in st.session_state["support_chat"]
+                        ])
+                        resend.Emails.send({
+                            "from": "Nova AI <onboarding@resend.dev>",
+                            "to": [st.secrets["EMAIL_RECEIVER"]],
+                            "subject": f"🆘 Support Nova — {user}",
+                            "text": f"""RÉSUMÉ CONVERSATION SUPPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Client   : {user}
+📱 WhatsApp : {db["users"].get(user, {}).get("whatsapp", "—")}
+⏰ Date     : {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{historique_email}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Action requise si le problème n'est pas résolu.
+"""
+                        })
+                        st.session_state["support_resolu"] = True
+                        st.success("✅ Conversation terminée — un résumé a été envoyé à Nova. Nous revenons vers vous rapidement !")
+                        st.rerun()
+                    except Exception as e_sup:
+                        st.error(f"❌ Erreur envoi résumé : {e_sup}")
+            else:
+                st.success("✅ Votre demande a été transmise à Nova. Nous vous répondrons bientôt.")
+                if st.button("🔄 Nouveau ticket support", key="reset_support"):
+                    st.session_state["support_chat"] = []
+                    st.session_state["support_resolu"] = False
+                    st.rerun()
+
+            st.divider()
             col_rel, col_sup = st.columns(2)
             with col_rel:
                 relance_msg = f"Bonjour, je souhaite un status sur ma mission Nova (ID: {user})."
