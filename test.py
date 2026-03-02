@@ -89,7 +89,7 @@ def set_auto_reply_setting(enabled: bool):
         pass
 
 def envoyer_email_auto_gratuit(client_nom, client_wa, service, nom_fichier, demande):
-    """Email admin — Arsène AI a répondu automatiquement à un gratuit après 1h30."""
+    """Email admin — Nova Platform a répondu automatiquement à un gratuit après 1h30."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
@@ -294,7 +294,7 @@ Connectez-vous à la console admin pour traiter cette mission.
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
 def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, demande_complete=""):
-    """Email envoyé quand Arsène AI a généré le doc automatiquement — pour info admin."""
+    """Email envoyé quand Nova Platform a généré le doc automatiquement — pour info admin."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
@@ -319,7 +319,7 @@ Vous n'avez rien à faire pour cette commande.
         resend.Emails.send({
             "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
-            "subject": f"✅ Arsène AI — {service} ({client_nom})",
+            "subject": f"✅ Nova Platform — {service} ({client_nom})",
             "text": corps
         })
     except Exception:
@@ -3604,7 +3604,7 @@ def inject_custom_css():
             animation: gold-glow-pulse 5s ease-in-out infinite !important;
         }
 
-        /* ── Titre principal NOVA PLATFORM PLATFORM ── */
+        /* ── Titre principal NOVA PLATFORM ── */
         .main-title {
             background: linear-gradient(90deg, #7a5500, #b8860b, #FFD700, #fff5c0, #FFD700, #b8860b, #7a5500) !important;
             background-size: 300% auto !important;
@@ -4386,7 +4386,7 @@ Si le client exprime un problème grave (paiement, fichier perdu, compte bloqué
 Si dans l'historique le client répond OUI ou "oui" ou "ok" ou "ouais" à cette proposition, réponds UNIQUEMENT ce texte exact sans rien d'autre :
 __ESCALADE_CONFIRMEE__"""
 
-                with st.spinner("🤖 Arsène IA répond..."):
+                with st.spinner("🤖 Nova Platform répond..."):
                     rep_auth = generer_avec_gemini("Support Auth", prompt_auth, "visiteur")
                 if rep_auth.startswith("❌"):
                     rep_auth = f"Désolé, une erreur est survenue. Contacte Nova directement sur WhatsApp : {WHATSAPP_NUMBER} 📲"
@@ -4405,7 +4405,7 @@ __ESCALADE_CONFIRMEE__"""
                     import resend
                     resend.api_key = st.secrets["RESEND_API_KEY"]
                     hist_email = "\n".join([
-                        f"{'🧑 Visiteur' if m['role']=='user' else '🤖 Arsène IA'} : {m['content']}"
+                        f"{'🧑 Visiteur' if m['role']=='user' else '🤖 Nova Platform'} : {m['content']}"
                         for m in st.session_state["auth_chat"]
                     ])
                     resend.Emails.send({
@@ -4527,7 +4527,7 @@ def main_dashboard():
                 font-size: 3.5rem !important;
                 font-weight: 800 !important;
                 margin-top: 0;
-            ">NOVA PLATFORM PLATFORM</h1>
+            ">NOVA PLATFORM</h1>
             <div style="
                 color: rgba(255,215,0,0.6);
                 font-size: 0.75rem;
@@ -4538,7 +4538,7 @@ def main_dashboard():
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("<h1 class='main-title'>NOVA PLATFORM PLATFORM</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 class='main-title'>NOVA PLATFORM</h1>", unsafe_allow_html=True)
 
     if not st.session_state["intro_played"]:
         st.session_state["intro_played"] = True
@@ -4697,7 +4697,7 @@ def main_dashboard():
                     continue
                 if _age_heures < 1.5:
                     continue  # Pas encore 2h
-                # Vérifier que le service est supporté par Arsène AI
+                # Vérifier que le service est supporté par Nova Platform
                 _service_req = _req.get("service", "")
                 if _service_req not in SERVICES_GEMINI:
                     continue
@@ -4854,10 +4854,10 @@ def main_dashboard():
 
         # ── BOUTON AIDE FLOTTANT ────────────────────────────────────────
         SERVICE_AIDE = {
-            "📊 Data & Excel Analytics": ("📊 Data & Excel Analytics", "Soumettez vos données brutes et décrivez l'analyse souhaitée. Arsène IA génère tableaux croisés, graphiques et rapports Excel.\n\n✅ Idéal pour : bilans, stats, dashboards\n📎 Collez vos données dans le cahier des charges"),
-            "📖 Fiche de Cours Professeur IA": ("📖 Fiche de Cours", "Indiquez la matière, le niveau, le chapitre et l'objectif. Arsène IA rédige une fiche complète avec notions, exemples et exercices.\n\n✅ Idéal pour : enseignants, formateurs\n💡 Précisez le programme (MENET-FP, LMD...)"),
+            "📊 Data & Excel Analytics": ("📊 Data & Excel Analytics", "Soumettez vos données brutes et décrivez l'analyse souhaitée. Nova Platform génère tableaux croisés, graphiques et rapports Excel.\n\n✅ Idéal pour : bilans, stats, dashboards\n📎 Collez vos données dans le cahier des charges"),
+            "📖 Fiche de Cours Professeur IA": ("📖 Fiche de Cours", "Indiquez la matière, le niveau, le chapitre et l'objectif. Nova Platform rédige une fiche complète avec notions, exemples et exercices.\n\n✅ Idéal pour : enseignants, formateurs\n💡 Précisez le programme (MENET-FP, LMD...)"),
             "📎 Modifier mon Fichier (Word / Excel / PPT)": ("📎 Modifier mon Fichier", "Importez votre fichier et décrivez précisément les modifications souhaitées.\n\n✅ Formats : Word, Excel, PowerPoint\n⚠️ Soyez précis sur ce que vous voulez changer"),
-            "📝 Exposé scolaire complet IA": ("📝 Exposé scolaire", "Remplissez le formulaire : niveau, matière, sujet, pages. Arsène IA rédige un exposé structuré complet.\n\n✅ Idéal pour : collège, lycée, université\n⭐ Service PREMIUM uniquement"),
+            "📝 Exposé scolaire complet IA": ("📝 Exposé scolaire", "Remplissez le formulaire : niveau, matière, sujet, pages. Nova Platform rédige un exposé structuré complet.\n\n✅ Idéal pour : collège, lycée, université\n⭐ Service PREMIUM uniquement"),
             "📝 Création de Sujets & Examens": ("📝 Sujets & Examens", "Choisissez niveau, matière, type d'épreuve et durée. Importez votre cours pour baser le sujet dessus.\n\n✅ Types : QCM, Vrai/Faux, Cas pratique, Devoir complet\n⭐ Génération auto avec Premium"),
             "⚙️ Pack Office (Word/Excel/PPT)": ("⚙️ Pack Office", "Décrivez le document voulu (contrat, rapport, présentation...). Précisez style, langue et contenu.\n\n✅ Tout format Office professionnel\n📝 Plus vous êtes précis, meilleur le résultat"),
             "🎨 Création Design IA": ("🎨 Création Design", "Décrivez votre visuel : type, couleurs, textes, style souhaité.\n\n✅ Livraison en image ou PDF\n💡 Mentionnez votre secteur d'activité"),
@@ -4976,22 +4976,22 @@ def main_dashboard():
             type_sujet_label = st.selectbox(
                 "Choisissez le type d'exercice que vous voulez dans votre sujet",
                 list(TYPES_SUJETS.keys()),
-                help="Sélectionnez précisément le type de sujet souhaité. Arsène AI adaptera 100% du contenu à ce format."
+                help="Sélectionnez précisément le type de sujet souhaité. Nova Platform adaptera 100% du contenu à ce format."
             )
             type_sujet_selectionne = TYPES_SUJETS[type_sujet_label]
 
             TYPE_SUJET_DESCRIPTIONS = {
-                "QCM": "**QCM sélectionné** — Arsène AI générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
-                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Arsène AI générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
-                "TEXTE_TROU": "**Texte à trous sélectionné** — Arsène AI rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
-                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Arsène AI formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
-                "MIXTE": "**Format Mixte sélectionné** — Arsène AI combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
-                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Arsène AI rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
-                "CALCUL": "**Exercices de Calcul sélectionnés** — Arsène AI rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
-                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Arsène AI créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
-                "SCHEMA": "**Schéma à légender sélectionné** — Arsène AI décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
-                "DISSERTATION": "**Dissertation guidée sélectionnée** — Arsène AI formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
-                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Arsène AI générera un vrai devoir ivoirien complet avec en-tête officiel + exercices variés progressifs (QCM → mise en situation → problème complexe) adaptés exactement au niveau et à la matière.",
+                "QCM": "**QCM sélectionné** — Nova Platform générera des questions à 4 choix (A/B/C/D) avec cases □ à cocher, distracteurs réalistes et corrigé si demandé.",
+                "VRAI_FAUX": "**Vrai ou Faux sélectionné** — Nova Platform générera des affirmations à évaluer (V/F) avec lignes de justification pour les fausses réponses.",
+                "TEXTE_TROU": "**Texte à trous sélectionné** — Nova Platform rédigera un texte cohérent avec des blancs à remplir et une liste de mots fournie.",
+                "QUESTIONS_OUVERTES": "**Questions ouvertes sélectionnées** — Nova Platform formulera des questions de réflexion avec lignes de réponse proportionnelles au barème.",
+                "MIXTE": "**Format Mixte sélectionné** — Nova Platform combinera QCM (Partie 1) + Vrai/Faux (Partie 2) + Question rédigée (Partie 3), barème équilibré.",
+                "CAS_PRATIQUE": "**Cas Pratique sélectionné** — Nova Platform rédigera un texte/document contextualisé (Côte d'Ivoire) + questions d'analyse progressives.",
+                "CALCUL": "**Exercices de Calcul sélectionnés** — Nova Platform rédigera des problèmes chiffrés contextualisés avec démarche guidée, formules rappelées et données réelles ivoiriennes.",
+                "ETUDE_DOCUMENT": "**Étude de Document sélectionnée** — Nova Platform créera un document support (texte, tableau ou description de carte) + questions d'identification, analyse et interprétation.",
+                "SCHEMA": "**Schéma à légender sélectionné** — Nova Platform décrira textuellement un schéma numéroté avec la liste des termes à placer et un corrigé de légendes.",
+                "DISSERTATION": "**Dissertation guidée sélectionnée** — Nova Platform formulera un sujet de composition, fournira des consignes de méthode et proposera un plan détaillé guidé.",
+                "DEVOIR_COMPLET": "**Devoir Complet sélectionné** — Nova Platform générera un vrai devoir ivoirien complet avec en-tête officiel + exercices variés progressifs (QCM → mise en situation → problème complexe) adaptés exactement au niveau et à la matière.",
             }
             st.info(TYPE_SUJET_DESCRIPTIONS.get(type_sujet_selectionne, ""))
 
@@ -5046,13 +5046,13 @@ def main_dashboard():
             </style>
             <div class="fichier-toggle-card2">
                 <span class="fichier-toggle-title2">📂 ✨ Créer le sujet à partir d'un de mes fichiers</span>
-                <span class="fichier-toggle-sub2">Importez votre cours ou leçon — Arsène AI génère un sujet basé uniquement sur votre document</span>
+                <span class="fichier-toggle-sub2">Importez votre cours ou leçon — Nova Platform génère un sujet basé uniquement sur votre document</span>
             </div>
             """, unsafe_allow_html=True)
             use_fichier_source = st.toggle(
                 "✅ Activer cette option",
                 key="use_fichier_source",
-                help="Importez un fichier Word, PDF ou TXT — Arsène AI analysera son contenu."
+                help="Importez un fichier Word, PDF ou TXT — Nova Platform analysera son contenu."
             )
 
             if not use_fichier_source:
@@ -5199,7 +5199,7 @@ def main_dashboard():
                 st.markdown('''
                 <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.3);
                      border-radius:10px;padding:12px 16px;margin:8px 0;">
-                    <span style="color:#2ecc71;font-weight:700;">📄 Arsène AI va scanner votre document et créer le sujet uniquement à partir de son contenu</span>
+                    <span style="color:#2ecc71;font-weight:700;">📄 Nova Platform va scanner votre document et créer le sujet uniquement à partir de son contenu</span>
                     <span style="color:rgba(255,255,255,.5);font-size:.82rem;display:block;margin-top:3px;">
                         Formats acceptés : PDF, Word (.docx), Texte (.txt)
                     </span>
@@ -5268,7 +5268,7 @@ def main_dashboard():
                      border-radius:10px;padding:12px 16px;margin:10px 0 4px 0;">
                     <span style="color:#FFA500;font-weight:700;">📋 Instructions pour le sujet</span>
                     <span style="color:rgba(255,255,255,.5);font-size:.8rem;display:block;margin-top:2px;">
-                        Arsène AI se base <b>uniquement sur votre fichier</b> — précisez ici ce que vous voulez comme sujet
+                        Nova Platform se base <b>uniquement sur votre fichier</b> — précisez ici ce que vous voulez comme sujet
                     </span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -6301,7 +6301,7 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                  border:1px solid rgba(66,133,244,0.4);border-radius:14px;padding:14px 18px;margin-bottom:12px;">
                 <span style="color:#4285f4;font-weight:800;font-size:1rem;">🤖 Assistant Support Nova</span>
                 <span style="color:rgba(255,255,255,.5);font-size:.82rem;display:block;margin-top:3px;">
-                    Décrivez votre problème — Arsène AI vous aide et envoie un résumé à Nova
+                    Décrivez votre problème — Nova Platform vous aide et envoie un résumé à Nova
                 </span>
             </div>
             """, unsafe_allow_html=True)
@@ -6324,7 +6324,7 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                 st.markdown(f"""
                 <div style="display:flex;justify-content:{align};margin:6px 0;">
                     <div style="background:{bg};border-radius:12px;padding:10px 14px;max-width:80%;">
-                        <span style="color:{role_color};font-size:.82rem;font-weight:700;">{role_icon} {"Vous" if msg["role"]=="user" else "Arsène AI"}</span>
+                        <span style="color:{role_color};font-size:.82rem;font-weight:700;">{role_icon} {"Vous" if msg["role"]=="user" else "Nova Platform"}</span>
                         <p style="color:#eee;margin:4px 0 0 0;font-size:.9rem;">{msg["content"]}</p>
                     </div>
                 </div>""", unsafe_allow_html=True)
@@ -6386,7 +6386,7 @@ PLANS PREMIUM :
 
 FONCTIONNEMENT :
 - Compte GRATUIT : le client soumet sa demande → Nova traite manuellement → livraison par lien
-- Compte PREMIUM : génération automatique par Arsène IA en moins d'1 minute → disponible dans "Mes Livrables"
+- Compte PREMIUM : génération automatique par Nova Platform en moins d'1 minute → disponible dans "Mes Livrables"
 - Délai moyen pour les gratuits : quelques heures selon la charge
 - Les livrables sont disponibles dans l'onglet "📂 MES LIVRABLES (CLOUD)"
 
@@ -6424,7 +6424,7 @@ Si le client exprime un problème grave (paiement, fichier perdu, compte bloqué
 Si dans l'historique le client répond OUI ou "oui" ou "ok" ou "ouais" à cette proposition, réponds UNIQUEMENT ce texte exact sans rien d'autre :
 __ESCALADE_CONFIRMEE__"""
 
-                    with st.spinner("🤖 Arsène AI répond..."):
+                    with st.spinner("🤖 Nova Platform répond..."):
                         reponse_ia = generer_avec_gemini("Support", prompt_support, user)
 
                     if reponse_ia.startswith("❌"):
@@ -6446,7 +6446,7 @@ __ESCALADE_CONFIRMEE__"""
                         import resend
                         resend.api_key = st.secrets["RESEND_API_KEY"]
                         historique_email = "\n".join([
-                            f"{'🧑 Client' if m['role']=='user' else '🤖 Arsène AI'} : {m['content']}"
+                            f"{'🧑 Client' if m['role']=='user' else '🤖 Nova Platform'} : {m['content']}"
                             for m in st.session_state["support_chat"]
                         ])
                         resend.Emails.send({
@@ -6485,7 +6485,7 @@ Action requise si le problème n'est pas résolu.
                 wa_relance = f"https://wa.me/{WHATSAPP_NUMBER}?text={relance_msg.replace(' ', '%20')}"
                 st.markdown(f'<a href="{wa_relance}" target="_blank" class="support-btn" style="border-color:#f1c40f; color:#f1c40f !important;">🔔 Relancer Nova</a>', unsafe_allow_html=True)
             with col_sup:
-                if st.button("🙋 Arsène IA", key="btn_arsene_page", use_container_width=True):
+                if st.button("🙋 Nova Platform", key="btn_arsene_page", use_container_width=True):
                     st.session_state["view"] = "arsene_ia"
                     st.rerun()
 
@@ -6507,7 +6507,7 @@ Action requise si le problème n'est pas résolu.
                          border-radius:10px;padding:12px 16px;margin-bottom:12px;">
                         <span style="font-weight:700;color:#FFD700;">🤖 Réponse automatique — Plan Gratuit</span>
                         <span style="color:rgba(255,255,255,0.5);font-size:0.82rem;display:block;margin-top:3px;">
-                            Si activé : Arsène AI répond automatiquement aux demandes gratuites après <b>1h30</b> d'attente, sans validation manuelle.
+                            Si activé : Nova Platform répond automatiquement aux demandes gratuites après <b>1h30</b> d'attente, sans validation manuelle.
                         </span>
                         <span style="font-weight:800;font-size:0.95rem;margin-top:6px;display:block;">
                             Statut actuel : {_auto_status}
@@ -6526,7 +6526,7 @@ Action requise si le problème n'est pas résolu.
                         if st.button("🟢 Activer", key="btn_toggle_auto", use_container_width=True):
                             st.session_state["auto_reply_gratuit"] = True
                             set_auto_reply_setting(True)
-                            st.success("✅ Réponse automatique activée — Arsène AI répondra après 1h30")
+                            st.success("✅ Réponse automatique activée — Nova Platform répondra après 1h30")
                             st.rerun()
 
                 st.divider()
@@ -6622,13 +6622,13 @@ Action requise si le problème n'est pas résolu.
                         st.markdown("<br>", unsafe_allow_html=True)
                         st.markdown(f"""
                         <div class="gemini-card">
-                            <div class="gemini-title">🤖 Arsène AI — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
+                            <div class="gemini-title">🤖 Nova Platform — GÉNÉRATION AUTOMATIQUE DISPONIBLE</div>
                             <div class="gemini-sub">Génère le document complet en .docx en 30-60 secondes</div>
                         </div>
                         """, unsafe_allow_html=True)
 
                         if st.button(f"🔍 Voir modèles disponibles", key=f"diag_{req_id}"):
-                            with st.spinner("Interrogation de l'API Arsène AI..."):
+                            with st.spinner("Interrogation de l'API Nova Platform..."):
                                 modeles_dispo = get_modeles_disponibles(st.secrets["GEMINI_API_KEY"])
                             if modeles_dispo:
                                 st.success(f"✅ {len(modeles_dispo)} modèles trouvés :")
@@ -6644,7 +6644,7 @@ Action requise si le problème n'est pas résolu.
                                     st.info(f"✅ Modèle sélectionné : **{modeles_dispo[0]}**")
                                 else:
                                     st.error("❌ Aucun modèle Gemini disponible pour cette clé API.")
-                            with st.spinner("🤖 Arsène AI génère le document... (30-60 secondes)"):
+                            with st.spinner("🤖 Nova Platform génère le document... (30-60 secondes)"):
                                 contenu = generer_avec_gemini(service, description, client_nom)
 
                             if contenu.startswith("❌"):
@@ -6939,7 +6939,7 @@ def show_arsene_ia_page():
         <span class="arsene-title-gold">✦ Assistant Nova 24/7 ✦</span>
         <div style="margin-top:10px;">
             <span class="arsene-badge">
-                <span class="online-dot"></span>En ligne · Propulsé par Arsène IA
+                <span class="online-dot"></span>En ligne · Propulsé par Nova Platform
             </span>
         </div>
         <span style="color:rgba(255,215,0,0.45);font-size:0.8rem;display:block;margin-top:10px;">
@@ -6983,7 +6983,7 @@ def show_arsene_ia_page():
         with st.form("arsene_form", clear_on_submit=True):
             msg_user = st.text_input(
                 "Message",
-                placeholder="Pose ta question à Arsène IA...",
+                placeholder="Pose ta question à Nova Platform...",
                 label_visibility="collapsed"
             )
             col_s, col_t = st.columns([4, 1])
@@ -7052,7 +7052,7 @@ Si le client exprime un problème grave (paiement, fichier perdu, compte bloqué
 Si dans l'historique le client répond OUI ou "oui" ou "ok" ou "ouais" à cette proposition, réponds UNIQUEMENT ce texte exact sans rien d'autre :
 __ESCALADE_CONFIRMEE__"""
 
-            with st.spinner("🤖 Arsène IA réfléchit..."):
+            with st.spinner("🤖 Nova Platform réfléchit..."):
                 reponse = generer_avec_gemini("Support Arsène IA", prompt_arsene, user or "visiteur")
             if reponse.startswith("❌"):
                 reponse = f"Désolé, je rencontre une difficulté. Contacte Nova directement sur WhatsApp : {WHATSAPP_NUMBER}"
@@ -7074,13 +7074,13 @@ __ESCALADE_CONFIRMEE__"""
                 resend.api_key = st.secrets["RESEND_API_KEY"]
                 db = st.session_state["db"]
                 historique_email = "\n".join([
-                    f"{'🧑 Client' if m['role']=='user' else '🤖 Arsène IA'} : {m['content']}"
+                    f"{'🧑 Client' if m['role']=='user' else '🤖 Nova Platform'} : {m['content']}"
                     for m in st.session_state["arsene_chat"]
                 ])
                 resend.Emails.send({
                     "from": "Nova Platform <onboarding@resend.dev>",
                     "to": [st.secrets["EMAIL_RECEIVER"]],
-                    "subject": f"🤖 Arsène IA — Conversation {user or 'visiteur'}",
+                    "subject": f"🤖 Nova Platform — Conversation {user or 'visiteur'}",
                     "text": f"""RÉSUMÉ CONVERSATION ARSÈNE IA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 👤 Client   : {user or "visiteur"}
