@@ -2166,6 +2166,50 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
         return f"❌ Erreur Gemini : {e}"
 
 
+
+def envoyer_escalade_support(client_nom, whatsapp_client, historique_msgs, source="Support"):
+    """Envoie un email structuré du problème client au service Nova."""
+    try:
+        import resend
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        # Résumé du problème via Gemini
+        hist_txt = "\n".join([
+            f"{'Client' if m['role']=='user' else 'Arsène IA'}: {m['content']}"
+            for m in historique_msgs if m["role"] == "user"
+        ])
+        prompt_resume = f"""Voici les messages d'un client Nova AI qui a un problème grave.
+Rédige un email de signalement professionnel et concis pour le service client Nova.
+Formule clairement : le problème rencontré, ce que le client a essayé, et ce qu'il attend.
+Ne dépasse pas 8 lignes. Sois factuel et précis.
+
+Messages du client :
+{hist_txt}"""
+        resume = generer_avec_gemini("Résumé Support", prompt_resume, client_nom)
+        if resume.startswith("❌"):
+            resume = hist_txt  # fallback brut
+        resend.Emails.send({
+            "from": "Nova AI <onboarding@resend.dev>",
+            "to": [st.secrets["EMAIL_RECEIVER"]],
+            "subject": f"🆘 PROBLÈME GRAVE — {client_nom} ({source})",
+            "text": f"""ESCALADE CLIENT — PROBLÈME GRAVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Client     : {client_nom}
+📱 WhatsApp   : {whatsapp_client}
+📍 Source     : {source}
+⏰ Date       : {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{resume}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ ACTION REQUISE — Contacter le client rapidement.
+"""
+        })
+        return True
+    except Exception as e:
+        return False
+
+
 def creer_docx(contenu, service, client_nom):
     from docx import Document
     from docx.shared import Pt, RGBColor, Cm
@@ -4203,6 +4247,195 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
+    # ── ARSÈNE IA SUPPORT SUR LA PAGE DE CONNEXION ────────────────────
+    st.markdown("""
+    <style>
+    @keyframes authGoldGlow {
+        0%, 100% { box-shadow: 0 0 8px 2px rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.4); }
+        50%       { box-shadow: 0 0 18px 6px rgba(255,215,0,0.45); border-color: rgba(255,215,0,0.7); }
+    }
+    @keyframes botFloat {
+        0%, 100% { transform: translateY(0); }
+        50%       { transform: translateY(-4px); }
+    }
+    .auth-arsene-widget {
+        background: linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,140,0,0.03));
+        border: 1.5px solid rgba(255,215,0,0.4);
+        border-radius: 18px;
+        padding: 18px 20px;
+        margin-top: 24px;
+        animation: authGoldGlow 2.5s ease-in-out infinite;
+    }
+    .auth-arsene-bot {
+        font-size: 1.8rem;
+        animation: botFloat 3s ease-in-out infinite;
+        display: inline-block;
+        filter: drop-shadow(0 0 6px rgba(255,215,0,0.5));
+    }
+    .auth-arsene-title {
+        background: linear-gradient(135deg, #FFD700, #FFA500, #FFD700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 900;
+        font-size: 1rem;
+        vertical-align: middle;
+        margin-left: 8px;
+    }
+    .auth-arsene-sub {
+        color: rgba(255,255,255,0.45);
+        font-size: 0.78rem;
+        margin-top: 4px;
+        display: block;
+    }
+    .auth-online-dot {
+        display: inline-block;
+        width: 7px; height: 7px;
+        background: #2ecc71;
+        border-radius: 50%;
+        margin-right: 5px;
+        box-shadow: 0 0 5px #2ecc71;
+    }
+    </style>
+    <div class="auth-arsene-widget">
+        <span class="auth-arsene-bot">🤖</span>
+        <span class="auth-arsene-title">Assistant Nova 24/7</span>
+        <span class="auth-arsene-sub">
+            <span class="auth-online-dot"></span>En ligne · Un problème pour vous connecter ou créer un compte ?
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Initialiser chat auth
+    if "auth_chat" not in st.session_state:
+        st.session_state["auth_chat"] = [{
+            "role": "assistant",
+            "content": "Salut ! Moi c'est Arsène IA 👋 Tu as un problème pour te connecter ou créer ton compte ? Dis-moi tout, je suis là pour t'aider !"
+        }]
+    if "auth_chat_open" not in st.session_state:
+        st.session_state["auth_chat_open"] = False
+    if "auth_resolu" not in st.session_state:
+        st.session_state["auth_resolu"] = False
+
+    col_open, _ = st.columns([1, 3])
+    with col_open:
+        label_btn_chat = "💬 Fermer" if st.session_state["auth_chat_open"] else "💬 Besoin d'aide ?"
+        if st.button(label_btn_chat, key="btn_auth_chat"):
+            st.session_state["auth_chat_open"] = not st.session_state["auth_chat_open"]
+            st.rerun()
+
+    if st.session_state["auth_chat_open"]:
+        # Afficher historique
+        for msg in st.session_state["auth_chat"]:
+            align = "flex-end" if msg["role"] == "user" else "flex-start"
+            bg = "rgba(255,255,255,0.05)" if msg["role"] == "user" else "rgba(255,193,7,0.08)"
+            border = "1px solid rgba(255,255,255,0.08)" if msg["role"] == "user" else "1px solid rgba(255,215,0,0.2)"
+            border_l = "" if msg["role"] == "user" else "border-left: 3px solid #FFD700;"
+            color_label = "rgba(255,255,255,0.5)" if msg["role"] == "user" else "#FFD700"
+            icon = "🧑" if msg["role"] == "user" else "🤖"
+            label_msg = "Vous" if msg["role"] == "user" else "Arsène IA"
+            st.markdown(f"""
+            <div style="display:flex;justify-content:{align};margin:6px 0;">
+                <div style="background:{bg};border:{border};{border_l}border-radius:12px;
+                     padding:10px 14px;max-width:85%;">
+                    <span style="color:{color_label};font-size:.78rem;font-weight:800;">{icon} {label_msg}</span>
+                    <p style="color:#eee;margin:4px 0 0 0;font-size:.88rem;line-height:1.5;">{msg["content"]}</p>
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+        if not st.session_state["auth_resolu"]:
+            with st.form("auth_chat_form", clear_on_submit=True):
+                msg_auth = st.text_input(
+                    "Votre message",
+                    placeholder="Ex: Je n'arrive pas à me connecter, mon identifiant est incorrect...",
+                    label_visibility="collapsed"
+                )
+                col_s, col_t = st.columns([4, 1])
+                with col_s:
+                    send_auth = st.form_submit_button("📨 Envoyer", use_container_width=True)
+                with col_t:
+                    end_auth = st.form_submit_button("✅ Fin", use_container_width=True)
+
+            if send_auth and msg_auth.strip():
+                st.session_state["auth_chat"].append({"role": "user", "content": msg_auth.strip()})
+                historique_auth = "\n".join([
+                    f"{'Client' if m['role']=='user' else 'Arsène IA'}: {m['content']}"
+                    for m in st.session_state["auth_chat"]
+                ])
+                prompt_auth = f"""Tu es ARSÈNE IA, l'assistant support de Nova AI (Côte d'Ivoire).
+Tu aides les visiteurs sur la PAGE DE CONNEXION — ils ne sont pas encore connectés.
+Réponds en français, avec bienveillance et concision.
+
+CE QUE TU SAIS SUR LA CONNEXION NOVA :
+- Identifiant = nom choisi à l'inscription
+- Mot de passe = numéro WhatsApp (format : 225XXXXXXXX avec 225 au début)
+- Si identifiant oublié → impossible à récupérer sans contacter Nova
+- Si numéro WhatsApp oublié → contacter Nova sur WhatsApp : {WHATSAPP_NUMBER}
+- Pour créer un compte : formulaire "Nouveau Compte" à droite sur cette même page
+- En cas de problème grave ou non résolu → donner le WhatsApp Nova : {WHATSAPP_NUMBER}
+
+RÈGLE : Ne te présente pas à chaque message. Reste naturel et direct.
+
+Historique :
+{historique_auth}
+
+Réponds uniquement au dernier message. 2-4 phrases max.
+RÈGLE ESCALADE OBLIGATOIRE :
+Si le client exprime un problème grave (paiement, fichier perdu, compte bloqué, bug critique, plainte urgente), tu DOIS lui proposer cette phrase exacte à la fin de ta réponse :
+"👉 Veux-tu que je transmette ton problème directement au service client Nova ? Réponds juste OUI et je m'en occupe immédiatement."
+Si dans l'historique le client répond OUI ou "oui" ou "ok" ou "ouais" à cette proposition, réponds UNIQUEMENT ce texte exact sans rien d'autre :
+__ESCALADE_CONFIRMEE__"""
+
+                with st.spinner("🤖 Arsène IA répond..."):
+                    rep_auth = generer_avec_gemini("Support Auth", prompt_auth, "visiteur")
+                if rep_auth.startswith("❌"):
+                    rep_auth = f"Désolé, une erreur est survenue. Contacte Nova directement sur WhatsApp : {WHATSAPP_NUMBER} 📲"
+                if "__ESCALADE_CONFIRMEE__" in rep_auth:
+                    ok = envoyer_escalade_support("visiteur", "non connecté", st.session_state["auth_chat"], "Page Connexion")
+                    if ok:
+                        rep_auth = "✅ C'est fait ! Ton problème a été transmis au service client Nova. Nous te recontactons très bientôt. 🙏"
+                        st.session_state["auth_resolu"] = True
+                    else:
+                        rep_auth = f"Désolé, l'envoi a échoué. Contacte Nova directement : {WHATSAPP_NUMBER} 📲"
+                st.session_state["auth_chat"].append({"role": "assistant", "content": rep_auth})
+                st.rerun()
+
+            if end_auth and len(st.session_state["auth_chat"]) > 1:
+                try:
+                    import resend
+                    resend.api_key = st.secrets["RESEND_API_KEY"]
+                    hist_email = "\n".join([
+                        f"{'🧑 Visiteur' if m['role']=='user' else '🤖 Arsène IA'} : {m['content']}"
+                        for m in st.session_state["auth_chat"]
+                    ])
+                    resend.Emails.send({
+                        "from": "Nova AI <onboarding@resend.dev>",
+                        "to": [st.secrets["EMAIL_RECEIVER"]],
+                        "subject": "🆘 Support Auth Nova — Visiteur",
+                        "text": f"""SIGNALEMENT PAGE CONNEXION
+━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Visiteur non connecté
+⏰ Date : {datetime.now().strftime("%d/%m/%Y à %H:%M")}
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+{hist_email}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+Intervenir si problème non résolu.
+"""
+                    })
+                    st.session_state["auth_resolu"] = True
+                    st.success("✅ Ton signalement a été envoyé à Nova. Nous revenons vers toi rapidement !")
+                    st.rerun()
+                except Exception as e_auth:
+                    st.error(f"Erreur envoi : {e_auth}")
+        else:
+            st.success("✅ Signalement transmis à Nova. Nous te recontactons bientôt.")
+            if st.button("🔄 Nouveau message", key="reset_auth_chat"):
+                st.session_state["auth_chat"] = [{"role": "assistant", "content": "Salut ! Comment puis-je t'aider ?"}]
+                st.session_state["auth_resolu"] = False
+                st.rerun()
+
     audio_path_login = "login.mp3"
     if os.path.exists(audio_path_login):
         with open(audio_path_login, "rb") as f:
@@ -6184,14 +6417,26 @@ Premium actif : {"OUI" if premium_actif else "NON — compte gratuit"}
 Historique de la conversation :
 {historique_txt}
 
-Réponds UNIQUEMENT au dernier message du client. Sois concis (3-5 phrases max). Tu es Arsène IA, pas Gemini."""
+Réponds UNIQUEMENT au dernier message du client. Sois concis (3-5 phrases max). Tu es Arsène IA, pas Gemini.
+RÈGLE ESCALADE OBLIGATOIRE :
+Si le client exprime un problème grave (paiement, fichier perdu, compte bloqué, bug critique, plainte urgente), tu DOIS lui proposer cette phrase exacte à la fin de ta réponse :
+"👉 Veux-tu que je transmette ton problème directement au service client Nova ? Réponds juste OUI et je m'en occupe immédiatement."
+Si dans l'historique le client répond OUI ou "oui" ou "ok" ou "ouais" à cette proposition, réponds UNIQUEMENT ce texte exact sans rien d'autre :
+__ESCALADE_CONFIRMEE__"""
 
                     with st.spinner("🤖 Arsène AI répond..."):
                         reponse_ia = generer_avec_gemini("Support", prompt_support, user)
 
                     if reponse_ia.startswith("❌"):
                         reponse_ia = "Désolé, je rencontre une difficulté technique. Contactez Nova directement via WhatsApp."
-
+                    if "__ESCALADE_CONFIRMEE__" in reponse_ia:
+                        _wa_sup = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
+                        ok = envoyer_escalade_support(user, _wa_sup, st.session_state["support_chat"], "Support Nova")
+                        if ok:
+                            reponse_ia = "✅ C'est fait ! Ton problème a été transmis au service client Nova. Nous te recontactons très bientôt. 🙏"
+                            st.session_state["support_resolu"] = True
+                        else:
+                            reponse_ia = f"Désolé, l'envoi a échoué. Contacte Nova directement : {WHATSAPP_NUMBER} 📲"
                     st.session_state["support_chat"].append({"role": "assistant", "content": reponse_ia})
                     st.rerun()
 
@@ -6800,12 +7045,26 @@ Historique :
 {historique_txt}
 
 Réponds UNIQUEMENT au dernier message. 3-5 phrases max. Tu es Arsène IA.
-RÈGLE IMPORTANTE : Ne commence JAMAIS tes réponses par "Bonjour [nom]" ou en te présentant à nouveau. Tu l'as déjà fait au début. Reste naturel, direct, comme dans une vraie conversation. Réponds directement à ce que le client dit."""
+RÈGLE IMPORTANTE : Ne commence JAMAIS tes réponses par "Bonjour [nom]" ou en te présentant à nouveau. Tu l'as déjà fait au début. Reste naturel, direct, comme dans une vraie conversation. Réponds directement à ce que le client dit.
+RÈGLE ESCALADE OBLIGATOIRE :
+Si le client exprime un problème grave (paiement, fichier perdu, compte bloqué, bug critique, plainte urgente), tu DOIS lui proposer cette phrase exacte à la fin de ta réponse :
+"👉 Veux-tu que je transmette ton problème directement au service client Nova ? Réponds juste OUI et je m'en occupe immédiatement."
+Si dans l'historique le client répond OUI ou "oui" ou "ok" ou "ouais" à cette proposition, réponds UNIQUEMENT ce texte exact sans rien d'autre :
+__ESCALADE_CONFIRMEE__"""
 
             with st.spinner("🤖 Arsène IA réfléchit..."):
                 reponse = generer_avec_gemini("Support Arsène IA", prompt_arsene, user or "visiteur")
             if reponse.startswith("❌"):
                 reponse = f"Désolé, je rencontre une difficulté. Contacte Nova directement sur WhatsApp : {WHATSAPP_NUMBER}"
+            if "__ESCALADE_CONFIRMEE__" in reponse:
+                _db_ars = st.session_state["db"]
+                _wa_ars = _db_ars["users"].get(user, {}).get("whatsapp", "—") if user else "—"
+                ok = envoyer_escalade_support(user or "visiteur", _wa_ars, st.session_state["arsene_chat"], "Assistant Nova 24/7")
+                if ok:
+                    reponse = "✅ C'est fait ! Ton problème a été transmis au service client Nova. Nous te recontactons très bientôt. 🙏"
+                    st.session_state["arsene_resolu"] = True
+                else:
+                    reponse = f"Désolé, l'envoi a échoué. Contacte Nova directement : {WHATSAPP_NUMBER} 📲"
             st.session_state["arsene_chat"].append({"role": "assistant", "content": reponse})
             st.rerun()
 
