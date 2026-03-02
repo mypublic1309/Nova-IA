@@ -89,7 +89,7 @@ def set_auto_reply_setting(enabled: bool):
         pass
 
 def envoyer_email_auto_gratuit(client_nom, client_wa, service, nom_fichier, demande):
-    """Email admin — Arsène AI a répondu automatiquement à un gratuit après 2h."""
+    """Email admin — Arsène AI a répondu automatiquement à un gratuit après 1h30."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
@@ -4462,7 +4462,7 @@ def main_dashboard():
                     _age_heures = (_now - _ts).total_seconds() / 3600
                 except:
                     continue
-                if _age_heures < 2:
+                if _age_heures < 1.5:
                     continue  # Pas encore 2h
                 # Vérifier que le service est supporté par Arsène AI
                 _service_req = _req.get("service", "")
@@ -5105,8 +5105,13 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """ + (_fichier_instr if _fichier_instr else "Crée un sujet adapté au niveau et à la durée indiqués, basé sur le document ci-dessous.") + """
 
-⚠️ RÈGLE ABSOLUE : Exécute EXACTEMENT la demande ci-dessus. 
-Le document ci-dessous est ta SEULE source de contenu — tu puises les notions, définitions et formules UNIQUEMENT dans ce texte. N'invente rien hors du document.
+⚠️ RÈGLES ABSOLUES — RESPECTER JUSQU'À LA FIN :
+1. Exécute EXACTEMENT la demande du client ci-dessus, du début jusqu'à la toute dernière ligne.
+2. Si le client a précisé un format, un nombre de questions, un style ou une structure — respecte-le à 100% sans t'en écarter.
+3. Ne t'arrête pas avant d'avoir TOUT produit tel que demandé. Si le client veut 20 QCM, génère 20 QCM complets.
+4. Le document ci-dessous est ta SEULE source de contenu — puise les notions, définitions et formules UNIQUEMENT dans ce texte.
+5. N'invente AUCUNE notion absente du document. Ne complète pas avec tes propres connaissances.
+6. Respecte l'intégralité du cahier des charges fourni, sans ignorer aucun détail.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📄 DOCUMENT SOURCE (contenu à utiliser) :
@@ -5785,7 +5790,14 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                     else:
                         # Incrémenter le compteur de générations
                         incrementer_gen(user)
-                        save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
+                        # Upload vers Supabase Storage pour accès permanent
+                        _req_id_local = hashlib.md5(str(datetime.now()).encode()).hexdigest()[:8]
+                        with st.spinner("⬆️ Sauvegarde du fichier..."):
+                            _url_local = upload_fichier_client(user, _req_id_local, result_holder["buf"], result_holder["nom"])
+                        if _url_local and not _url_local.startswith("ERREUR"):
+                            save_lien(user, service, _url_local, datetime.now().strftime("%d/%m/%Y"))
+                        else:
+                            save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
                         envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], demande_complete=prompt)
@@ -5932,16 +5944,30 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                             </div>
                         </div>""", unsafe_allow_html=True)
                     elif link["url"].startswith("__local__"):
+                        nom_fichier_local = link["url"].replace("__local__", "")
                         st.markdown(f"""
                         <div class="file-card" style="border-color:rgba(255,215,0,.5);">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <div>
                                     <h3 style="color:#FFD700;margin:0;">⭐ {link['name']}</h3>
-                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Généré le {link.get('date',"Aujourd'hui")} · Téléchargez depuis l'onglet Déployer</p>
+                                    <p style="color:#aaa;font-size:.85rem;margin:5px 0;">Généré le {link.get('date',"Aujourd'hui")}</p>
                                 </div>
                                 <span class="badge-premium">IA AUTO</span>
                             </div>
                         </div>""", unsafe_allow_html=True)
+                        # Bouton retélécharger si le fichier est encore en mémoire
+                        lv = st.session_state.get("premium_livrable")
+                        if lv and lv.get("nom") == nom_fichier_local and lv.get("buf"):
+                            st.download_button(
+                                label="📥 Retélécharger le fichier",
+                                data=lv["buf"].getvalue() if hasattr(lv["buf"], "getvalue") else lv["buf"],
+                                file_name=lv["nom"],
+                                mime=lv.get("mime", "application/octet-stream"),
+                                key=f"dl_local_{nom_fichier_local}",
+                                use_container_width=True,
+                            )
+                        else:
+                            st.info("⚠️ Fichier non disponible — reconnectez-vous ou contactez Nova pour le récupérer.")
                     else:
                         st.markdown(f"""
                         <div class="file-card">
@@ -6006,7 +6032,7 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                          border-radius:10px;padding:12px 16px;margin-bottom:12px;">
                         <span style="font-weight:700;color:#FFD700;">🤖 Réponse automatique — Plan Gratuit</span>
                         <span style="color:rgba(255,255,255,0.5);font-size:0.82rem;display:block;margin-top:3px;">
-                            Si activé : Arsène AI répond automatiquement aux demandes gratuites après <b>2 heures</b> d'attente, sans validation manuelle.
+                            Si activé : Arsène AI répond automatiquement aux demandes gratuites après <b>1h30</b> d'attente, sans validation manuelle.
                         </span>
                         <span style="font-weight:800;font-size:0.95rem;margin-top:6px;display:block;">
                             Statut actuel : {_auto_status}
@@ -6025,7 +6051,7 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                         if st.button("🟢 Activer", key="btn_toggle_auto", use_container_width=True):
                             st.session_state["auto_reply_gratuit"] = True
                             set_auto_reply_setting(True)
-                            st.success("✅ Réponse automatique activée — Arsène AI répondra après 2h")
+                            st.success("✅ Réponse automatique activée — Arsène AI répondra après 1h30")
                             st.rerun()
 
                 st.divider()
