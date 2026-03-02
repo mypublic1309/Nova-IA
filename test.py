@@ -6512,56 +6512,154 @@ def show_arsene_ia_page():
     user = st.session_state.get("current_user", "")
     st.markdown("""
     <style>
-    @keyframes arseneGlow {
-        0%   { box-shadow: 0 0 10px 3px rgba(66,133,244,0.4); }
-        50%  { box-shadow: 0 0 25px 8px rgba(66,133,244,0.8); }
-        100% { box-shadow: 0 0 10px 3px rgba(66,133,244,0.4); }
+    @keyframes goldGlow {
+        0%   { box-shadow: 0 0 12px 4px rgba(255,193,7,0.3), 0 0 30px 8px rgba(255,140,0,0.15); }
+        50%  { box-shadow: 0 0 30px 10px rgba(255,215,0,0.7), 0 0 60px 20px rgba(255,140,0,0.35); }
+        100% { box-shadow: 0 0 12px 4px rgba(255,193,7,0.3), 0 0 30px 8px rgba(255,140,0,0.15); }
     }
-    .arsene-header {
-        background: linear-gradient(135deg, rgba(66,133,244,0.15), rgba(66,133,244,0.05));
-        border: 2px solid rgba(66,133,244,0.6);
-        border-radius: 20px;
-        padding: 28px 24px;
+    @keyframes goldShimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position: 200% center; }
+    }
+    @keyframes floatBot {
+        0%, 100% { transform: translateY(0px); }
+        50%       { transform: translateY(-8px); }
+    }
+    @keyframes goldPulseText {
+        0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+        50%       { opacity: 0.85; text-shadow: 0 0 20px rgba(255,215,0,0.9); }
+    }
+    @keyframes starSpin {
+        0%   { transform: rotate(0deg) scale(1); }
+        50%  { transform: rotate(180deg) scale(1.2); }
+        100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .nova-assistant-page {
+        background: linear-gradient(160deg, rgba(20,15,5,0.98), rgba(30,22,5,0.95));
+        min-height: 100vh;
+    }
+    .arsene-header-gold {
+        background: linear-gradient(135deg,
+            rgba(255,215,0,0.12) 0%,
+            rgba(255,140,0,0.08) 40%,
+            rgba(255,215,0,0.06) 100%);
+        border: 2px solid;
+        border-image: linear-gradient(135deg, #FFD700, #FFA500, #FFD700) 1;
+        border-radius: 22px;
+        padding: 36px 28px 28px 28px;
         text-align: center;
-        animation: arseneGlow 2.5s ease-in-out infinite;
-        margin-bottom: 20px;
+        animation: goldGlow 2.5s ease-in-out infinite;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
     }
-    .arsene-avatar {
-        font-size: 4rem;
+    .arsene-header-gold::before {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%; right: 0; bottom: 0;
+        background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255,215,0,0.08) 40%,
+            rgba(255,255,255,0.12) 50%,
+            rgba(255,215,0,0.08) 60%,
+            transparent 100%);
+        background-size: 200% 100%;
+        animation: goldShimmer 3s linear infinite;
+    }
+    .arsene-bot-icon {
+        font-size: 4.5rem;
         display: block;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+        animation: floatBot 3s ease-in-out infinite;
+        filter: drop-shadow(0 0 12px rgba(255,215,0,0.6));
     }
-    .arsene-name {
-        color: #4285f4;
-        font-size: 1.8rem;
+    .arsene-title-gold {
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 40%, #FFD700 70%, #FFFACD 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2rem;
         font-weight: 900;
+        letter-spacing: 1px;
         display: block;
+        animation: goldPulseText 2.5s ease-in-out infinite, goldShimmer 4s linear infinite;
     }
-    .arsene-desc {
-        color: rgba(255,255,255,0.6);
-        font-size: 0.9rem;
-        margin-top: 6px;
+    .arsene-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.15));
+        border: 1px solid rgba(255,215,0,0.5);
+        border-radius: 30px;
+        padding: 5px 16px;
+        margin-top: 10px;
+        font-size: 0.82rem;
+        color: #FFD700;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .arsene-stars {
+        font-size: 1.1rem;
         display: block;
+        margin-top: 8px;
+        animation: starSpin 4s linear infinite;
+        display: inline-block;
+    }
+    .arsene-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #FFD700, #FFA500, #FFD700, transparent);
+        border: none;
+        margin: 16px 0;
+        border-radius: 2px;
+    }
+    .msg-assistant-gold {
+        background: linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,140,0,0.06));
+        border: 1px solid rgba(255,215,0,0.25);
+        border-left: 3px solid #FFD700;
+        border-radius: 0 14px 14px 14px;
+    }
+    .msg-user-gold {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px 0 14px 14px;
+    }
+    .online-dot {
+        display: inline-block;
+        width: 9px; height: 9px;
+        background: #2ecc71;
+        border-radius: 50%;
+        margin-right: 6px;
+        box-shadow: 0 0 6px #2ecc71;
+        animation: goldPulseText 1.5s ease-in-out infinite;
     }
     </style>
-    <div class="arsene-header">
-        <span class="arsene-avatar">🤖</span>
-        <span class="arsene-name">Arsène IA</span>
-        <span class="arsene-desc">Assistant officiel Nova AI · Disponible 24h/24</span>
+
+    <div class="arsene-header-gold">
+        <span class="arsene-bot-icon">🤖</span>
+        <span class="arsene-title-gold">✦ Assistant Nova 24/7 ✦</span>
+        <div style="margin-top:10px;">
+            <span class="arsene-badge">
+                <span class="online-dot"></span>En ligne · Propulsé par Arsène IA
+            </span>
+        </div>
+        <span style="color:rgba(255,215,0,0.45);font-size:0.8rem;display:block;margin-top:10px;">
+            ⭐ Je connais tous les services Nova · Je réponds instantanément ⭐
+        </span>
     </div>
+    <hr class="arsene-divider">
     """, unsafe_allow_html=True)
 
-    if st.button("← Retour", key="retour_arsene"):
+    if st.button("← Retour au dashboard", key="retour_arsene"):
         st.session_state["view"] = "home"
         st.rerun()
 
-    st.markdown("---")
+    st.markdown('<hr class="arsene-divider">', unsafe_allow_html=True)
 
     # Initialiser chat
     if "arsene_chat" not in st.session_state:
         st.session_state["arsene_chat"] = [{
             "role": "assistant",
-            "content": f"Salut, moi c'est Arsène IA, ton assistant Nova ! 👋 Je connais tous les services, les abonnements et je suis là pour t'aider. Comment puis-je t'aider aujourd'hui{', ' + user if user else ''} ?"
+            "content": f"Salut, moi c'est Arsène IA, ton assistant Nova 24/7 ! ✨ Je connais tous les services, les abonnements et je suis là pour toi. Comment puis-je t'aider aujourd'hui{', ' + user if user else ''} ?"
         }]
     if "arsene_resolu" not in st.session_state:
         st.session_state["arsene_resolu"] = False
@@ -6569,15 +6667,15 @@ def show_arsene_ia_page():
     # Afficher historique
     for msg in st.session_state["arsene_chat"]:
         align = "flex-end" if msg["role"] == "user" else "flex-start"
-        bg = "rgba(255,255,255,0.07)" if msg["role"] == "user" else "rgba(66,133,244,0.12)"
-        color = "#eee" if msg["role"] == "user" else "#4285f4"
+        css_class = "msg-user-gold" if msg["role"] == "user" else "msg-assistant-gold"
+        color = "rgba(255,255,255,0.85)" if msg["role"] == "user" else "#FFD700"
         icon = "🧑" if msg["role"] == "user" else "🤖"
-        label = "Vous" if msg["role"] == "user" else "Arsène IA"
+        label = "Vous" if msg["role"] == "user" else "Assistant Nova 24/7"
         st.markdown(f"""
         <div style="display:flex;justify-content:{align};margin:8px 0;">
-            <div style="background:{bg};border-radius:14px;padding:12px 16px;max-width:80%;border:1px solid rgba(255,255,255,0.05);">
-                <span style="color:{color};font-size:.8rem;font-weight:700;">{icon} {label}</span>
-                <p style="color:#eee;margin:5px 0 0 0;font-size:.92rem;line-height:1.5;">{msg["content"]}</p>
+            <div class="{css_class}" style="padding:12px 16px;max-width:82%;">
+                <span style="color:{color};font-size:.8rem;font-weight:800;">{icon} {label}</span>
+                <p style="color:#eee;margin:5px 0 0 0;font-size:.92rem;line-height:1.6;">{msg["content"]}</p>
             </div>
         </div>""", unsafe_allow_html=True)
 
