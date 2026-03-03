@@ -4682,6 +4682,15 @@ def main_dashboard():
                 if _req.get("service", "") in SERVICES_EXCLUS_AUTO:
                     continue  # Exposé = premium obligatoire ou accord manuel uniquement
 
+                # Auto gratuit uniquement pour ces 3 services (6 min)
+                _SERVICES_AUTO_GRATUIT = [
+                    "📝 Création de Sujets & Examens",
+                    "📖 Fiche de Cours Professeur IA",
+                    "👔 CV & Lettre de Motivation",
+                ]
+                if _req.get("service", "") not in _SERVICES_AUTO_GRATUIT:
+                    continue
+
                 # Seulement les demandes des utilisateurs NON premium
                 _req_user = _req.get("uid", "")
                 _req_user_data = st.session_state["db"]["users"].get(_req_user, {})
@@ -4695,8 +4704,8 @@ def main_dashboard():
                     _age_heures = (_now - _ts).total_seconds() / 3600
                 except:
                     continue
-                if _age_heures < 1.5:
-                    continue  # Pas encore 2h
+                if _age_heures < 0.1:
+                    continue  # Pas encore 6 minutes
                 # Vérifier que le service est supporté par Nova Platform
                 _service_req = _req.get("service", "")
                 if _service_req not in SERVICES_GEMINI:
@@ -6507,7 +6516,7 @@ Action requise si le problème n'est pas résolu.
                          border-radius:10px;padding:12px 16px;margin-bottom:12px;">
                         <span style="font-weight:700;color:#FFD700;">🤖 Réponse automatique — Plan Gratuit</span>
                         <span style="color:rgba(255,255,255,0.5);font-size:0.82rem;display:block;margin-top:3px;">
-                            Si activé : Nova Platform répond automatiquement aux demandes gratuites après <b>1h30</b> d'attente, sans validation manuelle.
+                            Si activé : Nova Platform répond après <b>6 minutes</b> pour : Sujets & Examens, Fiche de Cours, CV & Lettre.
                         </span>
                         <span style="font-weight:800;font-size:0.95rem;margin-top:6px;display:block;">
                             Statut actuel : {_auto_status}
@@ -6526,7 +6535,7 @@ Action requise si le problème n'est pas résolu.
                         if st.button("🟢 Activer", key="btn_toggle_auto", use_container_width=True):
                             st.session_state["auto_reply_gratuit"] = True
                             set_auto_reply_setting(True)
-                            st.success("✅ Réponse automatique activée — Nova Platform répondra après 1h30")
+                            st.success("✅ Réponse automatique activée — Nova Platform répondra après 6 minutes")
                             st.rerun()
 
                 st.divider()
