@@ -763,6 +763,13 @@ RÈGLE 10 — VRAIS AUTEURS ET ŒUVRES : Citer de vraies œuvres d'auteurs réel
 
 === MISSION ===
 
+⛔ RÈGLE ABSOLUE N°1 — SUJET IMPOSÉ, NE JAMAIS MODIFIER :
+Le SUJET/THÈME de l'exposé est fourni ci-dessous par le client. Tu DOIS rédiger l'exposé EXACTEMENT sur ce sujet.
+INTERDIT ABSOLU : changer, reformuler, remplacer, élargir ou dévier du sujet donné.
+Si le sujet est "Les enfants de la rue" → l'exposé parle UNIQUEMENT des enfants de la rue.
+Si le sujet est "La photosynthèse" → l'exposé parle UNIQUEMENT de la photosynthèse.
+Le titre ###TITRE_ROUGE### doit reprendre fidèlement le sujet du client, joliment formulé — jamais un thème inventé.
+
 Rédige un exposé scolaire COMPLET, STRUCTURÉ, PROFESSIONNEL et ENCYCLOPÉDIQUE basé sur cette demande :
 
 {description}
