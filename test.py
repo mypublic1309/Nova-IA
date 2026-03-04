@@ -3282,6 +3282,8 @@ if "is_glowing" not in st.session_state:
     st.session_state["is_glowing"] = False
 if "show_premium_modal" not in st.session_state:
     st.session_state["show_premium_modal"] = False
+if "nova_service_idx" not in st.session_state:
+    st.session_state["nova_service_idx"] = 0
 if "show_service_warning" not in st.session_state:
     st.session_state["show_service_warning"] = False
 if "auto_reply_gratuit" not in st.session_state:
@@ -4873,28 +4875,62 @@ def main_dashboard():
             },
         }
 
-        col_f, col_wa = st.columns(2)
-        with col_f:
-            st.markdown("#### 🛠️ Service Nova")
-            service = st.selectbox(
-                "Type d'intervention",
-                [
-                    "📊 Data & Excel Analytics",
-                    "📖 Fiche de Cours Professeur IA",
-                    "📎 Modifier mon Fichier (Word / Excel / PPT)",
-                    "📝 Exposé scolaire complet IA",
-                    "📝 Création de Sujets & Examens",
-                    "⚙️ Pack Office (Word/Excel/PPT)",
-                    "🎨 Création Design IA",
-                    "📚 Affiches & Reçus",
-                    "👔 CV & Lettre de Motivation",
-                    "📄 Conversion & Fichier PDF",
-                ]
-            )
-        with col_wa:
-            st.markdown("#### 📞 Notification")
-            default_wa = db["users"][user]["whatsapp"] if user else ""
-            wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
+        # ── CATALOGUE SERVICES — GRILLE DE CARTES ────────────────────
+        NOVA_SERVICES = [
+            ("📊", "Data & Excel Analytics",       "📊 Data & Excel Analytics",              "Tableaux, graphiques, dashboards",         False),
+            ("📖", "Fiche de Cours IA",             "📖 Fiche de Cours Professeur IA",         "Fiches pédagogiques pour enseignants",     False),
+            ("📎", "Modifier mon Fichier",          "📎 Modifier mon Fichier (Word / Excel / PPT)", "Modifier Word, Excel, PowerPoint",     False),
+            ("📝", "Exposé Scolaire IA",            "📝 Exposé scolaire complet IA",           "Du CP au Master",                          True),
+            ("📝", "Sujets & Examens",              "📝 Création de Sujets & Examens",         "QCM, devoirs, contrôles",                  True),
+            ("⚙️", "Pack Office",                  "⚙️ Pack Office (Word/Excel/PPT)",         "Documents professionnels",                 False),
+            ("🎨", "Création Design",               "🎨 Création Design IA",                   "Affiches, flyers, logos",                  False),
+            ("📚", "Affiches & Reçus",              "📚 Affiches & Reçus",                     "Supports visuels entreprises",             False),
+            ("👔", "CV & Lettre de Motivation",     "👔 CV & Lettre de Motivation",            "CV et lettres percutants",                 False),
+            ("📄", "Conversion PDF",                "📄 Conversion & Fichier PDF",             "Conversion entre formats",                 False),
+        ]
+
+        st.markdown("""
+        <style>
+        div[data-testid="stButton"].nova-svc-btn > button {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown("#### 🛠️ Choisissez votre service Nova")
+
+        _cols_svc = st.columns(3)
+        for _i, (_em, _nom_court, _nom_full, _desc, _is_prem) in enumerate(NOVA_SERVICES):
+            _sel = st.session_state["nova_service_idx"] == _i
+            _border = "2px solid #FFD700" if _sel else "1px solid rgba(255,255,255,0.12)"
+            _bg     = "linear-gradient(135deg,rgba(255,215,0,0.13),rgba(255,140,0,0.08))" if _sel else "rgba(255,255,255,0.04)"
+            _title_col = "#FFD700" if _sel else "#ffffff"
+            _badge  = '<span style="font-size:0.65rem;background:rgba(255,215,0,0.2);color:#FFD700;border-radius:8px;padding:2px 7px;margin-left:5px;">⭐ Premium</span>' if _is_prem else ""
+            _check  = '<span style="position:absolute;top:8px;right:10px;color:#FFD700;font-size:1rem;">✓</span>' if _sel else ""
+            with _cols_svc[_i % 3]:
+                st.markdown(f"""
+                <div style="position:relative;background:{_bg};border:{_border};border-radius:14px;
+                            padding:14px 12px 10px 12px;margin-bottom:6px;cursor:pointer;
+                            transition:all .2s;min-height:90px;">
+                    {_check}
+                    <div style="font-size:1.6rem;margin-bottom:4px;">{_em}</div>
+                    <div style="color:{_title_col};font-weight:700;font-size:0.82rem;line-height:1.3;">
+                        {_nom_court}{_badge}
+                    </div>
+                    <div style="color:rgba(255,255,255,0.45);font-size:0.72rem;margin-top:3px;">{_desc}</div>
+                </div>""", unsafe_allow_html=True)
+                if st.button("Sélectionner", key=f"svc_btn_{_i}", use_container_width=True):
+                    st.session_state["nova_service_idx"] = _i
+                    st.rerun()
+
+        service = NOVA_SERVICES[st.session_state["nova_service_idx"]][2]
+
+        st.markdown("#### 📞 Notification")
+        default_wa = db["users"][user]["whatsapp"] if user else ""
+        wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
 
         SERVICE_SAISIE = "📊 Data & Excel Analytics"
 
