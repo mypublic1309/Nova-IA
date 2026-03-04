@@ -4924,29 +4924,35 @@ def main_dashboard():
                     "📄 Conversion & Fichier PDF",
                 ]
             )
-            st.markdown("""
-            <style>
-            @keyframes hint-arrow {
-                0%,100% { transform: translateY(0px); opacity: 0.7; }
-                50%      { transform: translateY(4px); opacity: 1; }
-            }
-            .nova-select-hint {
-                display: flex; align-items: center; gap: 7px;
-                background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.05));
-                border: 1px dashed rgba(255,215,0,0.35);
-                border-radius: 8px; padding: 6px 12px; margin-top: 5px;
-                font-size: 0.78rem; color: rgba(255,215,0,0.85);
-            }
-            .nova-select-hint .arrow {
-                animation: hint-arrow 1.2s ease-in-out infinite;
-                font-size: 1rem;
-            }
-            </style>
-            <div class="nova-select-hint">
-                <span class="arrow">👆</span>
-                <span>Clique ici pour voir <strong style="color:#FFD700;">tous les services Nova</strong> disponibles</span>
-            </div>
-            """, unsafe_allow_html=True)
+            if service == "📊 Data & Excel Analytics":
+                st.markdown("""
+                <style>
+                @keyframes hint-arrow {
+                    0%,100% { transform: translateY(0px); opacity: 0.7; }
+                    50%      { transform: translateY(5px); opacity: 1; }
+                }
+                @keyframes hint-glow {
+                    0%,100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.0); border-color: rgba(255,215,0,0.3); }
+                    50%     { box-shadow: 0 0 10px rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.7); }
+                }
+                .nova-select-hint {
+                    display: flex; align-items: center; gap: 8px;
+                    background: linear-gradient(135deg, rgba(255,215,0,0.07), rgba(255,140,0,0.04));
+                    border: 1px dashed rgba(255,215,0,0.35);
+                    border-radius: 8px; padding: 7px 13px; margin-top: 6px;
+                    font-size: 0.79rem; color: rgba(255,215,0,0.9);
+                    animation: hint-glow 2s ease-in-out infinite;
+                }
+                .nova-select-hint .arrow {
+                    animation: hint-arrow 1s ease-in-out infinite;
+                    font-size: 1.1rem; display: inline-block;
+                }
+                </style>
+                <div class="nova-select-hint">
+                    <span class="arrow">☝️</span>
+                    <span>C'est <strong style="color:#FFD700;">📊 Data & Excel</strong> par défaut — clique pour voir <strong style="color:#FFD700;">tous les services Nova</strong> !</span>
+                </div>
+                """, unsafe_allow_html=True)
         with col_wa:
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
