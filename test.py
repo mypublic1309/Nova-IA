@@ -3640,6 +3640,16 @@ def inject_custom_css():
             animation: nova-pulse 2s ease-in-out infinite;
         }
         .nova-processing-title { color: #FFD700; font-size: 1.6rem; font-weight: 800; }
+        /* ── Bouton "Voir tous les services" ── */
+        @keyframes svc-shine {
+            0%   { box-shadow: 0 0 6px rgba(255,215,0,0.5), 0 0 20px rgba(255,140,0,0.3); }
+            50%  { box-shadow: 0 0 18px rgba(255,215,0,0.9), 0 0 40px rgba(255,140,0,0.6); }
+            100% { box-shadow: 0 0 6px rgba(255,215,0,0.5), 0 0 20px rgba(255,140,0,0.3); }
+        }
+        button[data-testid="baseButton-secondary"]:has-text,
+        [data-testid="stButton"] button[kind="secondary"] {
+            /* ciblage général — surcharge par key ci-dessous */
+        }
         .nova-processing-sub   { color: rgba(255,255,255,0.7); font-size: 1rem; margin-top: 8px; }
         .livrable-auto {
             background: linear-gradient(135deg, rgba(46,204,113,0.12), rgba(0,210,255,0.08));
@@ -4506,29 +4516,7 @@ Intervenir si problème non résolu.
                 st.session_state["auth_resolu"] = False
                 st.rerun()
 
-    audio_path_login = "login.mp3"
-    if os.path.exists(audio_path_login):
-        with open(audio_path_login, "rb") as f:
-            audio_b64_login = __import__('base64').b64encode(f.read()).decode()
-        components.html(f"""
-            <script>
-            (function() {{
-                setTimeout(function() {{
-                    var b64 = "{audio_b64_login}";
-                    var binary = atob(b64);
-                    var bytes = new Uint8Array(binary.length);
-                    for (var i = 0; i < binary.length; i++) {{
-                        bytes[i] = binary.charCodeAt(i);
-                    }}
-                    var blob = new Blob([bytes], {{type: "audio/mpeg"}});
-                    var url = URL.createObjectURL(blob);
-                    var audio = new Audio(url);
-                    audio.volume = 1;
-                    audio.play().catch(function(e) {{ console.log("Autoplay bloqué:", e); }});
-                }}, 3000);
-            }})();
-            </script>
-        """, height=0)
+
 
 
 def main_dashboard():
@@ -4610,31 +4598,7 @@ def main_dashboard():
     else:
         st.markdown("<h1 class='main-title'>NOVA PLATFORM</h1>", unsafe_allow_html=True)
 
-    if not st.session_state["intro_played"]:
-        st.session_state["intro_played"] = True
-        audio_path = "intro.mp3"
-        if os.path.exists(audio_path):
-            with open(audio_path, "rb") as f:
-                audio_b64 = __import__('base64').b64encode(f.read()).decode()
-            components.html(f"""
-                <script>
-                (function() {{
-                    setTimeout(function() {{
-                        var b64 = "{audio_b64}";
-                        var binary = atob(b64);
-                        var bytes = new Uint8Array(binary.length);
-                        for (var i = 0; i < binary.length; i++) {{
-                            bytes[i] = binary.charCodeAt(i);
-                        }}
-                        var blob = new Blob([bytes], {{type: "audio/mpeg"}});
-                        var url = URL.createObjectURL(blob);
-                        var audio = new Audio(url);
-                        audio.volume = 1;
-                        audio.play().catch(function(e) {{ console.log("Autoplay bloqué:", e); }});
-                    }}, 3000);
-                }})();
-                </script>
-            """, height=0)
+
 
     wa_jour = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%20Journalier%20%C3%A0%20600%20FC."
     wa_10j  = f"https://wa.me/{WHATSAPP_NUMBER}?text=Je%20souhaite%20l%27abonnement%20Nova%20Premium%2010%20Jours%20%C3%A0%201000%20FC."
@@ -4906,9 +4870,43 @@ def main_dashboard():
             },
         }
 
+        # ── HEADER Service + bouton liste ──────────────────────────
+        col_svc_title, col_svc_btn = st.columns([3, 1])
+        with col_svc_title:
+            st.markdown("#### 🛠️ Service Nova")
+        with col_svc_btn:
+            st.markdown("")  # petit espace vertical
+            st.markdown("""
+            <style>
+            @keyframes svc-shine {
+                0%,100% { box-shadow: 0 0 6px rgba(255,215,0,0.6), 0 0 18px rgba(255,140,0,0.4); }
+                50%     { box-shadow: 0 0 22px rgba(255,215,0,1), 0 0 45px rgba(255,140,0,0.7); }
+            }
+            div[data-testid="stButton"]:nth-of-type(1) > button,
+            button[key="btn_open_services"] {
+                background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%) !important;
+                color: #000 !important; font-weight: 900 !important;
+                border: none !important; border-radius: 20px !important;
+                animation: svc-shine 1.4s ease-in-out infinite !important;
+                font-size: 0.78rem !important; letter-spacing: 0.03em !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            if st.button("✨ Voir tous les services", key="btn_open_services", use_container_width=True):
+                components.html("""
+                <script>
+                (function() {
+                    // Trouver le selectbox Streamlit et simuler un clic
+                    var selects = window.parent.document.querySelectorAll('div[data-baseweb="select"]');
+                    if (selects.length > 0) {
+                        selects[0].click();
+                    }
+                })();
+                </script>
+                """, height=0)
+
         col_f, col_wa = st.columns(2)
         with col_f:
-            st.markdown("#### 🛠️ Service Nova")
             service = st.selectbox(
                 "Type d'intervention",
                 [
@@ -4922,10 +4920,9 @@ def main_dashboard():
                     "📚 Affiches & Reçus",
                     "👔 CV & Lettre de Motivation",
                     "📄 Conversion & Fichier PDF",
-                ]
+                ],
+                key="service_selectbox"
             )
-            if service == "📊 Data & Excel Analytics":
-                st.info("☝️ **📊 Data & Excel** est sélectionné par défaut — clique dessus pour voir tous les services Nova disponibles !")
         with col_wa:
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
@@ -5954,22 +5951,7 @@ NOTE : fichier original joint via lien ci-dessous.
 {"".join(f"- {icone} {texte}\n" for icone, texte in info["items"])}
 💡 *{info["note"]}*
 """)
-                if os.path.exists("prerequis_excel.mp3"):
-                    with open("prerequis_excel.mp3", "rb") as f:
-                        b64_excel = __import__('base64').b64encode(f.read()).decode()
-                    components.html(f"""
-                        <script>
-                        (function() {{
-                            var binary = atob("{b64_excel}");
-                            var bytes = new Uint8Array(binary.length);
-                            for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                            var blob = new Blob([bytes], {{type: "audio/mpeg"}});
-                            var audio = new Audio(URL.createObjectURL(blob));
-                            audio.volume = 1;
-                            audio.play().catch(function(e) {{ console.log(e); }});
-                        }})();
-                        </script>
-                    """, height=0)
+
                 col_mid = st.columns([1, 2, 1])[1]
                 with col_mid:
                     if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
