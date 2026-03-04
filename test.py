@@ -4261,8 +4261,11 @@ def show_auth_page():
         </div>
         """, unsafe_allow_html=True)
         with st.form("login"):
-            uid    = st.text_input("Identifiant Nova", placeholder="Votre identifiant...")
-            wa_auth = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
+            uid    = st.text_input("Nom ou surnom Nova", placeholder="Votre nom ou surnom...")
+            wa_auth_raw = st.text_input("Numéro WhatsApp", placeholder="Ex: 22501...")
+            wa_auth = "".join(c for c in wa_auth_raw if c.isdigit())
+            if wa_auth_raw != wa_auth and wa_auth_raw:
+                st.warning("⚠️ Le numéro WhatsApp ne doit contenir que des chiffres.")
             if st.form_submit_button("⚡ S'IDENTIFIER"):
                 # Recharger depuis Supabase pour avoir les données fraîches
                 fresh_db = load_db()
@@ -4274,7 +4277,7 @@ def show_auth_page():
                     st.query_params["user_id"] = uid
                     st.rerun()
                 else:
-                    st.error("❌ Identifiant ou numéro inconnu.")
+                    st.error("❌ Nom/surnom ou numéro inconnu.")
 
     with col2:
         st.markdown("""
@@ -4290,8 +4293,11 @@ def show_auth_page():
         </div>
         """, unsafe_allow_html=True)
         with st.form("signup"):
-            new_uid = st.text_input("Identifiant au choix", placeholder="Choisissez un identifiant...")
-            new_wa  = st.text_input("Votre WhatsApp (clé d'accès)", placeholder="Ex: 22507...")
+            new_uid = st.text_input("Nom ou surnom au choix", placeholder="Choisissez un nom ou surnom...")
+            new_wa_raw = st.text_input("Votre WhatsApp (clé d'accès)", placeholder="Ex: 22507...")
+            new_wa = "".join(c for c in new_wa_raw if c.isdigit())
+            if new_wa_raw != new_wa and new_wa_raw:
+                st.warning("⚠️ Le numéro WhatsApp ne doit contenir que des chiffres.")
             if st.form_submit_button("💎 REJOINDRE NOVA PLATFORM"):
                 if new_uid and new_wa:
                     db = st.session_state["db"]
@@ -4316,7 +4322,7 @@ def show_auth_page():
                         else:
                             st.error("❌ Impossible de créer le compte. Vérifie ta connexion ou contacte le support.")
                     else:
-                        st.warning("⚠️ Identifiant déjà utilisé.")
+                        st.warning("⚠️ Ce nom ou surnom est déjà utilisé.")
                 else:
                     st.error("Champs obligatoires.")
 
@@ -4927,7 +4933,10 @@ def main_dashboard():
         with col_wa:
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
-            wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
+            wa_display_raw = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
+            wa_display = "".join(c for c in wa_display_raw if c.isdigit())
+            if wa_display_raw != wa_display and wa_display_raw:
+                st.warning("⚠️ Chiffres uniquement pour le numéro WhatsApp.")
 
         SERVICE_SAISIE = "📊 Data & Excel Analytics"
 
@@ -6046,6 +6055,11 @@ NOTE : fichier original joint via lien ci-dessous.
         if "Conversion" not in service and st.button(label_btn):
             if not user:
                 st.session_state["view"] = "auth"
+                st.rerun()
+
+            elif champs_manquants and "Cahier des charges" in champs_manquants:
+                # Description vide → rediriger vers Arsène IA service client
+                st.session_state["view"] = "arsene_ia"
                 st.rerun()
 
             elif premium_actif and service in SERVICES_GEMINI and not champs_manquants:
