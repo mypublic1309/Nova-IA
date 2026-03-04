@@ -4551,7 +4551,7 @@ def main_dashboard():
             if st.button("Quitter la session"):
                 st.session_state["current_user"] = None
                 st.query_params.clear()
-                components.html("<script>localStorage.removeItem('nova_user_id');</script>", height=0)
+                # localStorage supprimé
                 st.rerun()
         else:
             if st.button("Connexion"):
@@ -4893,17 +4893,8 @@ def main_dashboard():
             </style>
             """, unsafe_allow_html=True)
             if st.button("✨ Voir tous les services", key="btn_open_services", use_container_width=True):
-                components.html("""
-                <script>
-                (function() {
-                    // Trouver le selectbox Streamlit et simuler un clic
-                    var selects = window.parent.document.querySelectorAll('div[data-baseweb="select"]');
-                    if (selects.length > 0) {
-                        selects[0].click();
-                    }
-                })();
-                </script>
-                """, height=0)
+                st.session_state["nova_service_idx"] = 0
+                st.rerun()
 
         col_f, col_wa = st.columns(2)
         with col_f:
@@ -5049,7 +5040,7 @@ def main_dashboard():
             with col_mid:
                 if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
                     st.session_state["show_service_warning"] = False
-                    components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
+                    # speechSynthesis supprimé
                     st.rerun()
 
         # ── SÉLECTION DU TYPE DE SUJET (uniquement pour le service Sujets/Examens) ──
@@ -5956,7 +5947,7 @@ NOTE : fichier original joint via lien ci-dessous.
                 with col_mid:
                     if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
                         st.session_state["show_service_warning"] = False
-                        components.html("<script>window.speechSynthesis.cancel();</script>", height=0)
+                        # speechSynthesis supprimé
                         st.rerun()
         
         st.markdown("""
