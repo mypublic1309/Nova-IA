@@ -6693,15 +6693,27 @@ Action requise si le problème n'est pas résolu.
                                      f"de traiter cette mission pour le moment. Merci de nous recontacter. "
                                      f"— Équipe Nova Platform ⚡")
 
-                    msg_succes = (f"✅ Bonjour {client_nom} ! Votre mission Nova Platform ({service}) est terminée ! "
-                                  f"Rendez-vous dans votre espace Nova pour récupérer votre livrable. "
-                                  f"Merci de votre confiance. — Équipe Nova Platform ⚡")
+                    msg_recu = (
+                        f"📬 Bonjour {client_nom} !\n\n"
+                        f"Nova Platform a bien reçu votre demande de *{service}*.\n"
+                        f"Votre mission est en cours de traitement par notre équipe.\n\n"
+                        f"Vous serez notifié dès que votre livrable sera prêt.\n"
+                        f"Merci de votre confiance ! 🙏\n\n"
+                        f"— Équipe Nova Platform ⚡"
+                    )
 
-                    msg_recu = (f"📬 Bonjour {client_nom}, nous confirmons la réception de votre demande "
-                                f"Nova Platform : {service}. Votre mission est en cours de traitement. "
-                                f"Vous serez notifié dès qu'elle sera finalisée. — Équipe Nova Platform ⚡")
+                    msg_succes = (
+                        f"✅ Bonjour {client_nom} !\n\n"
+                        f"Votre *{service}* est terminé et disponible !\n\n"
+                        f"👉 Connectez-vous à votre espace Nova et rendez-vous dans *Mes Livrables* pour télécharger votre document.\n\n"
+                        f"Merci de votre confiance — à très bientôt ! 😊\n\n"
+                        f"— Équipe Nova Platform ⚡"
+                    )
 
-                    col_rejet, col_recu, col_succes = st.columns(3)
+                    # Lien WhatsApp direct (sans message prédéfini)
+                    wa_direct = f"https://wa.me/{client_wa}" if client_wa and client_wa != "(non renseigné)" else None
+
+                    col_rejet, col_contact, col_recu, col_succes = st.columns(4)
                     with col_rejet:
                         if st.button("❌ Rejeter", key=f"rej_{i}", use_container_width=True):
                             save_refus(client_nom, service, msg_rejet)
@@ -6709,6 +6721,11 @@ Action requise si le problème n'est pas résolu.
                             st.session_state["db"] = load_db()
                             st.success(f"Mission refusée — notification envoyée dans les livrables de {client_nom}.")
                             st.rerun()
+                    with col_contact:
+                        if wa_direct:
+                            st.markdown(f'<a href="{wa_direct}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:linear-gradient(135deg,rgba(37,211,102,0.2),rgba(18,140,126,0.15)); border:2px solid #25d366; color:#25d366; font-weight:800; text-decoration:none; font-size:0.85rem;">📞 Contacter</a>', unsafe_allow_html=True)
+                        else:
+                            st.markdown('<div style="text-align:center;padding:10px;color:rgba(255,255,255,0.3);font-size:0.8rem;">Pas de WA</div>', unsafe_allow_html=True)
                     with col_recu:
                         st.markdown(f'<a href="{wa_url(client_wa, msg_recu)}" target="_blank" style="display:block; text-align:center; padding:10px; border-radius:10px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); color:#FFD700; font-weight:700; text-decoration:none;">📬 Reçu</a>', unsafe_allow_html=True)
                     with col_succes:
