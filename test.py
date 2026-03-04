@@ -4908,6 +4908,7 @@ def main_dashboard():
                 with _cols[_i % 2]:
                     if st.button(_svc, key=f"pick_svc_{_i}", use_container_width=True):
                         st.session_state["service_choisi"] = _svc
+                        st.session_state["service_selectbox"] = _svc
                         st.session_state["show_services_list"] = False
                         st.rerun()
 
