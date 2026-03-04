@@ -4871,49 +4871,58 @@ def main_dashboard():
         }
 
         # ── HEADER Service + bouton liste ──────────────────────────
+        # ── SESSION STATE liste services ──
+        if "show_services_list" not in st.session_state:
+            st.session_state["show_services_list"] = False
+        if "service_choisi" not in st.session_state:
+            st.session_state["service_choisi"] = "📊 Data & Excel Analytics"
+
+        TOUS_SERVICES = [
+            "📊 Data & Excel Analytics",
+            "📖 Fiche de Cours Professeur IA",
+            "📎 Modifier mon Fichier (Word / Excel / PPT)",
+            "📝 Exposé scolaire complet IA",
+            "📝 Création de Sujets & Examens",
+            "⚙️ Pack Office (Word/Excel/PPT)",
+            "🎨 Création Design IA",
+            "📚 Affiches & Reçus",
+            "👔 CV & Lettre de Motivation",
+            "📄 Conversion & Fichier PDF",
+        ]
+
         col_svc_title, col_svc_btn = st.columns([3, 1])
         with col_svc_title:
             st.markdown("#### 🛠️ Service Nova")
         with col_svc_btn:
-            st.markdown("")  # petit espace vertical
-            st.markdown("""
-            <style>
-            @keyframes svc-shine {
-                0%,100% { box-shadow: 0 0 6px rgba(255,215,0,0.6), 0 0 18px rgba(255,140,0,0.4); }
-                50%     { box-shadow: 0 0 22px rgba(255,215,0,1), 0 0 45px rgba(255,140,0,0.7); }
-            }
-            div[data-testid="stButton"]:nth-of-type(1) > button,
-            button[key="btn_open_services"] {
-                background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%) !important;
-                color: #000 !important; font-weight: 900 !important;
-                border: none !important; border-radius: 20px !important;
-                animation: svc-shine 1.4s ease-in-out infinite !important;
-                font-size: 0.78rem !important; letter-spacing: 0.03em !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            if st.button("✨ Voir tous les services", key="btn_open_services", use_container_width=True):
-                st.session_state["nova_service_idx"] = 0
+            st.markdown("")
+            _lbl = "✕ Fermer" if st.session_state["show_services_list"] else "✨ Tous les services"
+            if st.button(_lbl, key="btn_open_services", use_container_width=True):
+                st.session_state["show_services_list"] = not st.session_state["show_services_list"]
                 st.rerun()
+
+        # ── LISTE DÉROULANTE NATIVE ──
+        if st.session_state["show_services_list"]:
+            st.info("👇 Clique sur un service pour le sélectionner")
+            _cols = st.columns(2)
+            for _i, _svc in enumerate(TOUS_SERVICES):
+                with _cols[_i % 2]:
+                    if st.button(_svc, key=f"pick_svc_{_i}", use_container_width=True):
+                        st.session_state["service_choisi"] = _svc
+                        st.session_state["show_services_list"] = False
+                        st.rerun()
 
         col_f, col_wa = st.columns(2)
         with col_f:
+            _idx_defaut = TOUS_SERVICES.index(st.session_state["service_choisi"]) if st.session_state["service_choisi"] in TOUS_SERVICES else 0
             service = st.selectbox(
                 "Type d'intervention",
-                [
-                    "📊 Data & Excel Analytics",
-                    "📖 Fiche de Cours Professeur IA",
-                    "📎 Modifier mon Fichier (Word / Excel / PPT)",
-                    "📝 Exposé scolaire complet IA",
-                    "📝 Création de Sujets & Examens",
-                    "⚙️ Pack Office (Word/Excel/PPT)",
-                    "🎨 Création Design IA",
-                    "📚 Affiches & Reçus",
-                    "👔 CV & Lettre de Motivation",
-                    "📄 Conversion & Fichier PDF",
-                ],
+                TOUS_SERVICES,
+                index=_idx_defaut,
                 key="service_selectbox"
             )
+            # Sync retour
+            if service != st.session_state["service_choisi"]:
+                st.session_state["service_choisi"] = service
         with col_wa:
             st.markdown("#### 📞 Notification")
             default_wa = db["users"][user]["whatsapp"] if user else ""
