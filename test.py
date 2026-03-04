@@ -4948,7 +4948,7 @@ def main_dashboard():
         if service in SERVICE_AIDE:
             _aide_titre, _aide_texte = SERVICE_AIDE[service]
             if f"aide_open_{service}" not in st.session_state:
-                st.session_state[f"aide_open_{service}"] = False
+                st.session_state[f"aide_open_{service}"] = True
 
             _aide_ouvert = st.session_state[f"aide_open_{service}"]
             st.markdown("""
@@ -6042,7 +6042,7 @@ NOTE : fichier original joint via lien ci-dessous.
                 </span>
             </div>""", unsafe_allow_html=True)
 
-        label_btn = "⚡ GÉNÉRER MAINTENANT AVEC L'IA NOVA" if (premium_actif and service in SERVICES_GEMINI) else "ACTIVER L'ALGORITHME NOVA"
+        label_btn = "⚡ GÉNÉRER MAINTENANT AVEC L'IA NOVA" if (premium_actif and service in SERVICES_GEMINI) else "🚀 LANCER LA GÉNÉRATION"
         if "Conversion" not in service and st.button(label_btn):
             if not user:
                 st.session_state["view"] = "auth"
