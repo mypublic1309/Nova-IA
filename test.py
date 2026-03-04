@@ -3411,6 +3411,30 @@ def inject_custom_css():
             color: white !important;
             border-radius: 10px !important;
         }
+        /* ── Dropdown liste déroulante — thème sombre ── */
+        ul[data-baseweb="menu"] {
+            background-color: #0d0d1a !important;
+            border: 1px solid rgba(255,215,0,0.3) !important;
+            border-radius: 12px !important;
+            padding: 6px !important;
+        }
+        ul[data-baseweb="menu"] li {
+            background-color: transparent !important;
+            color: rgba(255,255,255,0.85) !important;
+            border-radius: 8px !important;
+            font-size: 0.88rem !important;
+            padding: 8px 12px !important;
+        }
+        ul[data-baseweb="menu"] li:hover,
+        ul[data-baseweb="menu"] li[aria-selected="true"] {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,140,0,0.1)) !important;
+            color: #FFD700 !important;
+        }
+        div[data-baseweb="popover"] > div {
+            background-color: #0d0d1a !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7) !important;
+        }
         .stTextArea textarea {
             background-color: rgba(0, 0, 0, 0.6) !important;
             color: white !important;
@@ -4875,62 +4899,51 @@ def main_dashboard():
             },
         }
 
-        # ── CATALOGUE SERVICES — GRILLE DE CARTES ────────────────────
-        NOVA_SERVICES = [
-            ("📊", "Data & Excel Analytics",       "📊 Data & Excel Analytics",              "Tableaux, graphiques, dashboards",         False),
-            ("📖", "Fiche de Cours IA",             "📖 Fiche de Cours Professeur IA",         "Fiches pédagogiques pour enseignants",     False),
-            ("📎", "Modifier mon Fichier",          "📎 Modifier mon Fichier (Word / Excel / PPT)", "Modifier Word, Excel, PowerPoint",     False),
-            ("📝", "Exposé Scolaire IA",            "📝 Exposé scolaire complet IA",           "Du CP au Master",                          True),
-            ("📝", "Sujets & Examens",              "📝 Création de Sujets & Examens",         "QCM, devoirs, contrôles",                  True),
-            ("⚙️", "Pack Office",                  "⚙️ Pack Office (Word/Excel/PPT)",         "Documents professionnels",                 False),
-            ("🎨", "Création Design",               "🎨 Création Design IA",                   "Affiches, flyers, logos",                  False),
-            ("📚", "Affiches & Reçus",              "📚 Affiches & Reçus",                     "Supports visuels entreprises",             False),
-            ("👔", "CV & Lettre de Motivation",     "👔 CV & Lettre de Motivation",            "CV et lettres percutants",                 False),
-            ("📄", "Conversion PDF",                "📄 Conversion & Fichier PDF",             "Conversion entre formats",                 False),
-        ]
-
-        st.markdown("""
-        <style>
-        div[data-testid="stButton"].nova-svc-btn > button {
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            width: 100% !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        st.markdown("#### 🛠️ Choisissez votre service Nova")
-
-        _cols_svc = st.columns(3)
-        for _i, (_em, _nom_court, _nom_full, _desc, _is_prem) in enumerate(NOVA_SERVICES):
-            _sel = st.session_state["nova_service_idx"] == _i
-            _border = "2px solid #FFD700" if _sel else "1px solid rgba(255,255,255,0.12)"
-            _bg     = "linear-gradient(135deg,rgba(255,215,0,0.13),rgba(255,140,0,0.08))" if _sel else "rgba(255,255,255,0.04)"
-            _title_col = "#FFD700" if _sel else "#ffffff"
-            _badge  = '<span style="font-size:0.65rem;background:rgba(255,215,0,0.2);color:#FFD700;border-radius:8px;padding:2px 7px;margin-left:5px;">⭐ Premium</span>' if _is_prem else ""
-            _check  = '<span style="position:absolute;top:8px;right:10px;color:#FFD700;font-size:1rem;">✓</span>' if _sel else ""
-            with _cols_svc[_i % 3]:
-                st.markdown(f"""
-                <div style="position:relative;background:{_bg};border:{_border};border-radius:14px;
-                            padding:14px 12px 10px 12px;margin-bottom:6px;cursor:pointer;
-                            transition:all .2s;min-height:90px;">
-                    {_check}
-                    <div style="font-size:1.6rem;margin-bottom:4px;">{_em}</div>
-                    <div style="color:{_title_col};font-weight:700;font-size:0.82rem;line-height:1.3;">
-                        {_nom_court}{_badge}
-                    </div>
-                    <div style="color:rgba(255,255,255,0.45);font-size:0.72rem;margin-top:3px;">{_desc}</div>
-                </div>""", unsafe_allow_html=True)
-                if st.button("Sélectionner", key=f"svc_btn_{_i}", use_container_width=True):
-                    st.session_state["nova_service_idx"] = _i
-                    st.rerun()
-
-        service = NOVA_SERVICES[st.session_state["nova_service_idx"]][2]
-
-        st.markdown("#### 📞 Notification")
-        default_wa = db["users"][user]["whatsapp"] if user else ""
-        wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
+        col_f, col_wa = st.columns(2)
+        with col_f:
+            st.markdown("#### 🛠️ Service Nova")
+            service = st.selectbox(
+                "Type d'intervention",
+                [
+                    "📊 Data & Excel Analytics",
+                    "📖 Fiche de Cours Professeur IA",
+                    "📎 Modifier mon Fichier (Word / Excel / PPT)",
+                    "📝 Exposé scolaire complet IA",
+                    "📝 Création de Sujets & Examens",
+                    "⚙️ Pack Office (Word/Excel/PPT)",
+                    "🎨 Création Design IA",
+                    "📚 Affiches & Reçus",
+                    "👔 CV & Lettre de Motivation",
+                    "📄 Conversion & Fichier PDF",
+                ]
+            )
+            st.markdown("""
+            <style>
+            @keyframes hint-arrow {
+                0%,100% { transform: translateY(0px); opacity: 0.7; }
+                50%      { transform: translateY(4px); opacity: 1; }
+            }
+            .nova-select-hint {
+                display: flex; align-items: center; gap: 7px;
+                background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.05));
+                border: 1px dashed rgba(255,215,0,0.35);
+                border-radius: 8px; padding: 6px 12px; margin-top: 5px;
+                font-size: 0.78rem; color: rgba(255,215,0,0.85);
+            }
+            .nova-select-hint .arrow {
+                animation: hint-arrow 1.2s ease-in-out infinite;
+                font-size: 1rem;
+            }
+            </style>
+            <div class="nova-select-hint">
+                <span class="arrow">👆</span>
+                <span>Clique ici pour voir <strong style="color:#FFD700;">tous les services Nova</strong> disponibles</span>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_wa:
+            st.markdown("#### 📞 Notification")
+            default_wa = db["users"][user]["whatsapp"] if user else ""
+            wa_display = st.text_input("WhatsApp de contact", value=default_wa, placeholder="225...")
 
         SERVICE_SAISIE = "📊 Data & Excel Analytics"
 
@@ -4953,21 +4966,34 @@ def main_dashboard():
             if f"aide_open_{service}" not in st.session_state:
                 st.session_state[f"aide_open_{service}"] = False
 
+            _aide_ouvert = st.session_state[f"aide_open_{service}"]
             st.markdown("""
             <style>
-            .aide-btn-float {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,140,0,0.1));
-                border: 1px solid rgba(255,193,7,0.5);
-                border-radius: 20px;
-                padding: 4px 12px;
-                font-size: 0.78rem;
-                color: #FFD700;
-                font-weight: 700;
-                cursor: pointer;
-                margin-bottom: 8px;
+            @keyframes aide-pulse {
+                0%,100% {
+                    box-shadow: 0 0 0 0 rgba(255,215,0,0.0);
+                    border-color: rgba(255,193,7,0.6);
+                }
+                50% {
+                    box-shadow: 0 0 0 6px rgba(255,215,0,0.18), 0 0 18px rgba(255,215,0,0.35);
+                    border-color: #FFD700;
+                }
+            }
+            div[data-testid="stButton"].nova-aide-pulse > button {
+                background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,140,0,0.12)) !important;
+                border: 2px solid #FFD700 !important;
+                border-radius: 20px !important;
+                color: #FFD700 !important;
+                font-weight: 800 !important;
+                font-size: 0.82rem !important;
+                letter-spacing: 0.03em !important;
+                animation: aide-pulse 1.8s ease-in-out infinite !important;
+                padding: 4px 14px !important;
+            }
+            div[data-testid="stButton"].nova-aide-pulse > button:hover {
+                background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,140,0,0.2)) !important;
+                animation: none !important;
+                box-shadow: 0 0 20px rgba(255,215,0,0.5) !important;
             }
             </style>
             """, unsafe_allow_html=True)
@@ -4975,8 +5001,13 @@ def main_dashboard():
             col_aide_l, col_aide_r = st.columns([6, 1])
             with col_aide_r:
                 _key_aide = f"btn_aide_{service[:10]}"
-                if st.button("❓ Aide", key=_key_aide, help=f"Comment utiliser : {_aide_titre}"):
-                    st.session_state[f"aide_open_{service}"] = not st.session_state[f"aide_open_{service}"]
+                if not _aide_ouvert:
+                    st.markdown('<div class="nova-aide-pulse">', unsafe_allow_html=True)
+                if st.button("✨ Voir" if not _aide_ouvert else "✕ Fermer", key=_key_aide, help=f"Découvrir ce service : {_aide_titre}"):
+                    st.session_state[f"aide_open_{service}"] = not _aide_ouvert
+                    st.rerun()
+                if not _aide_ouvert:
+                    st.markdown('</div>', unsafe_allow_html=True)
 
             if st.session_state[f"aide_open_{service}"]:
                 st.markdown(f"""
