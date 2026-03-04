@@ -416,7 +416,7 @@ def get_modeles_disponibles(api_key):
         modeles = []
         exclusions = ["tts", "audio", "image", "imagen", "veo", "robotics",
                       "embedding", "aqa", "computer-use", "research", "nano-banana",
-                      "gemma", "preview"]
+                      "gemma"]
         for m in data.get("models", []):
             if "generateContent" in m.get("supportedGenerationMethods", []):
                 nom = m["name"].replace("models/", "")
@@ -424,16 +424,17 @@ def get_modeles_disponibles(api_key):
                     modeles.append(nom)
         def priorite(nom):
             if "flash-lite" in nom: return 0
-            if "flash" in nom:      return 1
-            if "pro" in nom:        return 2
-            return 3
+            if "2.0-flash" in nom:  return 1
+            if "flash" in nom:      return 2
+            if "pro" in nom:        return 3
+            return 4
         modeles_tries = sorted(modeles, key=priorite)
         return modeles_tries
     except Exception as e:
         return ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-2.5-flash"]
 
 
-def generer_avec_gemini(service, description, client_nom):
+def generer_avec_gemini(service, description, client_nom, is_premium=False, gen_used=0, _plan_for_model=None):
     try:
         import urllib.request as _ur
         import urllib.error
@@ -2109,8 +2110,44 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
         modeles = get_modeles_disponibles(api_key)
         if not modeles:
             return "❌ Aucun modèle Gemini disponible pour generateContent avec cette clé API."
-        erreurs = []
 
+        # ── SÉLECTION DU MODÈLE SELON PROFIL UTILISATEUR ──────────────
+        # 30 Jours (illimité) : gen 1→7 = gemini-2.5-pro, gen 8+ = léger
+        # 10 Jours            : gen 1→3 = gemini-2.5-pro, gen 4+ = léger
+        # Journalier          : gen 1   = gemini-2.5-pro, gen 2  = léger
+        # Gratuit             : toujours flash-lite (inchangé)
+        def _priorite_smart(nom):
+            if "2.5-pro" in nom:              return 0
+            if "pro" in nom:                  return 1
+            if "2.5-flash" in nom:            return 2
+            if "flash" in nom and "lite" not in nom: return 3
+            if "flash-lite" in nom:           return 4
+            return 5
+
+        def _priorite_light(nom):
+            if "flash-lite" in nom: return 0
+            if "2.0-flash" in nom:  return 1
+            if "flash" in nom:      return 2
+            if "pro" in nom:        return 3
+            return 4
+
+        if is_premium:
+            plan_name = _plan_for_model  # passé en paramètre
+            if plan_name == "30 Jours":
+                seuil_pro = 7   # gen 1→7 avec 2.5-pro
+            elif plan_name == "10 Jours":
+                seuil_pro = 3   # gen 1→3 avec 2.5-pro
+            else:
+                seuil_pro = 1   # Journalier : gen 1 avec 2.5-pro
+
+            if gen_used < seuil_pro:
+                modeles = sorted(modeles, key=_priorite_smart)
+            else:
+                modeles = sorted(modeles, key=_priorite_light)
+        # else : gratuit → ordre par défaut (flash-lite en premier)
+        # ───────────────────────────────────────────────────────────────
+
+        erreurs = []
         for modele in modeles:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{modele}:generateContent?key={api_key}"
@@ -6034,7 +6071,7 @@ Si QUESTIONS_OUVERTES → Questions ouvertes seulement. Si CALCUL → Calculs se
 Si ETUDE_DOCUMENT → Étude de document seulement. Si SCHEMA → Schéma à légender seulement.
 Si DISSERTATION → Composition guidée seulement. Si CAS_PRATIQUE → Cas pratique seulement.
 Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Section Critique (en-tête officiel + structure progressive adaptée au niveau détecté). Mélange intelligent de tous les types adaptés au niveau."""
-                            contenu = generer_avec_gemini(service, prompt_enrichi, user)
+                            contenu = generer_avec_gemini(service, prompt_enrichi, user, is_premium=True, gen_used=used_auj, _plan_for_model=plan_actuel)
                             if contenu.startswith("❌"):
                                 result_holder["erreur"] = contenu
                                 return
