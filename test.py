@@ -4758,15 +4758,40 @@ def main_dashboard():
                 _client_req = _req.get("uid", "")
                 _wa_req     = _req.get("whatsapp", "")
                 _req_id     = _req.get("id", "")
-                _contenu_auto = generer_avec_gemini(_service_req, _desc_req, _client_req)
-                if _contenu_auto.startswith("❌"):
-                    continue  # Erreur API — on réessaiera au prochain refresh
+                _contenu_auto = generer_avec_gemini(_service_req, _desc_req, _client_req, is_premium=False)
+                if not _contenu_auto or _contenu_auto.startswith("❌"):
+                    # Log l'erreur dans Supabase pour debug
+                    try:
+                        supabase.table("config").upsert({
+                            "key": f"auto_error_{_req_id}",
+                            "value": _contenu_auto or "Réponse vide"
+                        }).execute()
+                    except:
+                        pass
+                    continue
                 # Créer le fichier docx
-                _buf_auto = creer_docx(_contenu_auto, _service_req, _client_req)
+                try:
+                    _buf_auto = creer_docx(_contenu_auto, _service_req, _client_req)
+                except Exception as _e_docx:
+                    try:
+                        supabase.table("config").upsert({
+                            "key": f"auto_error_{_req_id}",
+                            "value": f"creer_docx échoué : {_e_docx}"
+                        }).execute()
+                    except:
+                        pass
+                    continue
                 _nom_auto = f"{_client_req}_{_service_req[:20].strip()}_auto.docx".replace(" ", "_").replace("/", "-")
                 # Upload vers Supabase Storage
                 _url_auto = upload_fichier_client(_client_req, _req_id, _buf_auto, _nom_auto)
-                if _url_auto.startswith("ERREUR"):
+                if not _url_auto or _url_auto.startswith("ERREUR"):
+                    try:
+                        supabase.table("config").upsert({
+                            "key": f"auto_error_{_req_id}",
+                            "value": f"Upload échoué : {_url_auto}"
+                        }).execute()
+                    except:
+                        pass
                     continue
                 # Sauvegarder le lien dans les livrables
                 save_lien(_client_req, _service_req, _url_auto, _now.strftime("%d/%m/%Y"))
@@ -4776,7 +4801,14 @@ def main_dashboard():
                 # Email admin
                 envoyer_email_auto_gratuit(_client_req, _wa_req, _service_req, _nom_auto, _desc_req)
         except Exception as _e_auto:
-            pass  # Silencieux — ne pas perturber l'interface
+            # Log l'erreur globale pour debug
+            try:
+                supabase.table("config").upsert({
+                    "key": "auto_reply_last_error",
+                    "value": f"{type(_e_auto).__name__}: {str(_e_auto)[:300]}"
+                }).execute()
+            except:
+                pass
 
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
 
@@ -6021,7 +6053,7 @@ NOTE : fichier original joint via lien ci-dessous.
                 color: rgba(241,196,15,0.85);
                 font-size: 0.85rem;
             ">
-                ⚠️ Veuillez s'il vous plaît détailler vos besoins comme il se doit, afin d'éviter que votre demande soit refusée.
+                👇 Décrivez votre besoin ci-dessus puis appuyez sur le bouton du bas pour lancer la génération.
             </div>
             """, unsafe_allow_html=True)
 
@@ -6624,6 +6656,24 @@ Action requise si le problème n'est pas résolu.
                             set_auto_reply_setting(True)
                             st.success("✅ Réponse automatique activée — Nova Platform répondra après 6 minutes")
                             st.rerun()
+
+                st.divider()
+
+                # ── DEBUG AUTO-REPLY ──────────────────────────────────────
+                with st.expander("🔍 Diagnostic auto-reply (debug)"):
+                    try:
+                        _err = supabase.table("config").select("key,value").like("key", "auto%error%").execute().data
+                        if _err:
+                            for _e in _err:
+                                st.error(f"**{_e['key']}** → {_e['value']}")
+                            if st.button("🗑️ Effacer les erreurs", key="clear_auto_errors"):
+                                for _e in _err:
+                                    supabase.table("config").delete().eq("key", _e["key"]).execute()
+                                st.rerun()
+                        else:
+                            st.success("✅ Aucune erreur auto-reply enregistrée")
+                    except Exception as _de:
+                        st.warning(f"Impossible de lire les erreurs : {_de}")
 
                 st.divider()
 
