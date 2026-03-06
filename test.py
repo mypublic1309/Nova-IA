@@ -3322,7 +3322,7 @@ if st.session_state["current_user"] is None:
                 window.location.href = url.toString();
             }
             </script>
-        """, height=0)
+        """, height=1)
 
 if st.session_state["current_user"]:
     uid_connecte = st.session_state["current_user"]
@@ -3330,7 +3330,7 @@ if st.session_state["current_user"]:
         <script>
         localStorage.setItem('nova_user_id', '{uid_connecte}');
         </script>
-    """, height=0)
+    """, height=1)
 
 def inject_custom_css():
     # ── Détection Premium ─────────────────────────────────────────
@@ -4710,47 +4710,58 @@ def main_dashboard():
                 st.rerun()
 
     # ── VÉRIFICATION AUTO-REPLY GRATUIT (tourne à chaque refresh) ──────
-    if st.session_state.get("auto_reply_gratuit", False) and user:
+    # ── AUTO-REPLY PLAN GRATUIT — tourne pour TOUS les visiteurs ──
+    if st.session_state.get("auto_reply_gratuit", False):
         try:
             _fresh_demandes = supabase.table("demandes").select("*").execute().data
             _now = datetime.now()
-            for _req in _fresh_demandes:
-                # Services EXCLUS de l'auto-reply (premium obligatoire ou accord manuel)
-                SERVICES_EXCLUS_AUTO = [
-                    "📝 Exposé scolaire complet IA",
-                ]
-                if _req.get("service", "") in SERVICES_EXCLUS_AUTO:
-                    continue  # Exposé = premium obligatoire ou accord manuel uniquement
 
-                # Auto gratuit uniquement pour ces 3 services (6 min)
-                _SERVICES_AUTO_GRATUIT = [
-                    "📝 Création de Sujets & Examens",
-                    "📖 Fiche de Cours Professeur IA",
-                    "👔 CV & Lettre de Motivation",
-                ]
+            # Services éligibles auto-reply gratuit
+            _SERVICES_AUTO_GRATUIT = [
+                "📝 Création de Sujets & Examens",
+                "📖 Fiche de Cours Professeur IA",
+                "👔 CV & Lettre de Motivation",
+                "⚙️ Pack Office (Word/Excel/PPT)",
+                "📊 Data & Excel Analytics",
+            ]
+            # Définition locale pour éviter les NameError
+            _SERVICES_GEMINI_LOCAL = [
+                "📝 Exposé scolaire complet IA",
+                "📝 Création de Sujets & Examens",
+                "📖 Fiche de Cours Professeur IA",
+                "👔 CV & Lettre de Motivation",
+                "⚙️ Pack Office (Word/Excel/PPT)",
+                "📊 Data & Excel Analytics",
+            ]
+
+            for _req in _fresh_demandes:
                 if _req.get("service", "") not in _SERVICES_AUTO_GRATUIT:
                     continue
 
                 # Seulement les demandes des utilisateurs NON premium
                 _req_user = _req.get("uid", "")
-                _req_user_data = st.session_state["db"]["users"].get(_req_user, {})
+                _req_user_data = supabase.table("users").select("*").eq("uid", _req_user).execute().data
+                _req_user_data = _req_user_data[0] if _req_user_data else {}
                 _is_premium_req = is_premium_actif(_req_user_data)
                 if _is_premium_req:
-                    continue  # Ignorer les premium
-                # Vérifier si ça fait plus de 2 heures
+                    continue
+
+                # Vérifier si ça fait plus de 6 minutes
                 _ts_str = _req.get("timestamp", "")
                 try:
                     _ts = datetime.fromisoformat(_ts_str)
-                    _age_heures = (_now - _ts).total_seconds() / 3600
+                    _age_minutes = (_now - _ts).total_seconds() / 60
                 except:
                     continue
-                if _age_heures < 0.1:
+                if _age_minutes < 6:
                     continue  # Pas encore 6 minutes
-                # Vérifier que le service est supporté par Nova Platform
+
+                # Vérifier que le service est supporté
                 _service_req = _req.get("service", "")
-                if _service_req not in SERVICES_GEMINI:
+                if _service_req not in _SERVICES_GEMINI_LOCAL:
                     continue
-                # Vérifier pas déjà traité (status != "auto_done")
+
+                # Vérifier pas déjà traité
                 if _req.get("status") == "auto_done":
                     continue
                 # ── Générer automatiquement ──────────────────────────────
@@ -5086,7 +5097,7 @@ def main_dashboard():
                         audio.play().catch(function(e) {{ console.log(e); }});
                     }})();
                     </script>
-                """, height=0)
+                """, height=1)
             col_mid = st.columns([1, 2, 1])[1]
             with col_mid:
                 if st.button("✅ J'ai compris, je continue ma demande", key="close_service_warning"):
@@ -6300,7 +6311,7 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                             audio.play().catch(function(e) {{ console.log("Autoplay bloqué:", e); }});
                         }})();
                         </script>
-                    """, height=0)
+                    """, height=1)
 
                 st.rerun()
             else:
@@ -6962,7 +6973,7 @@ components.html("""
         localStorage.setItem('nova_user', currentUser);
     }
     </script>
-""", height=0)
+""", height=1)
 
 # Masquer l'iframe vide créée par components.html
 st.markdown("""
