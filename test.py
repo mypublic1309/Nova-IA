@@ -5860,8 +5860,8 @@ NOTE : fichier original joint via lien ci-dessous.
             # Définir les types acceptés selon la conversion choisie
             if "Word" in conv_type and "→ PDF" in conv_type:
                 types_acceptes = ["docx", "doc"]
-                label_upload   = "📂 Importer votre fichier Word (.docx)"
-                suffix_in      = ".docx"
+                label_upload   = "📂 Importer votre fichier Word (.docx / .doc)"
+                suffix_in      = None  # déterminé dynamiquement depuis le nom du fichier
             elif "Excel" in conv_type and "→ PDF" in conv_type:
                 types_acceptes = ["xlsx", "xls"]
                 label_upload   = "📂 Importer votre fichier Excel (.xlsx)"
@@ -5877,7 +5877,7 @@ NOTE : fichier original joint via lien ci-dessous.
             elif "PowerPoint" in conv_type and "→ PDF" in conv_type:
                 types_acceptes = ["pptx", "ppt"]
                 label_upload   = "📂 Importer votre fichier PowerPoint (.pptx)"
-                suffix_in      = ".pptx"
+                suffix_in      = None  # déterminé dynamiquement depuis le nom du fichier
             elif "PDF → Word" in conv_type:
                 types_acceptes = ["pdf"]
                 label_upload   = "📂 Importer votre fichier PDF"
@@ -5890,17 +5890,33 @@ NOTE : fichier original joint via lien ci-dessous.
             conv_fichier = st.file_uploader(label_upload, type=types_acceptes, key="conv_fichier")
 
             if conv_fichier:
+                # ── Mise en cache immédiate pour éviter buffer vide au clic ──
+                cache_key = f"conv_bytes_{conv_fichier.name}_{conv_fichier.size}"
+                if st.session_state.get("conv_cache_key") != cache_key:
+                    st.session_state["conv_cache_key"]  = cache_key
+                    st.session_state["conv_fichier_bytes"] = conv_fichier.read()
+                    st.session_state["conv_fichier_name"]  = conv_fichier.name
+
                 st.success(f"✅ **{conv_fichier.name}** · {round(conv_fichier.size/1024, 1)} Ko importé")
 
                 if st.button("⚡ CONVERTIR MAINTENANT", use_container_width=True, key="btn_convertir"):
                     with st.spinner("🔄 Conversion en cours..."):
                         try:
                             import tempfile, os as _os, subprocess as _sub
-                            fichier_bytes = conv_fichier.read()
+                            fichier_bytes = st.session_state.get("conv_fichier_bytes", b"")
+                            # suffix_in dynamique selon l'extension réelle du fichier
+                            if suffix_in is None:
+                                ext_reelle = "." + st.session_state["conv_fichier_name"].rsplit(".", 1)[-1].lower()
+                                suffix_in_reel = ext_reelle
+                            else:
+                                suffix_in_reel = suffix_in
+                            if not fichier_bytes:
+                                st.error("❌ Fichier introuvable, veuillez le ré-importer.")
+                                st.stop()
 
                             # ── Word / Excel / PPT → PDF via LibreOffice ─────
                             if "→ PDF" in conv_type:
-                                with tempfile.NamedTemporaryFile(suffix=suffix_in, delete=False) as tmp_in:
+                                with tempfile.NamedTemporaryFile(suffix=suffix_in_reel, delete=False) as tmp_in:
                                     tmp_in.write(fichier_bytes)
                                     tmp_in_path = tmp_in.name
                                 tmp_out_dir = tempfile.mkdtemp()
@@ -5914,7 +5930,7 @@ NOTE : fichier original joint via lien ci-dessous.
                                 if _os.path.exists(pdf_path):
                                     with open(pdf_path, "rb") as f:
                                         buf_out = f.read()
-                                    nom_sortie = conv_fichier.name.rsplit(".", 1)[0] + ".pdf"
+                                    nom_sortie = st.session_state["conv_fichier_name"].rsplit(".", 1)[0] + ".pdf"
                                     st.success("✅ Conversion réussie !")
                                     st.download_button("📥 TÉLÉCHARGER LE PDF", data=buf_out,
                                         file_name=nom_sortie, mime="application/pdf",
@@ -5922,6 +5938,8 @@ NOTE : fichier original joint via lien ci-dessous.
                                 else:
                                     st.error(f"❌ Erreur LibreOffice : {res.stderr or res.stdout}")
                                 try: _os.unlink(tmp_in_path)
+                                except: pass
+                                try: import shutil; shutil.rmtree(tmp_out_dir, ignore_errors=True)
                                 except: pass
 
                             # ── CSV → Excel ──────────────────────────────────
@@ -5932,7 +5950,7 @@ NOTE : fichier original joint via lien ci-dessous.
                                 buf_out = _BytesIO()
                                 df.to_excel(buf_out, index=False, engine="openpyxl")
                                 buf_out.seek(0)
-                                nom_sortie = conv_fichier.name.replace(".csv", "") + ".xlsx"
+                                nom_sortie = st.session_state["conv_fichier_name"].replace(".csv", "") + ".xlsx"
                                 st.success("✅ Conversion réussie !")
                                 st.download_button("📥 TÉLÉCHARGER L'EXCEL", data=buf_out.read(),
                                     file_name=nom_sortie,
@@ -5944,8 +5962,8 @@ NOTE : fichier original joint via lien ci-dessous.
                                 import pandas as pd
                                 from io import BytesIO as _BytesIO
                                 df = pd.read_excel(_BytesIO(fichier_bytes))
-                                csv_str = df.to_csv(index=False, encoding="utf-8-sig")
-                                nom_sortie = conv_fichier.name.rsplit(".", 1)[0] + ".csv"
+                                csv_str = df.to_csv(index=False)
+                                nom_sortie = st.session_state["conv_fichier_name"].rsplit(".", 1)[0] + ".csv"
                                 st.success("✅ Conversion réussie !")
                                 st.download_button("📥 TÉLÉCHARGER LE CSV", data=csv_str.encode("utf-8-sig"),
                                     file_name=nom_sortie, mime="text/csv",
@@ -5962,13 +5980,13 @@ NOTE : fichier original joint via lien ci-dessous.
                                 with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_in:
                                     tmp_in.write(fichier_bytes)
                                     tmp_in_path = tmp_in.name
-                                tmp_out_path = tmp_in_path.replace(".pdf", ".docx")
+                                tmp_out_path = tmp_in_path[:-4] + ".docx"
                                 cv = PdfConverter(tmp_in_path)
                                 cv.convert(tmp_out_path, start=0, end=None)
                                 cv.close()
                                 with open(tmp_out_path, "rb") as f:
                                     buf_out = f.read()
-                                nom_sortie = conv_fichier.name.replace(".pdf", "") + ".docx"
+                                nom_sortie = st.session_state["conv_fichier_name"].replace(".pdf", "") + ".docx"
                                 st.success("✅ Conversion réussie !")
                                 st.download_button("📥 TÉLÉCHARGER LE WORD", data=buf_out,
                                     file_name=nom_sortie,
@@ -5993,7 +6011,7 @@ NOTE : fichier original joint via lien ci-dessous.
                                 if _os.path.exists(pptx_path):
                                     with open(pptx_path, "rb") as f:
                                         buf_out = f.read()
-                                    nom_sortie = conv_fichier.name.replace(".pdf", "") + ".pptx"
+                                    nom_sortie = st.session_state["conv_fichier_name"].replace(".pdf", "") + ".pptx"
                                     st.success("✅ Conversion réussie !")
                                     st.download_button("📥 TÉLÉCHARGER LE POWERPOINT", data=buf_out,
                                         file_name=nom_sortie,
@@ -6002,6 +6020,8 @@ NOTE : fichier original joint via lien ci-dessous.
                                 else:
                                     st.error(f"❌ Erreur conversion PDF→PPT : {res.stderr or res.stdout}")
                                 try: _os.unlink(tmp_in_path)
+                                except: pass
+                                try: import shutil; shutil.rmtree(tmp_out_dir, ignore_errors=True)
                                 except: pass
 
                         except Exception as e:
