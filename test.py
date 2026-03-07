@@ -345,6 +345,26 @@ def quota_restant(user_data):
     used, quota = get_gen_quota(user_data)
     return max(0, quota - used)
 
+MAX_DEMANDES_GRATUIT_PAR_JOUR = 7
+
+def get_demandes_gratuit_today(uid):
+    """Retourne le nombre de demandes soumises aujourd'hui par un utilisateur gratuit."""
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        rows = supabase.table("demandes").select("timestamp").eq("uid", uid).execute().data
+        count = 0
+        for r in rows:
+            ts_str = r.get("timestamp", "")
+            try:
+                ts = datetime.fromisoformat(ts_str)
+                if ts.strftime("%Y-%m-%d") == today:
+                    count += 1
+            except:
+                pass
+        return count
+    except:
+        return 0
+
 def incrementer_gen(uid):
     """Incrémente le compteur de générations du jour pour l'utilisateur."""
     try:
@@ -1925,18 +1945,23 @@ REGLES ABSOLUES :
 
 Rédige en français, ton professionnel et percutant."""
 
-        elif "Pack Office" in service:
-            prompt = f"""Tu es un expert bureautique. Crée le contenu complet et professionnel pour :
+        elif "Création Word" in service:
+            prompt = f"""Tu es un expert en rédaction de documents Word professionnels. Le client te décrit précisément ce qu'il veut, et tu dois créer le document complet, structuré et prêt à l'emploi.
 
+DEMANDE CLIENT :
 {description}
 
-Fournis un document structuré avec :
-- Titres et sous-titres hiérarchisés
-- Paragraphes complets et détaillés
-- Tableaux si pertinent
-- Recommandations de mise en forme
+INSTRUCTIONS DE CRÉATION :
+- Crée le document COMPLET tel que demandé par le client, du début à la fin
+- Structure avec des titres (##), sous-titres (###) et paragraphes bien organisés
+- Utilise des tableaux Markdown si le client en a besoin ou si c'est pertinent
+- Adapte le ton et le style exactement à ce que le client décrit (formel, commercial, juridique, scolaire, etc.)
+- Inclus TOUT le contenu réel : ne laisse aucune section vide ou en exemple générique
+- Si le client mentionne des noms, données, chiffres ou infos spécifiques → intègre-les directement
+- Longueur : aussi long que nécessaire pour que le document soit COMPLET et utilisable tel quel
+- Rédige en français sauf si le client demande une autre langue
 
-Rédige en français, format professionnel et exhaustif."""
+Le document doit être livrable directement, sans que le client ait à compléter quoi que ce soit."""
 
         elif "Excel" in service or "Data" in service:
             prompt = f"""Tu es un expert Excel et Data Analytics africain francophone.
@@ -2092,7 +2117,7 @@ Rédige en français avec une structure claire : titres, sous-titres, paragraphe
             "Sujet CEPE / BEPC              : 2-3 pages + corrigé exhaustif si demandé\n"
             "Sujet BAC / Universitaire      : 3-5 pages + corrigé avec toutes les étapes\n"
             "CV + Lettre                    : 2 pages CV + 1 page lettre minimum\n"
-            "Pack Office / Word             : 4-8 pages selon la demande\n\n"
+            "Création Word (depuis zéro)    : document complet selon la description client\n\n"
 
             "══ RÈGLE D'OR FINALE ══\n"
             "Chaque document est PARFAIT, COMPLET, ENTIÈREMENT RÉDIGÉ, PROFESSIONNEL\n"
@@ -4721,7 +4746,7 @@ def main_dashboard():
                 "📝 Création de Sujets & Examens",
                 "📖 Fiche de Cours Professeur IA",
                 "👔 CV & Lettre de Motivation",
-                "⚙️ Pack Office (Word/Excel/PPT)",
+                "📄 Création Word (depuis zéro)",
                 "📊 Data & Excel Analytics",
             ]
             # Définition locale pour éviter les NameError
@@ -4730,7 +4755,7 @@ def main_dashboard():
                 "📝 Création de Sujets & Examens",
                 "📖 Fiche de Cours Professeur IA",
                 "👔 CV & Lettre de Motivation",
-                "⚙️ Pack Office (Word/Excel/PPT)",
+                "📄 Création Word (depuis zéro)",
                 "📊 Data & Excel Analytics",
             ]
 
@@ -4746,15 +4771,17 @@ def main_dashboard():
                 if _is_premium_req:
                     continue
 
-                # Vérifier si ça fait plus de 6 minutes
+                # Vérifier le délai variable (6, 8 ou 10 min selon l'ID de la demande)
                 _ts_str = _req.get("timestamp", "")
+                _req_id_hash = hash(_req.get("id", "")) % 3  # 0, 1 ou 2
+                _delai_minutes = [6, 8, 10][_req_id_hash]
                 try:
                     _ts = datetime.fromisoformat(_ts_str)
                     _age_minutes = (_now - _ts).total_seconds() / 60
                 except:
                     continue
-                if _age_minutes < 6:
-                    continue  # Pas encore 6 minutes
+                if _age_minutes < _delai_minutes:
+                    continue  # Pas encore le délai requis
 
                 # Vérifier que le service est supporté
                 _service_req = _req.get("service", "")
@@ -4828,7 +4855,7 @@ def main_dashboard():
         "📝 Création de Sujets & Examens",
         "📖 Fiche de Cours Professeur IA",
         "👔 CV & Lettre de Motivation",
-        "⚙️ Pack Office (Word/Excel/PPT)",
+        "📄 Création Word (depuis zéro)",
         "📊 Data & Excel Analytics",
     ]
 
@@ -4867,17 +4894,17 @@ def main_dashboard():
                 ],
                 "note": "Vous pouvez également joindre un fichier exemple via WhatsApp après la soumission."
             },
-            "⚙️ Pack Office (Word/Excel/PPT)": {
-                "icone": "⚙️",
-                "titre": "Pack Office — Word / Excel / PowerPoint",
-                "intro": "Pour réaliser votre document Office au standard professionnel, précisez :",
+            "📄 Création Word (depuis zéro)": {
+                "icone": "📄",
+                "titre": "Création Word — Document sur mesure",
+                "intro": "Pour créer votre document Word parfaitement adapté, décrivez-nous :",
                 "items": [
-                    ("📄", "Le type de document souhaité (Word, Excel ou PowerPoint)"),
-                    ("🎯", "Le sujet ou contenu du document"),
-                    ("📏", "Le nombre de pages ou diapositives souhaité"),
-                    ("🎨", "Un style ou thème de couleurs si vous en avez un"),
+                    ("📋", "Le type de document (contrat, rapport, lettre, procédure, formulaire...)"),
+                    ("🎯", "Le sujet et le contenu principal à rédiger"),
+                    ("📏", "La longueur souhaitée (nombre de pages ou sections)"),
+                    ("🎨", "Le ton souhaité (formel, commercial, juridique, amical...)"),
                 ],
-                "note": "Précisez si vous souhaitez un logo ou une charte graphique particulière."
+                "note": "Plus votre description est précise, plus le document sera prêt à l'emploi sans retouches."
             },
             "🎨 Création Design IA": {
                 "icone": "🎨",
@@ -4932,7 +4959,7 @@ def main_dashboard():
             "📎 Modifier mon Fichier (Word / Excel / PPT)",
             "📝 Exposé scolaire complet IA",
             "📝 Création de Sujets & Examens",
-            "⚙️ Pack Office (Word/Excel/PPT)",
+            "📄 Création Word (depuis zéro)",
             "🎨 Création Design IA",
             "📚 Affiches & Reçus",
             "👔 CV & Lettre de Motivation",
@@ -4990,7 +5017,7 @@ def main_dashboard():
             "📎 Modifier mon Fichier (Word / Excel / PPT)": ("📎 Modifier mon Fichier", "Importez votre fichier et décrivez précisément les modifications souhaitées.\n\n✅ Formats : Word, Excel, PowerPoint\n⚠️ Soyez précis sur ce que vous voulez changer"),
             "📝 Exposé scolaire complet IA": ("📝 Exposé scolaire", "Remplissez le formulaire : niveau, matière, sujet, pages. Nova Platform rédige un exposé structuré complet.\n\n✅ Idéal pour : collège, lycée, université\n⭐ Service PREMIUM uniquement"),
             "📝 Création de Sujets & Examens": ("📝 Sujets & Examens", "Choisissez niveau, matière, type d'épreuve et durée. Importez votre cours pour baser le sujet dessus.\n\n✅ Types : QCM, Vrai/Faux, Cas pratique, Devoir complet\n⭐ Génération auto avec Premium"),
-            "⚙️ Pack Office (Word/Excel/PPT)": ("⚙️ Pack Office", "Décrivez le document voulu (contrat, rapport, présentation...). Précisez style, langue et contenu.\n\n✅ Tout format Office professionnel\n📝 Plus vous êtes précis, meilleur le résultat"),
+            "📄 Création Word (depuis zéro)": ("📄 Création Word", "Décrivez précisément le document Word que vous voulez : type, contenu, ton, longueur. Nova Platform le crée de A à Z, prêt à l'emploi.\n\n✅ Contrats, rapports, lettres, procédures, formulaires...\n📝 Plus vous êtes précis, plus le résultat est parfait"),
             "🎨 Création Design IA": ("🎨 Création Design", "Décrivez votre visuel : type, couleurs, textes, style souhaité.\n\n✅ Livraison en image ou PDF\n💡 Mentionnez votre secteur d'activité"),
             "📚 Affiches & Reçus": ("📚 Affiches & Reçus", "Précisez le type (affiche, reçu, bon de commande...) et les infos à afficher.\n\n✅ Idéal pour : commerces, associations, événements\n📋 Fournissez les données exactes"),
             "👔 CV & Lettre de Motivation": ("👔 CV & Lettre", "Indiquez votre parcours, le poste visé et l'entreprise cible.\n\n✅ Formats modernes et professionnels\n💡 Précisez si vous avez déjà un CV à améliorer"),
@@ -5067,7 +5094,7 @@ def main_dashboard():
             info = SERVICE_PREREQUIS[service]
 
             SERVICE_AUDIO = {
-                "⚙️ Pack Office (Word/Excel/PPT)": "prerequis_office.mp3",
+                "📄 Création Word (depuis zéro)": "prerequis_word.mp3",
                 "🎨 Création Design IA":           "prerequis_design.mp3",
                 "📚 Affiches & Reçus":             "prerequis_affiches.mp3",
                 "👔 CV & Lettre de Motivation":    "prerequis_cv.mp3",
@@ -6243,6 +6270,15 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                 st.rerun()
 
         if st.session_state["is_glowing"]:
+            # ── VÉRIFICATION LIMITE GRATUIT (7 demandes/jour) ─────────────
+            if user and not premium_actif:
+                _nb_dem_today = get_demandes_gratuit_today(user)
+                if _nb_dem_today >= MAX_DEMANDES_GRATUIT_PAR_JOUR:
+                    st.session_state["is_glowing"] = False
+                    st.error(f"🚫 Limite atteinte : vous avez soumis {_nb_dem_today}/{MAX_DEMANDES_GRATUIT_PAR_JOUR} demandes aujourd'hui (plan gratuit).")
+                    st.info("💡 Votre quota se renouvelle demain à minuit. Passez Premium pour des générations illimitées ! 👑")
+                    st.stop()
+            # ──────────────────────────────────────────────────────────────
             progress_placeholder = st.empty()
             status_text = st.empty()
             bar = progress_placeholder.progress(0)
@@ -6511,7 +6547,7 @@ SERVICES DISPONIBLES :
 - 📎 Modifier mon Fichier : modification de fichiers Word, Excel, PowerPoint
 - 📝 Exposé scolaire complet IA : exposés structurés du CP au Master (PREMIUM uniquement)
 - 📝 Création de Sujets & Examens : devoirs, contrôles, QCM, examens (PREMIUM auto-généré)
-- ⚙️ Pack Office : création de documents Word, Excel, PowerPoint professionnels
+- 📄 Création Word (depuis zéro) : le client décrit son document, Nova le crée complet et prêt à l'emploi
 - 🎨 Création Design IA : affiches, flyers, bannières, logos (décrits en texte)
 - 📚 Affiches & Reçus : supports visuels pour entreprises et associations
 - 👔 CV & Lettre de Motivation : CV et lettres percutants
@@ -6646,7 +6682,7 @@ Action requise si le problème n'est pas résolu.
                          border-radius:10px;padding:12px 16px;margin-bottom:12px;">
                         <span style="font-weight:700;color:#FFD700;">🤖 Réponse automatique — Plan Gratuit</span>
                         <span style="color:rgba(255,255,255,0.5);font-size:0.82rem;display:block;margin-top:3px;">
-                            Si activé : Nova Platform répond après <b>6 minutes</b> pour : Sujets & Examens, Fiche de Cours, CV & Lettre.
+                            Si activé : Nova Platform répond après <b>6, 8 ou 10 min</b> (variable) pour : Sujets & Examens, Fiche de Cours, CV & Lettre.
                         </span>
                         <span style="font-weight:800;font-size:0.95rem;margin-top:6px;display:block;">
                             Statut actuel : {_auto_status}
@@ -6665,7 +6701,7 @@ Action requise si le problème n'est pas résolu.
                         if st.button("🟢 Activer", key="btn_toggle_auto", use_container_width=True):
                             st.session_state["auto_reply_gratuit"] = True
                             set_auto_reply_setting(True)
-                            st.success("✅ Réponse automatique activée — Nova Platform répondra après 6 minutes")
+                            st.success("✅ Réponse automatique activée — Nova Platform répondra après 6, 8 ou 10 min (variable)")
                             st.rerun()
 
                 st.divider()
@@ -7187,7 +7223,7 @@ SERVICES :
 - 📎 Modifier mon Fichier : modification Word, Excel, PowerPoint
 - 📝 Exposé scolaire complet IA : exposés du CP au Master (PREMIUM)
 - 📝 Création de Sujets & Examens : devoirs, QCM, contrôles (PREMIUM = auto)
-- ⚙️ Pack Office : documents Word, Excel, PowerPoint professionnels
+- 📄 Création Word (depuis zéro) : le client décrit son document Word, Nova le génère complet
 - 🎨 Création Design IA : affiches, flyers, bannières, logos
 - 📚 Affiches & Reçus : supports visuels entreprises
 - 👔 CV & Lettre de Motivation : CV et lettres percutants
