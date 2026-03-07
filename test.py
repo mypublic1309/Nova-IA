@@ -5920,12 +5920,77 @@ NOTE : fichier original joint via lien ci-dessous.
                                 magic = fichier_bytes[:8]
                                 est_html_utf16 = fichier_bytes[:2] in (b'\xff\xfe', b'\xfe\xff')
                                 est_html_utf8  = fichier_bytes[:5].lower().startswith(b'<html') or fichier_bytes[:14].lower().replace(b'\xef\xbb\xbf', b'').startswith(b'<html')
-                                est_ole        = magic == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'  # vrai .doc binaire
-                                est_zip        = magic[:2] == b'PK'  # .docx/.xlsx/.pptx
-                                if est_html_utf16 or est_html_utf8:
-                                    # Fichier HTML déguisé en .doc — LibreOffice l'ignorerait
-                                    # On force l'extension .html pour que LibreOffice le lise correctement
-                                    suffix_in_reel = ".html"
+                                est_html = est_html_utf16 or est_html_utf8
+
+                                if est_html:
+                                    # ── Fichier HTML/Word HTML → reconstruire un vrai .docx ──
+                                    import re as _re
+                                    from bs4 import BeautifulSoup
+                                    from docx import Document as _Doc
+                                    from docx.shared import Pt as _Pt, RGBColor as _RGB, Cm as _Cm
+                                    from io import BytesIO as _BIO
+
+                                    if est_html_utf16:
+                                        html_text = fichier_bytes.decode('utf-16', errors='ignore')
+                                    else:
+                                        html_text = fichier_bytes.decode('utf-8', errors='ignore')
+
+                                    soup = BeautifulSoup(html_text, 'html.parser')
+                                    # Supprimer VML, images, scripts, styles
+                                    for tag in soup(['script', 'style', 'head', 'img',
+                                                     'v:shape', 'v:shapetype', 'o:p']):
+                                        tag.decompose()
+
+                                    new_doc = _Doc()
+                                    for sec in new_doc.sections:
+                                        sec.top_margin = _Cm(2); sec.bottom_margin = _Cm(2)
+                                        sec.left_margin = _Cm(2.5); sec.right_margin = _Cm(2.5)
+
+                                    def get_font_size(el):
+                                        """Récupère la font-size max dans les spans d'un paragraphe."""
+                                        sizes = []
+                                        for sp in el.find_all('span', style=True):
+                                            m = _re.search(r'font-size\s*:\s*([\d.]+)pt', sp.get('style',''), _re.I)
+                                            if m: sizes.append(float(m.group(1)))
+                                        return max(sizes) if sizes else None
+
+                                    def get_clean_text(el):
+                                        """Texte propre — on prend le texte direct de l'élément sans récursion dans les sous-spans."""
+                                        # Remplacer les sous-éléments par leur texte pour éviter les doublons
+                                        return _re.sub(r'\s+', ' ', el.get_text(' ', strip=True)).strip()
+
+                                    seen_texts = set()
+                                    _roman_re  = _re.compile(r'^(I{1,3}|IV|V|VI{1,3}|IX|X)[\.\s]')
+                                    for el in soup.find_all(['p','h1','h2','h3','h4','li']):
+                                        texte = _re.sub(r'\s+', ' ', el.get_text(' ', strip=True)).strip()
+                                        if not texte or texte in ('\xa0', '&nbsp;'): continue
+                                        if texte in seen_texts: continue
+                                        seen_texts.add(texte)
+                                        tag      = el.name
+                                        fs       = get_font_size(el)
+                                        is_bold  = bool(el.find('b') or el.find('strong'))
+                                        is_roman = bool(_roman_re.match(texte))
+
+                                        if tag == 'h1' or (fs and fs >= 28):
+                                            new_doc.add_heading(texte, level=1)
+                                        elif tag == 'h2' or (fs and 20 <= fs < 28):
+                                            new_doc.add_heading(texte, level=2)
+                                        elif tag == 'h3' or (fs and 16 <= fs < 20) or is_roman:
+                                            new_doc.add_heading(texte, level=3)
+                                        elif tag == 'h4' or (fs and 13 <= fs < 16):
+                                            new_doc.add_heading(texte, level=4)
+                                        else:
+                                            para = new_doc.add_paragraph()
+                                            run  = para.add_run(texte)
+                                            run.bold = is_bold
+                                            if fs: run.font.size = _Pt(min(fs, 24))
+
+                                    buf_docx = _BIO()
+                                    new_doc.save(buf_docx)
+                                    buf_docx.seek(0)
+                                    suffix_in_reel = ".docx"
+                                    fichier_bytes  = buf_docx.read()
+
                                 with tempfile.NamedTemporaryFile(suffix=suffix_in_reel, delete=False) as tmp_in:
                                     tmp_in.write(fichier_bytes)
                                     tmp_in_path = tmp_in.name
