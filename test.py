@@ -5925,7 +5925,12 @@ NOTE : fichier original joint via lien ci-dessous.
                                 if est_html:
                                     # ── Fichier HTML/Word HTML → reconstruire un vrai .docx ──
                                     import re as _re
-                                    from bs4 import BeautifulSoup
+                                    try:
+                                        from bs4 import BeautifulSoup
+                                    except ImportError:
+                                        _sub.run(["pip", "install", "beautifulsoup4",
+                                                  "--break-system-packages", "-q"], check=True)
+                                        from bs4 import BeautifulSoup
                                     from docx import Document as _Doc
                                     from docx.shared import Pt as _Pt, RGBColor as _RGB, Cm as _Cm
                                     from io import BytesIO as _BIO
