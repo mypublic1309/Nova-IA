@@ -5916,6 +5916,16 @@ NOTE : fichier original joint via lien ci-dessous.
 
                             # ── Word / Excel / PPT → PDF via LibreOffice ─────
                             if "→ PDF" in conv_type:
+                                # ── Détection du format réel du fichier ──────
+                                magic = fichier_bytes[:8]
+                                est_html_utf16 = fichier_bytes[:2] in (b'\xff\xfe', b'\xfe\xff')
+                                est_html_utf8  = fichier_bytes[:5].lower().startswith(b'<html') or fichier_bytes[:14].lower().replace(b'\xef\xbb\xbf', b'').startswith(b'<html')
+                                est_ole        = magic == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'  # vrai .doc binaire
+                                est_zip        = magic[:2] == b'PK'  # .docx/.xlsx/.pptx
+                                if est_html_utf16 or est_html_utf8:
+                                    # Fichier HTML déguisé en .doc — LibreOffice l'ignorerait
+                                    # On force l'extension .html pour que LibreOffice le lise correctement
+                                    suffix_in_reel = ".html"
                                 with tempfile.NamedTemporaryFile(suffix=suffix_in_reel, delete=False) as tmp_in:
                                     tmp_in.write(fichier_bytes)
                                     tmp_in_path = tmp_in.name
