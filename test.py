@@ -4880,18 +4880,6 @@ def main_dashboard():
             st.stop()
 
         SERVICE_PREREQUIS = {
-            "📊 Data & Excel Analytics": {
-                "icone": "📊",
-                "titre": "Data & Excel Analytics",
-                "intro": "Pour traiter vos données efficacement, merci de préciser dans votre cahier des charges :",
-                "items": [
-                    ("📁", "Le type de fichier à traiter (Excel, CSV, autre...)"),
-                    ("🎯", "L'objectif de l'analyse (tableau de bord, graphiques, calculs...)"),
-                    ("📋", "Une description des données ou colonnes présentes"),
-                    ("🔢", "Le nombre approximatif de lignes ou d'entrées"),
-                ],
-                "note": "Vous pouvez également joindre un fichier exemple via WhatsApp après la soumission."
-            },
             "📄 Création Word (depuis zéro)": {
                 "icone": "📄",
                 "titre": "Création Word — Document sur mesure",
