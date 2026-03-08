@@ -5588,6 +5588,52 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                         st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
         elif "Exposé" in service:
+            # ── Splash screen exposé (0.7 sec) ──────────────────────────
+            if f"splash_expose_done_{service}" not in st.session_state:
+                st.session_state[f"splash_expose_done_{service}"] = True
+                _splash = st.empty()
+                _splash.markdown('''
+                <div style="
+                    position:fixed;top:0;left:0;width:100vw;height:100vh;
+                    background:#0c0516;z-index:99999;
+                    display:flex;align-items:center;justify-content:center;
+                    flex-direction:column;gap:16px;
+                ">
+                  <div style="
+                    position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);
+                    width:340px;height:220px;
+                    background:radial-gradient(ellipse,rgba(160,80,255,0.28) 0%,transparent 70%);
+                    filter:blur(30px);pointer-events:none;
+                  "></div>
+                  <div style="font-size:5rem;line-height:1;filter:drop-shadow(0 0 20px rgba(180,100,255,0.7));">📚</div>
+                  <div style="
+                    font-family:Arial Black,Impact,sans-serif;
+                    font-size:2.2rem;font-weight:900;
+                    color:#ffffff;text-align:center;line-height:1.1;
+                    text-shadow:0 0 30px rgba(180,100,255,0.6);
+                  ">TON EXPOSÉ<br><span style="color:#c87aff;">RÉDIGÉ PAR L'IA</span></div>
+                  <div style="
+                    font-family:monospace;font-size:0.9rem;
+                    color:rgba(255,255,255,0.4);letter-spacing:2px;text-align:center;
+                  ">Du CP jusqu&#39;au Master · Structuré · Argumenté</div>
+                  <div style="
+                    background:rgba(200,122,255,0.15);
+                    border:1px solid rgba(200,122,255,0.5);
+                    border-radius:100px;padding:8px 24px;
+                    font-family:monospace;font-size:0.85rem;
+                    color:#c87aff;font-weight:700;letter-spacing:2px;
+                  ">⚡ LIVRÉ EN 60 SECONDES</div>
+                  <div style="
+                    font-family:Arial Black,sans-serif;font-size:1.8rem;
+                    color:#FFD700;font-weight:900;
+                    filter:drop-shadow(0 0 10px rgba(255,180,0,0.5));
+                  ">1 GÉNÉRATION · 600 FC</div>
+                </div>
+                ''', unsafe_allow_html=True)
+                time.sleep(0.7)
+                _splash.empty()
+            # ────────────────────────────────────────────────────────────
+
             st.markdown('''
             <div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.35);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
