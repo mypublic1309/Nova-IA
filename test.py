@@ -4747,7 +4747,6 @@ def main_dashboard():
                 "📖 Fiche de Cours Professeur IA",
                 "👔 CV & Lettre de Motivation",
                 "📄 Création Word (depuis zéro)",
-                "📊 Data & Excel Analytics",
             ]
             # Définition locale pour éviter les NameError
             _SERVICES_GEMINI_LOCAL = [
@@ -4756,7 +4755,6 @@ def main_dashboard():
                 "📖 Fiche de Cours Professeur IA",
                 "👔 CV & Lettre de Motivation",
                 "📄 Création Word (depuis zéro)",
-                "📊 Data & Excel Analytics",
             ]
 
             for _req in _fresh_demandes:
