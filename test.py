@@ -4601,6 +4601,16 @@ Intervenir si problème non résolu.
 
 
 def main_dashboard():
+    # Défini en premier pour éviter tout UnboundLocalError
+    SERVICES_GEMINI = [
+        "📝 Exposé scolaire complet IA",
+        "📝 Création de Sujets & Examens",
+        "📖 Fiche de Cours Professeur IA",
+        "👔 CV & Lettre de Motivation",
+        "📄 Création Word (depuis zéro)",
+        "📊 Data & Excel Analytics",
+    ]
+
     user = st.session_state["current_user"]
     db = st.session_state["db"]
 
@@ -4897,15 +4907,6 @@ def main_dashboard():
                 pass
 
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
-
-    SERVICES_GEMINI = [
-        "📝 Exposé scolaire complet IA",
-        "📝 Création de Sujets & Examens",
-        "📖 Fiche de Cours Professeur IA",
-        "👔 CV & Lettre de Motivation",
-        "📄 Création Word (depuis zéro)",
-        "📊 Data & Excel Analytics",
-    ]
 
     with tab1:
         type_sujet_selectionne = None  # Initialisé ici, redéfini si service Sujets/Examens
