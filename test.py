@@ -8,7 +8,53 @@ from io import BytesIO
 import streamlit.components.v1 as components
 from supabase import create_client
 
-st.set_page_config(
+# ══════════════════════════════════════════════════════════════════
+# SPLASH SCREEN — Fonction universelle pour tous les services
+# ══════════════════════════════════════════════════════════════════
+_SPLASH_CONFIG = {
+    "Expose": {"icon":"📚","bg":"#0c0516","glow":"rgba(160,80,255,0.28)","color":"#c87aff","titre":"TON EXPOSÉ<br><span style='color:#c87aff;'>RÉDIGÉ PAR L'IA</span>","sub":"Du CP jusqu'au Master · Structuré · Argumenté","badge":"⚡ LIVRÉ EN 60 SECONDES","prix":"1 GÉNÉRATION · 600 FC"},
+    "Fiche": {"icon":"📖","bg":"#0a0514","glow":"rgba(155,89,182,0.28)","color":"#9b59b6","titre":"TA FICHE DE COURS<br><span style='color:#9b59b6;'>GÉNÉRÉE PAR L'IA</span>","sub":"Notions · Exemples · Exercices · Prête à imprimer","badge":"⚡ PROFESSIONNELLE EN 60 SEC","prix":"1 GÉNÉRATION · 600 FC"},
+    "Sujets": {"icon":"📝","bg":"#050c14","glow":"rgba(0,150,255,0.25)","color":"#00aaff","titre":"TON SUJET D'EXAMEN<br><span style='color:#00aaff;'>CRÉÉ PAR L'IA</span>","sub":"QCM · Vrai/Faux · Cas pratique · Devoir complet","badge":"⚡ AUTO-GÉNÉRÉ EN 60 SEC","prix":"1 GÉNÉRATION · 600 FC"},
+    "CV": {"icon":"👔","bg":"#050a10","glow":"rgba(0,200,255,0.22)","color":"#00d2ff","titre":"TON CV PROFESSIONNEL<br><span style='color:#00d2ff;'>RÉDIGÉ PAR L'IA</span>","sub":"CV + Lettre de motivation · Prêt à envoyer","badge":"⚡ PROFESSIONNEL EN 60 SEC","prix":"1 GÉNÉRATION · 600 FC"},
+    "Word": {"icon":"📄","bg":"#050d08","glow":"rgba(0,200,80,0.22)","color":"#4dff88","titre":"TON DOCUMENT WORD<br><span style='color:#4dff88;'>CRÉÉ PAR L'IA</span>","sub":"Rapport · Lettre · Contrat · Document complet","badge":"⚡ LIVRÉ EN 60 SECONDES","prix":"1 GÉNÉRATION · 600 FC"},
+    "Modifier": {"icon":"✏️","bg":"#050a0d","glow":"rgba(0,210,255,0.22)","color":"#00d2ff","titre":"MODIFICATION<br><span style='color:#00d2ff;'>DE TON FICHIER</span>","sub":"Word · Excel · PDF · PowerPoint · sur mesure","badge":"📎 IMPORTE TON FICHIER","prix":"TRAITEMENT RAPIDE"},
+    "Conversion": {"icon":"🔄","bg":"#050d08","glow":"rgba(46,204,113,0.22)","color":"#2ecc71","titre":"CONVERSION<br><span style='color:#2ecc71;'>INSTANTANÉE</span>","sub":"PDF · Word · Excel · Images · 100% automatique","badge":"⚡ RÉSULTAT EN QUELQUES SEC","prix":"CONVERSION GRATUITE"},
+    "Design": {"icon":"🎨","bg":"#0d050a","glow":"rgba(255,80,180,0.22)","color":"#ff50b4","titre":"TON DESIGN<br><span style='color:#ff50b4;'>CRÉÉ PAR L'IA</span>","sub":"Affiches · Reçus · Visuels · Prêts à imprimer","badge":"⚡ LIVRÉ EN 60 SECONDES","prix":"1 GÉNÉRATION · 600 FC"},
+}
+
+def _show_splash(service_key: str, duree: float = 1.2):
+    cfg = _SPLASH_CONFIG.get(service_key)
+    if not cfg:
+        return
+    key = f"_splash_done_{service_key}"
+    if key in st.session_state:
+        return
+    st.session_state[key] = True
+    _ph = st.empty()
+    _ph.markdown(f'''
+    <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;
+        background:{cfg['bg']};z-index:99999;
+        display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
+      <div style="position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);
+        width:380px;height:260px;
+        background:radial-gradient(ellipse,{cfg['glow']} 0%,transparent 70%);
+        filter:blur(35px);pointer-events:none;"></div>
+      <div style="font-size:5rem;line-height:1;filter:drop-shadow(0 0 22px {cfg['color']});">{cfg['icon']}</div>
+      <div style="font-family:Arial Black,Impact,sans-serif;font-size:2.1rem;font-weight:900;
+        color:#ffffff;text-align:center;line-height:1.15;text-shadow:0 0 30px {cfg['color']};">{cfg['titre']}</div>
+      <div style="font-family:monospace;font-size:0.88rem;color:rgba(255,255,255,0.38);
+        letter-spacing:2px;text-align:center;">{cfg['sub']}</div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid {cfg['color']}88;
+        border-radius:100px;padding:8px 26px;font-family:monospace;font-size:0.82rem;
+        color:{cfg['color']};font-weight:700;letter-spacing:2px;">{cfg['badge']}</div>
+      <div style="font-family:Arial Black,sans-serif;font-size:1.7rem;color:#FFD700;
+        font-weight:900;filter:drop-shadow(0 0 10px rgba(255,180,0,0.5));">{cfg['prix']}</div>
+    </div>
+    ''', unsafe_allow_html=True)
+    time.sleep(duree)
+    _ph.empty()
+
+
     page_title="L'IA bureautique NoVA AI", 
     page_icon="⚡", 
     layout="wide",
@@ -5121,6 +5167,7 @@ def main_dashboard():
         # ── SÉLECTION DU TYPE DE SUJET (uniquement pour le service Sujets/Examens) ──
         type_sujet_selectionne = None
         if "Sujets" in service or "Examens" in service:
+            _show_splash("Sujets")
             st.markdown("#### 🎯 Type de sujet")
             TYPES_SUJETS = {
                 "🔵 QCM — Questions à Choix Multiple": "QCM",
@@ -5588,52 +5635,7 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                         st.warning("⚠️ Sélectionnez une matière précise (pas le titre de catégorie)")
 
         elif "Exposé" in service:
-            # ── Splash screen exposé (0.7 sec) ──────────────────────────
-            if f"splash_expose_done_{service}" not in st.session_state:
-                st.session_state[f"splash_expose_done_{service}"] = True
-                _splash = st.empty()
-                _splash.markdown('''
-                <div style="
-                    position:fixed;top:0;left:0;width:100vw;height:100vh;
-                    background:#0c0516;z-index:99999;
-                    display:flex;align-items:center;justify-content:center;
-                    flex-direction:column;gap:16px;
-                ">
-                  <div style="
-                    position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);
-                    width:340px;height:220px;
-                    background:radial-gradient(ellipse,rgba(160,80,255,0.28) 0%,transparent 70%);
-                    filter:blur(30px);pointer-events:none;
-                  "></div>
-                  <div style="font-size:5rem;line-height:1;filter:drop-shadow(0 0 20px rgba(180,100,255,0.7));">📚</div>
-                  <div style="
-                    font-family:Arial Black,Impact,sans-serif;
-                    font-size:2.2rem;font-weight:900;
-                    color:#ffffff;text-align:center;line-height:1.1;
-                    text-shadow:0 0 30px rgba(180,100,255,0.6);
-                  ">TON EXPOSÉ<br><span style="color:#c87aff;">RÉDIGÉ PAR L'IA</span></div>
-                  <div style="
-                    font-family:monospace;font-size:0.9rem;
-                    color:rgba(255,255,255,0.4);letter-spacing:2px;text-align:center;
-                  ">Du CP jusqu&#39;au Master · Structuré · Argumenté</div>
-                  <div style="
-                    background:rgba(200,122,255,0.15);
-                    border:1px solid rgba(200,122,255,0.5);
-                    border-radius:100px;padding:8px 24px;
-                    font-family:monospace;font-size:0.85rem;
-                    color:#c87aff;font-weight:700;letter-spacing:2px;
-                  ">⚡ LIVRÉ EN 60 SECONDES</div>
-                  <div style="
-                    font-family:Arial Black,sans-serif;font-size:1.8rem;
-                    color:#FFD700;font-weight:900;
-                    filter:drop-shadow(0 0 10px rgba(255,180,0,0.5));
-                  ">1 GÉNÉRATION · 600 FC</div>
-                </div>
-                ''', unsafe_allow_html=True)
-                time.sleep(0.7)
-                _splash.empty()
-            # ────────────────────────────────────────────────────────────
-
+            _show_splash("Expose")
             st.markdown('''
             <div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.35);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
@@ -5725,6 +5727,7 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                 if not _exp_matiere_val:  st.warning("⚠️ Sélectionnez une matière précise")
 
         elif "Fiche de Cours" in service:
+            _show_splash("Fiche")
             st.markdown('''
             <div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.35);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
@@ -5816,6 +5819,7 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                 if not _fc_matiere_val: st.warning("⚠️ Sélectionnez une matière précise")
 
         elif "Modifier" in service and "Fichier" in service:
+            _show_splash("Modifier")
             st.markdown('''
             <div style="background:rgba(0,210,255,0.07);border:1px solid rgba(0,210,255,0.3);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
@@ -5869,6 +5873,7 @@ NOTE : fichier original joint via lien ci-dessous.
             # ════════════════════════════════════════════════════════════════
             # SERVICE CONVERSION — 100% Python, pas de Gemini, pas de WhatsApp
             # ════════════════════════════════════════════════════════════════
+            _show_splash("Conversion")
             st.markdown('''
             <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.35);
                  border-radius:12px;padding:14px 18px;margin-bottom:14px;">
@@ -6144,6 +6149,13 @@ NOTE : fichier original joint via lien ci-dessous.
             prompt = "CONVERSION_AUTO"  # Pas de prompt Gemini ni WhatsApp
 
         else:
+            # ── Splash screen adapté au service ───────────────────────────────
+            if "CV" in service or "Lettre" in service:
+                _show_splash("CV")
+            elif "Word" in service:
+                _show_splash("Word")
+            elif "Design" in service or "Affiches" in service:
+                _show_splash("Design")
             # ── CHAMP TEXTE LIBRE POUR LES AUTRES SERVICES ────────────────────
             prompt = st.text_area("Cahier des charges Nova", height=150, placeholder="Détaillez votre projet pour une exécution parfaite...")
 
