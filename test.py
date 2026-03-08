@@ -26,10 +26,13 @@ def _show_splash(service_key: str, duree: float = 1.2):
     cfg = _SPLASH_CONFIG.get(service_key)
     if not cfg:
         return
-    key = f"_splash_done_{service_key}"
-    if key in st.session_state:
+    if st.session_state.get("_splash_last_service") == service_key:
         return
-    st.session_state[key] = True
+    st.session_state["_splash_last_service"] = service_key
+    # Nettoyer l'ancienne clé one-shot si elle existe encore
+    old_key = f"_splash_done_{service_key}"
+    if old_key in st.session_state:
+        del st.session_state[old_key]
     _ph = st.empty()
     _ph.markdown(f'''
     <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;
