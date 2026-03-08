@@ -94,6 +94,8 @@ def load_db():
                 "premium_expiry": r.get("premium_expiry", None),
                 "gen_used": r.get("gen_used", 0),
                 "gen_date": r.get("gen_date", None),
+                "gen_bonus": r.get("gen_bonus", 0),
+                "gen_bonus_date": r.get("gen_bonus_date", None),
             }
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
@@ -224,6 +226,16 @@ def delete_all_liens(uid):
         supabase.table("liens").delete().eq("uid", uid).execute()
     except Exception as e:
         st.error(f"Erreur suppression historique : {e}")
+
+def supprimer_membre(uid):
+    """Supprime un membre et toutes ses données (users, demandes, liens)."""
+    try:
+        supabase.table("demandes").delete().eq("uid", uid).execute()
+        supabase.table("liens").delete().eq("uid", uid).execute()
+        supabase.table("users").delete().eq("uid", uid).execute()
+        return True
+    except Exception as e:
+        return str(e)
 
 def save_refus(uid, service, message):
     """Sauvegarde un refus de mission dans les livrables du client."""
@@ -382,14 +394,38 @@ PLANS_PREMIUM = {
 }
 
 def get_gen_quota(user_data):
-    """Retourne (gen_used_aujourd_hui, quota_max) selon le plan."""
+    """Retourne (gen_used_aujourd_hui, quota_max) selon le plan + bonus du jour."""
     plan = user_data.get("premium_plan")
     quota = PLANS_PREMIUM.get(plan, {}).get("generations", 0) if plan else 0
     gen_date = user_data.get("gen_date")
     today = datetime.now().strftime("%Y-%m-%d")
+    # Bonus générations offert par l'admin (valable 1 jour)
+    bonus = 0
+    bonus_date = user_data.get("gen_bonus_date")
+    if bonus_date == today:
+        bonus = int(user_data.get("gen_bonus", 0) or 0)
+    quota_total = quota + bonus
     if gen_date != today:
-        return 0, quota  # Nouveau jour → compteur remis à zéro
-    return user_data.get("gen_used", 0), quota
+        return 0, quota_total  # Nouveau jour -> compteur remis a zero
+    return user_data.get("gen_used", 0), quota_total
+
+def ajouter_generations_bonus(uid, n):
+    """Credite n generations bonus valables pour la journee en cours."""
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        row = supabase.table("users").select("gen_bonus, gen_bonus_date").eq("uid", uid).execute().data
+        if row:
+            existing_date  = row[0].get("gen_bonus_date")
+            existing_bonus = int(row[0].get("gen_bonus", 0) or 0) if existing_date == today else 0
+        else:
+            existing_bonus = 0
+        supabase.table("users").update({
+            "gen_bonus":      existing_bonus + n,
+            "gen_bonus_date": today,
+        }).eq("uid", uid).execute()
+        return True
+    except Exception as e:
+        return False
 
 def quota_restant(user_data):
     used, quota = get_gen_quota(user_data)
@@ -7138,6 +7174,73 @@ Action requise si le problème n'est pas résolu.
                                 st.session_state["db"] = load_db()
                                 st.success(f"✅ Premium activé pour {uid_m} !")
                                 st.rerun()
+
+                    # ── SUPPRIMER LE MEMBRE ──────────────────────────────────
+                    _confirm_key = f"confirm_del_{uid_m}"
+                    if st.session_state.get(_confirm_key):
+                        st.markdown(f"""
+                        <div style="background:rgba(255,50,50,0.10);border:1px solid rgba(255,80,80,0.4);
+                             border-radius:10px;padding:12px 16px;margin:6px 0;">
+                            ⚠️ <b style="color:#ff5555;">Confirmer la suppression de <u>{uid_m}</u> ?</b><br>
+                            <small style="color:rgba(255,255,255,0.5);">
+                                Toutes ses données (compte, demandes, livrables) seront effacées définitivement.
+                            </small>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        dc1, dc2 = st.columns(2)
+                        with dc1:
+                            if st.button("✅ Oui, supprimer", key=f"del_ok_{uid_m}", use_container_width=True):
+                                result = supprimer_membre(uid_m)
+                                if result is True:
+                                    st.session_state.pop(_confirm_key, None)
+                                    st.session_state["db"] = load_db()
+                                    st.success(f"🗑️ Membre **{uid_m}** supprimé définitivement.")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Erreur : {result}")
+                        with dc2:
+                            if st.button("❌ Annuler", key=f"del_cancel_{uid_m}", use_container_width=True):
+                                st.session_state.pop(_confirm_key, None)
+                                st.rerun()
+                    else:
+                        if st.button(f"🗑️ Supprimer le compte", key=f"del_{uid_m}", use_container_width=False):
+                            st.session_state[_confirm_key] = True
+                            st.rerun()
+
+                    # ── BONUS GÉNÉRATIONS (admin) ─────────────────────────────
+                    today_str = datetime.now().strftime("%Y-%m-%d")
+                    _bonus_actif = udata.get("gen_bonus_date") == today_str
+                    _bonus_val   = int(udata.get("gen_bonus", 0) or 0) if _bonus_actif else 0
+                    _used_today, _quota_today = get_gen_quota(udata)
+                    _restant = max(0, _quota_today - _used_today)
+
+                    with st.expander(f"⚡ Créditer des générations · {uid_m}  {'🎁 +' + str(_bonus_val) + ' bonus actif' if _bonus_actif and _bonus_val > 0 else ''}"):
+                        st.markdown(f"""
+                        <div style="background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);
+                             border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:0.85rem;">
+                            📊 Utilisées aujourd'hui : <b>{_used_today}</b> · 
+                            Quota total : <b>{_quota_today}</b> · 
+                            Restantes : <b style="color:#4dff88;">{_restant}</b>
+                            {f" · 🎁 Bonus actif : <b style='color:#FFD700;'>+{_bonus_val}</b>" if _bonus_actif and _bonus_val > 0 else ""}
+                        </div>
+                        """, unsafe_allow_html=True)
+                        bc1, bc2 = st.columns([2, 1])
+                        with bc1:
+                            nb_bonus = st.number_input(
+                                "Générations à offrir (valables 1 jour)",
+                                min_value=1, max_value=50, value=2, step=1,
+                                key=f"nb_bonus_{uid_m}"
+                            )
+                        with bc2:
+                            st.markdown("<br>", unsafe_allow_html=True)
+                            if st.button(f"🎁 Créditer +{nb_bonus}", key=f"btn_bonus_{uid_m}", use_container_width=True):
+                                ok = ajouter_generations_bonus(uid_m, nb_bonus)
+                                if ok:
+                                    st.session_state["db"] = load_db()
+                                    st.success(f"✅ +{nb_bonus} génération(s) créditée(s) à **{uid_m}** pour aujourd'hui !")
+                                    st.rerun()
+                                else:
+                                    st.error("Erreur lors du crédit — vérifier la colonne gen_bonus dans Supabase.")
 
 
 inject_custom_css()
