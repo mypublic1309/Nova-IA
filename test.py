@@ -26,13 +26,10 @@ def _show_splash(service_key: str, duree: float = 1.2):
     cfg = _SPLASH_CONFIG.get(service_key)
     if not cfg:
         return
-    if st.session_state.get("_splash_last_service") == service_key:
+    key = f"_splash_done_{service_key}"
+    if key in st.session_state:
         return
-    st.session_state["_splash_last_service"] = service_key
-    # Nettoyer l'ancienne clé one-shot si elle existe encore
-    old_key = f"_splash_done_{service_key}"
-    if old_key in st.session_state:
-        del st.session_state[old_key]
+    st.session_state[key] = True
     _ph = st.empty()
     _ph.markdown(f'''
     <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;
@@ -58,7 +55,6 @@ def _show_splash(service_key: str, duree: float = 1.2):
     _ph.empty()
 
 
-st.set_page_config(
     page_title="L'IA bureautique NoVA AI", 
     page_icon="⚡", 
     layout="wide",
@@ -94,8 +90,6 @@ def load_db():
                 "premium_expiry": r.get("premium_expiry", None),
                 "gen_used": r.get("gen_used", 0),
                 "gen_date": r.get("gen_date", None),
-                "gen_bonus": r.get("gen_bonus", 0),
-                "gen_bonus_date": r.get("gen_bonus_date", None),
             }
         demandes_rows = supabase.table("demandes").select("*").execute().data
         demandes = []
@@ -226,16 +220,6 @@ def delete_all_liens(uid):
         supabase.table("liens").delete().eq("uid", uid).execute()
     except Exception as e:
         st.error(f"Erreur suppression historique : {e}")
-
-def supprimer_membre(uid):
-    """Supprime un membre et toutes ses données (users, demandes, liens)."""
-    try:
-        supabase.table("demandes").delete().eq("uid", uid).execute()
-        supabase.table("liens").delete().eq("uid", uid).execute()
-        supabase.table("users").delete().eq("uid", uid).execute()
-        return True
-    except Exception as e:
-        return str(e)
 
 def save_refus(uid, service, message):
     """Sauvegarde un refus de mission dans les livrables du client."""
@@ -387,6 +371,71 @@ Vous n'avez rien à faire pour cette commande.
     except Exception:
         pass  # Silencieux — l'email d'info admin n'est pas critique
 
+def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
+    """Envoie un email de notification au CLIENT quand son fichier est prêt."""
+    if not client_email or client_email == "Non renseigné" or "@" not in client_email:
+        return  # Pas d'email renseigné → silencieux
+    try:
+        import resend
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        corps_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:16px;overflow:hidden;border:1px solid #222;">
+          <!-- Header -->
+          <div style="background:linear-gradient(135deg,#0d1f0d,#0a0a0a);padding:28px 30px 18px;text-align:center;border-bottom:1px solid #1a3a1a;">
+            <div style="font-size:2.2rem;margin-bottom:6px;">⚡</div>
+            <div style="font-family:Arial Black,sans-serif;font-size:1.5rem;font-weight:900;color:#4dff88;letter-spacing:2px;">NOVA PLATFORM</div>
+            <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;letter-spacing:1px;margin-top:4px;">L'IA Bureautique de Côte d'Ivoire</div>
+          </div>
+          <!-- Body -->
+          <div style="padding:28px 30px;">
+            <div style="color:rgba(255,255,255,0.85);font-size:1rem;margin-bottom:18px;">
+              Bonjour <strong style="color:#4dff88;">{client_nom}</strong> 👋
+            </div>
+            <div style="background:#0d1f0d;border:1px solid #1a5c30;border-radius:12px;padding:18px 20px;margin-bottom:20px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+              <div style="font-family:Arial Black,sans-serif;font-size:1.2rem;font-weight:900;color:#ffffff;">Votre fichier est prêt !</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-top:6px;">Votre demande a été traitée avec succès par Nova Platform</div>
+            </div>
+            <!-- Détails commande -->
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+              <tr>
+                <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;border-bottom:1px solid #1a1a1a;">🛠️ Service</td>
+                <td style="padding:8px 0;color:#ffffff;font-size:0.82rem;font-weight:700;text-align:right;border-bottom:1px solid #1a1a1a;">{service}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;border-bottom:1px solid #1a1a1a;">📄 Fichier</td>
+                <td style="padding:8px 0;color:#4dff88;font-size:0.82rem;font-weight:700;text-align:right;border-bottom:1px solid #1a1a1a;">{nom_fichier}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;">⏰ Livré le</td>
+                <td style="padding:8px 0;color:#ffffff;font-size:0.82rem;text-align:right;">{datetime.now().strftime("%d/%m/%Y à %H:%M")}</td>
+              </tr>
+            </table>
+            <div style="background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:14px 16px;margin-bottom:20px;text-align:center;">
+              <div style="color:rgba(255,255,255,0.4);font-size:0.75rem;letter-spacing:1px;margin-bottom:4px;">RETROUVEZ VOTRE FICHIER SUR</div>
+              <div style="color:#ffffff;font-size:0.88rem;">👉 Votre interface Nova Platform</div>
+            </div>
+            <!-- Contact -->
+            <div style="text-align:center;padding-top:8px;border-top:1px solid #1a1a1a;">
+              <div style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin-bottom:6px;">Un problème ? Contactez-nous sur WhatsApp</div>
+              <div style="font-family:monospace;font-size:1rem;font-weight:700;color:#25d366;">+225 01 71 54 25 05</div>
+            </div>
+          </div>
+          <!-- Footer -->
+          <div style="background:#050505;padding:14px 30px;text-align:center;border-top:1px solid #111;">
+            <div style="color:rgba(255,255,255,0.2);font-size:0.72rem;">Nova Platform · Abidjan, Côte d'Ivoire 🇨🇮</div>
+          </div>
+        </div>
+        """
+        resend.Emails.send({
+            "from": "Nova Platform <onboarding@resend.dev>",
+            "to": [client_email],
+            "subject": f"✅ Votre fichier est prêt — {service} | Nova Platform",
+            "html": corps_html
+        })
+    except Exception:
+        pass  # Silencieux — l'email client n'est pas bloquant
+
 PLANS_PREMIUM = {
     "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 2},
     "10 Jours":   {"jours": 10, "prix": "1000 FC", "emoji": "🔟", "generations": 9},
@@ -394,38 +443,14 @@ PLANS_PREMIUM = {
 }
 
 def get_gen_quota(user_data):
-    """Retourne (gen_used_aujourd_hui, quota_max) selon le plan + bonus du jour."""
+    """Retourne (gen_used_aujourd_hui, quota_max) selon le plan."""
     plan = user_data.get("premium_plan")
     quota = PLANS_PREMIUM.get(plan, {}).get("generations", 0) if plan else 0
     gen_date = user_data.get("gen_date")
     today = datetime.now().strftime("%Y-%m-%d")
-    # Bonus générations offert par l'admin (valable 1 jour)
-    bonus = 0
-    bonus_date = user_data.get("gen_bonus_date")
-    if bonus_date == today:
-        bonus = int(user_data.get("gen_bonus", 0) or 0)
-    quota_total = quota + bonus
     if gen_date != today:
-        return 0, quota_total  # Nouveau jour -> compteur remis a zero
-    return user_data.get("gen_used", 0), quota_total
-
-def ajouter_generations_bonus(uid, n):
-    """Credite n generations bonus valables pour la journee en cours."""
-    try:
-        today = datetime.now().strftime("%Y-%m-%d")
-        row = supabase.table("users").select("gen_bonus, gen_bonus_date").eq("uid", uid).execute().data
-        if row:
-            existing_date  = row[0].get("gen_bonus_date")
-            existing_bonus = int(row[0].get("gen_bonus", 0) or 0) if existing_date == today else 0
-        else:
-            existing_bonus = 0
-        supabase.table("users").update({
-            "gen_bonus":      existing_bonus + n,
-            "gen_bonus_date": today,
-        }).eq("uid", uid).execute()
-        return True
-    except Exception as e:
-        return False
+        return 0, quota  # Nouveau jour → compteur remis à zéro
+    return user_data.get("gen_used", 0), quota
 
 def quota_restant(user_data):
     used, quota = get_gen_quota(user_data)
@@ -4409,15 +4434,19 @@ def show_auth_page():
             new_wa = "".join(c for c in new_wa_raw if c.isdigit())
             if new_wa_raw != new_wa and new_wa_raw:
                 st.warning("⚠️ Le numéro WhatsApp ne doit contenir que des chiffres.")
+            new_email = st.text_input("📧 Email (optionnel — pour recevoir vos fichiers par email)", placeholder="Ex: monmail@gmail.com")
+            if new_email and "@" not in new_email:
+                st.warning("⚠️ Adresse email invalide.")
             if st.form_submit_button("💎 REJOINDRE NOVA PLATFORM"):
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
-                        succes = save_user(new_uid, normalize_wa(new_wa))
+                        email_val = new_email.strip() if new_email and "@" in new_email else "Non renseigné"
+                        succes = save_user(new_uid, normalize_wa(new_wa), email=email_val)
                         if succes:
                             db["users"][new_uid] = {
                                 "whatsapp": normalize_wa(new_wa),
-                                "email": "Non renseigné",
+                                "email": email_val,
                                 "joined": str(datetime.now()),
                                 "premium": False,
                                 "premium_plan": None,
@@ -4637,16 +4666,6 @@ Intervenir si problème non résolu.
 
 
 def main_dashboard():
-    # Défini en premier pour éviter tout UnboundLocalError
-    SERVICES_GEMINI = [
-        "📝 Exposé scolaire complet IA",
-        "📝 Création de Sujets & Examens",
-        "📖 Fiche de Cours Professeur IA",
-        "👔 CV & Lettre de Motivation",
-        "📄 Création Word (depuis zéro)",
-        "📊 Data & Excel Analytics",
-    ]
-
     user = st.session_state["current_user"]
     db = st.session_state["db"]
 
@@ -4943,6 +4962,15 @@ def main_dashboard():
                 pass
 
     tab1, tab2 = st.tabs(["🚀 DÉPLOYER UNE TÂCHE", "📂 MES LIVRABLES (CLOUD)"])
+
+    SERVICES_GEMINI = [
+        "📝 Exposé scolaire complet IA",
+        "📝 Création de Sujets & Examens",
+        "📖 Fiche de Cours Professeur IA",
+        "👔 CV & Lettre de Motivation",
+        "📄 Création Word (depuis zéro)",
+        "📊 Data & Excel Analytics",
+    ]
 
     with tab1:
         type_sujet_selectionne = None  # Initialisé ici, redéfini si service Sujets/Examens
@@ -6440,6 +6468,9 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                         # Email admin — Gemini a déjà répondu
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
                         envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], demande_complete=prompt)
+                        # Email client — notification de livraison
+                        _email_client = st.session_state["db"]["users"].get(user, {}).get("email", "")
+                        envoyer_notif_client_email(user, _email_client, service, result_holder["nom"])
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
@@ -7081,6 +7112,9 @@ Action requise si le problème n'est pas résolu.
                                         delete_demande(req["id"])
                                         if req_id in st.session_state["gemini_results"]:
                                             del st.session_state["gemini_results"][req_id]
+                                        # Email client — notification livraison admin
+                                        _email_c = st.session_state["db"]["users"].get(client_nom, {}).get("email", "")
+                                        envoyer_notif_client_email(client_nom, _email_c, service, nom_fichier)
                                         st.session_state["db"] = load_db()
                                         st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
                                         st.rerun()
@@ -7095,6 +7129,9 @@ Action requise si le problème n'est pas résolu.
                             delete_demande(req['id'])
                             if req_id in st.session_state["gemini_results"]:
                                 del st.session_state["gemini_results"][req_id]
+                            # Email client — notification livraison manuelle
+                            _email_c = st.session_state["db"]["users"].get(req['user'], {}).get("email", "")
+                            envoyer_notif_client_email(req['user'], _email_c, req['service'], "Votre fichier")
                             st.session_state["db"] = load_db()
                             st.success(f"✅ Mission livrée à {client_nom} !")
                             st.rerun()
@@ -7174,73 +7211,6 @@ Action requise si le problème n'est pas résolu.
                                 st.session_state["db"] = load_db()
                                 st.success(f"✅ Premium activé pour {uid_m} !")
                                 st.rerun()
-
-                    # ── SUPPRIMER LE MEMBRE ──────────────────────────────────
-                    _confirm_key = f"confirm_del_{uid_m}"
-                    if st.session_state.get(_confirm_key):
-                        st.markdown(f"""
-                        <div style="background:rgba(255,50,50,0.10);border:1px solid rgba(255,80,80,0.4);
-                             border-radius:10px;padding:12px 16px;margin:6px 0;">
-                            ⚠️ <b style="color:#ff5555;">Confirmer la suppression de <u>{uid_m}</u> ?</b><br>
-                            <small style="color:rgba(255,255,255,0.5);">
-                                Toutes ses données (compte, demandes, livrables) seront effacées définitivement.
-                            </small>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        dc1, dc2 = st.columns(2)
-                        with dc1:
-                            if st.button("✅ Oui, supprimer", key=f"del_ok_{uid_m}", use_container_width=True):
-                                result = supprimer_membre(uid_m)
-                                if result is True:
-                                    st.session_state.pop(_confirm_key, None)
-                                    st.session_state["db"] = load_db()
-                                    st.success(f"🗑️ Membre **{uid_m}** supprimé définitivement.")
-                                    st.rerun()
-                                else:
-                                    st.error(f"Erreur : {result}")
-                        with dc2:
-                            if st.button("❌ Annuler", key=f"del_cancel_{uid_m}", use_container_width=True):
-                                st.session_state.pop(_confirm_key, None)
-                                st.rerun()
-                    else:
-                        if st.button(f"🗑️ Supprimer le compte", key=f"del_{uid_m}", use_container_width=False):
-                            st.session_state[_confirm_key] = True
-                            st.rerun()
-
-                    # ── BONUS GÉNÉRATIONS (admin) ─────────────────────────────
-                    today_str = datetime.now().strftime("%Y-%m-%d")
-                    _bonus_actif = udata.get("gen_bonus_date") == today_str
-                    _bonus_val   = int(udata.get("gen_bonus", 0) or 0) if _bonus_actif else 0
-                    _used_today, _quota_today = get_gen_quota(udata)
-                    _restant = max(0, _quota_today - _used_today)
-
-                    with st.expander(f"⚡ Créditer des générations · {uid_m}  {'🎁 +' + str(_bonus_val) + ' bonus actif' if _bonus_actif and _bonus_val > 0 else ''}"):
-                        st.markdown(f"""
-                        <div style="background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);
-                             border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:0.85rem;">
-                            📊 Utilisées aujourd'hui : <b>{_used_today}</b> · 
-                            Quota total : <b>{_quota_today}</b> · 
-                            Restantes : <b style="color:#4dff88;">{_restant}</b>
-                            {f" · 🎁 Bonus actif : <b style='color:#FFD700;'>+{_bonus_val}</b>" if _bonus_actif and _bonus_val > 0 else ""}
-                        </div>
-                        """, unsafe_allow_html=True)
-                        bc1, bc2 = st.columns([2, 1])
-                        with bc1:
-                            nb_bonus = st.number_input(
-                                "Générations à offrir (valables 1 jour)",
-                                min_value=1, max_value=50, value=2, step=1,
-                                key=f"nb_bonus_{uid_m}"
-                            )
-                        with bc2:
-                            st.markdown("<br>", unsafe_allow_html=True)
-                            if st.button(f"🎁 Créditer +{nb_bonus}", key=f"btn_bonus_{uid_m}", use_container_width=True):
-                                ok = ajouter_generations_bonus(uid_m, nb_bonus)
-                                if ok:
-                                    st.session_state["db"] = load_db()
-                                    st.success(f"✅ +{nb_bonus} génération(s) créditée(s) à **{uid_m}** pour aujourd'hui !")
-                                    st.rerun()
-                                else:
-                                    st.error("Erreur lors du crédit — vérifier la colonne gen_bonus dans Supabase.")
 
 
 inject_custom_css()
