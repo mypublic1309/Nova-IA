@@ -55,6 +55,7 @@ def _show_splash(service_key: str, duree: float = 1.2):
     _ph.empty()
 
 
+st.set_page_config(
     page_title="L'IA bureautique NoVA AI", 
     page_icon="⚡", 
     layout="wide",
