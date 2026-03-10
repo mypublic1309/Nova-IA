@@ -341,7 +341,7 @@ Connectez-vous à la console admin pour traiter cette mission.
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
 def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, demande_complete=""):
-    """Email envoyé quand Nova Platform a généré le doc automatiquement — pour info admin."""
+    """Email admin quand Gemini a généré — + notif client si email dispo."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
@@ -351,7 +351,7 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {demande_complete.strip()}
 """ if demande_complete.strip() else ""
-        corps = f"""
+        corps_admin = f"""
 ✅ ARSÈNE AI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
@@ -367,27 +367,25 @@ Vous n'avez rien à faire pour cette commande.
             "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"✅ Nova Platform — {service} ({client_nom})",
-            "text": corps
+            "text": corps_admin
         })
     except Exception:
-        pass  # Silencieux — l'email d'info admin n'est pas critique
+        pass
 
 def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
-    """Envoie un email de notification au CLIENT quand son fichier est prêt."""
+    """Envoie un email HTML au CLIENT quand son fichier est prêt."""
     if not client_email or client_email == "Non renseigné" or "@" not in client_email:
-        return  # Pas d'email renseigné → silencieux
+        return
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
         corps_html = f"""
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:16px;overflow:hidden;border:1px solid #222;">
-          <!-- Header -->
           <div style="background:linear-gradient(135deg,#0d1f0d,#0a0a0a);padding:28px 30px 18px;text-align:center;border-bottom:1px solid #1a3a1a;">
             <div style="font-size:2.2rem;margin-bottom:6px;">⚡</div>
             <div style="font-family:Arial Black,sans-serif;font-size:1.5rem;font-weight:900;color:#4dff88;letter-spacing:2px;">NOVA PLATFORM</div>
             <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;letter-spacing:1px;margin-top:4px;">L'IA Bureautique de Côte d'Ivoire</div>
           </div>
-          <!-- Body -->
           <div style="padding:28px 30px;">
             <div style="color:rgba(255,255,255,0.85);font-size:1rem;margin-bottom:18px;">
               Bonjour <strong style="color:#4dff88;">{client_nom}</strong> 👋
@@ -395,9 +393,8 @@ def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
             <div style="background:#0d1f0d;border:1px solid #1a5c30;border-radius:12px;padding:18px 20px;margin-bottom:20px;text-align:center;">
               <div style="font-size:2rem;margin-bottom:8px;">✅</div>
               <div style="font-family:Arial Black,sans-serif;font-size:1.2rem;font-weight:900;color:#ffffff;">Votre fichier est prêt !</div>
-              <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-top:6px;">Votre demande a été traitée avec succès par Nova Platform</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-top:6px;">Généré automatiquement par l'IA Nova Platform</div>
             </div>
-            <!-- Détails commande -->
             <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
               <tr>
                 <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;border-bottom:1px solid #1a1a1a;">🛠️ Service</td>
@@ -416,13 +413,11 @@ def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
               <div style="color:rgba(255,255,255,0.4);font-size:0.75rem;letter-spacing:1px;margin-bottom:4px;">RETROUVEZ VOTRE FICHIER SUR</div>
               <div style="color:#ffffff;font-size:0.88rem;">👉 Votre interface Nova Platform</div>
             </div>
-            <!-- Contact -->
             <div style="text-align:center;padding-top:8px;border-top:1px solid #1a1a1a;">
               <div style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin-bottom:6px;">Un problème ? Contactez-nous sur WhatsApp</div>
               <div style="font-family:monospace;font-size:1rem;font-weight:700;color:#25d366;">+225 01 71 54 25 05</div>
             </div>
           </div>
-          <!-- Footer -->
           <div style="background:#050505;padding:14px 30px;text-align:center;border-top:1px solid #111;">
             <div style="color:rgba(255,255,255,0.2);font-size:0.72rem;">Nova Platform · Abidjan, Côte d'Ivoire 🇨🇮</div>
           </div>
@@ -435,7 +430,12 @@ def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
             "html": corps_html
         })
     except Exception:
-        pass  # Silencieux — l'email client n'est pas bloquant
+        pass
+
+def notifier_livraison_gemini(client_nom, client_wa, client_email, service, nom_fichier, demande_complete=""):
+    """Point d'entrée unique — notifie admin ET client à chaque livraison Gemini."""
+    envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, demande_complete)
+    envoyer_notif_client_email(client_nom, client_email, service, nom_fichier)
 
 PLANS_PREMIUM = {
     "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 2},
@@ -4950,8 +4950,9 @@ def main_dashboard():
                 # Marquer la demande comme traitée et la supprimer
                 supabase.table("demandes").update({"status": "auto_done"}).eq("id", _req_id).execute()
                 delete_demande(_req_id)
-                # Email admin
-                envoyer_email_auto_gratuit(_client_req, _wa_req, _service_req, _nom_auto, _desc_req)
+                # Notifier admin + client (auto-gratuit)
+                _email_auto = st.session_state["db"]["users"].get(_client_req, {}).get("email", "")
+                notifier_livraison_gemini(_client_req, _wa_req, _email_auto, _service_req, _nom_auto, demande_complete=_desc_req)
         except Exception as _e_auto:
             # Log l'erreur globale pour debug
             try:
@@ -6466,12 +6467,10 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                             save_lien(user, service, _url_local, datetime.now().strftime("%d/%m/%Y"))
                         else:
                             save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
-                        # Email admin — Gemini a déjà répondu
+                        # Notifier admin + client (livraison Gemini premium)
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
-                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], demande_complete=prompt)
-                        # Email client — notification de livraison
                         _email_client = st.session_state["db"]["users"].get(user, {}).get("email", "")
-                        envoyer_notif_client_email(user, _email_client, service, result_holder["nom"])
+                        notifier_livraison_gemini(user, wa_display_local, _email_client, service, result_holder["nom"], demande_complete=prompt)
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
@@ -7113,9 +7112,10 @@ Action requise si le problème n'est pas résolu.
                                         delete_demande(req["id"])
                                         if req_id in st.session_state["gemini_results"]:
                                             del st.session_state["gemini_results"][req_id]
-                                        # Email client — notification livraison admin
+                                        # Notifier admin + client
                                         _email_c = st.session_state["db"]["users"].get(client_nom, {}).get("email", "")
-                                        envoyer_notif_client_email(client_nom, _email_c, service, nom_fichier)
+                                        _wa_c = st.session_state["db"]["users"].get(client_nom, {}).get("whatsapp", "—")
+                                        notifier_livraison_gemini(client_nom, _wa_c, _email_c, service, nom_fichier)
                                         st.session_state["db"] = load_db()
                                         st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
                                         st.rerun()
@@ -7130,9 +7130,10 @@ Action requise si le problème n'est pas résolu.
                             delete_demande(req['id'])
                             if req_id in st.session_state["gemini_results"]:
                                 del st.session_state["gemini_results"][req_id]
-                            # Email client — notification livraison manuelle
+                            # Notifier admin + client
                             _email_c = st.session_state["db"]["users"].get(req['user'], {}).get("email", "")
-                            envoyer_notif_client_email(req['user'], _email_c, req['service'], "Votre fichier")
+                            _wa_c = st.session_state["db"]["users"].get(req['user'], {}).get("whatsapp", "—")
+                            notifier_livraison_gemini(req['user'], _wa_c, _email_c, req['service'], "Votre fichier")
                             st.session_state["db"] = load_db()
                             st.success(f"✅ Mission livrée à {client_nom} !")
                             st.rerun()
