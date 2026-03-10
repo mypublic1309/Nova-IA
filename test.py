@@ -429,8 +429,14 @@ def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
             "subject": f"✅ Votre fichier est prêt — {service} | Nova Platform",
             "html": corps_html
         })
-    except Exception:
-        pass
+    except Exception as _e_client_mail:
+        try:
+            supabase.table("config").upsert({
+                "key": "email_client_last_error",
+                "value": f"{type(_e_client_mail).__name__}: {str(_e_client_mail)[:400]} | dest={client_email}"
+            }).execute()
+        except:
+            pass
 
 def notifier_livraison_gemini(client_nom, client_wa, client_email, service, nom_fichier, demande_complete=""):
     """Point d'entrée unique — notifie admin ET client à chaque livraison Gemini."""
@@ -6888,6 +6894,18 @@ Action requise si le problème n'est pas résolu.
 
             with admin_tab1:
                 st.markdown("### 🛡️ Panneau de contrôle Nova")
+
+                # ── DEBUG EMAIL CLIENT ─────────────────────────────────────
+                try:
+                    _err_row = supabase.table("config").select("value").eq("key", "email_client_last_error").execute().data
+                    if _err_row:
+                        st.error(f"📧 Dernière erreur email client : {_err_row[0]['value']}")
+                        if st.button("🗑️ Effacer l'erreur email", key="clear_email_err"):
+                            supabase.table("config").delete().eq("key", "email_client_last_error").execute()
+                            st.rerun()
+                except:
+                    pass
+                # ──────────────────────────────────────────────────────────
 
                 # ── TOGGLE RÉPONSE AUTOMATIQUE PLAN GRATUIT ───────────────
                 col_toggle_l, col_toggle_r = st.columns([3, 1])
