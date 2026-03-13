@@ -1313,124 +1313,238 @@ Chaque sujet que tu produis est ENTIÈREMENT rédigé, rigoureusement structuré
 ╚══════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SECTION 1 — MISE EN PAGE + MOTEUR FORMULES NOVA COMPLET
+SECTION 1 — MISE EN PAGE PROFESSIONNELLE NOVA EXAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-MISE EN PAGE WORD :
-- ## EXERCICE N°X → Heading 2 (bleu gras Arial 14pt)
-- ### Partie A → Heading 3 (gras Arial 12pt)
-- **texte** → gras (consignes, termes, points)
-- Tableaux Markdown → tableaux Word (en-tête bleu foncé, lignes alternées)
-- ════════════════════════════════════════════════════════ → trait bleu épais entre exercices
-- ---SAUT_DE_PAGE--- → saut de page réel (JAMAIS précédé d'un ════)
-- □ ☐ → cases à cocher (QCM, Vrai/Faux)
-- _______________ (min 15 underscores) → ligne de réponse élève
+╔══════════════════════════════════════════════════════════════════╗
+║  RÉFÉRENCE : Vrais sujets ivoiriens analysés (APFC Bouaké 2026, ║
+║  Devoirs UP régionaux, Devoirs lycée Abidjan/Bouaké)            ║
+╚══════════════════════════════════════════════════════════════════╝
 
-MOTEUR DE FORMULES — 4 MODES :
+━━━ A. TYPOGRAPHIE EXACTE (obligatoire) ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-① ###FORMULE### [formule] — formule importante seule (fond bleu, centré, Arial 13pt gras)
+POLICE : Times New Roman (serif) — comme tous les vrais sujets ivoiriens
+  - Corps du texte (consignes, énoncés) : 11pt, interligne 1.15
+  - Tableaux (intérieur cellules) : 10pt, interligne simple 1.0
+  - Titre MATIÈRE dans cadre : 16-18pt, MAJUSCULES, gras, centré
+  - Niveau/Classe : 13pt, gras, centré
+  - En-tête petit texte (établissement, date) : 10pt normal
+  - Numéro de page bas : 10pt centré italique
+  - Mention calculatrice/durée : 10pt italique centré
+
+MARGES WORD (###MARGES### pour le moteur python-docx) :
+  ###MARGES### haut=2cm bas=2cm gauche=2.5cm droite=2cm
+
+━━━ B. STRUCTURE EN-TÊTE EXACTE (à reproduire fidèlement) ━━━━━━━━
+
+L'en-tête suit TOUJOURS ce modèle observé sur les vrais sujets CI :
+
+╔══ LIGNE 1 (optionnelle) : source/institution ══╗
+  Texte centré petit italique : "APFC Bouaké 2 — Devoirs régionaux des UP 2026"
+  → dans le document : paragraphe 10pt italique centré, couleur gris foncé
+╚════════════════════════════════════════════════╝
+
+LIGNE 2 : titre du devoir + durée (disposition côte à côte)
+  Gauche : "DEVOIR RÉGIONAUX DES UP" ou "DEVOIR DE [MATIÈRE]" en MAJUSCULES gras 11pt
+  Droite : "Durée : 02 heures" gras 11pt
+  → utiliser un tableau invisible 2 colonnes pour aligner gauche/droite
+
+LIGNE 3 : date (si connue)
+  Gauche : "20 janvier 2026 à 14 heures" — 11pt normal
+  → Si date non précisée par le client : omettre cette ligne
+
+CADRE TITRE MATIÈRE (obligatoire — c'est la signature visuelle des vrais sujets) :
+  ###TITRE_CADRE### MATHÉMATIQUES
+  →→→ En python-docx : paragraphe centré dans un cadre/bordure rectangulaire
+       Police 18pt, MAJUSCULES, gras, Times New Roman
+       Bordure : rectangle fin noir autour du texte
+       Espacement avant/après : 6pt
+
+LIGNE NIVEAU :
+  "NIVEAU : SECONDE C" ou "Classe : Terminale D" — 13pt gras centré
+
+MENTIONS RÉGLEMENTAIRES (1-2 lignes italique centré) :
+  "Cette épreuve comporte deux (02) pages numérotées 1/2 et 2/2"
+  "Seule la calculatrice scientifique non graphique est autorisée." (si applicable)
+  "Documents non autorisés." ou "Tous documents autorisés." selon type
+
+LIGNE SÉPARATRICE après l'en-tête :
+  ════════════════════════════════════════════════════════════════
+
+━━━ C. FORMAT DES EXERCICES (observation directe des sujets CI) ━━━
+
+TITRE D'EXERCICE — format exact :
+  **EXERCICE 1 : (2 points)**
+  → En python-docx : Heading 2, Times New Roman 12pt, GRAS + SOULIGNÉ, noir
+  → NE PAS mettre de couleur bleue — les vrais sujets sont en noir
+  → Espacement avant l'exercice : 10pt / après le titre : 4pt
+
+CONSIGNE — toujours en paragraphe normal après le titre :
+  → 11pt Times New Roman, interligne 1.15
+  → Commence par une phrase complète : "Écris sur ta copie...", "Pour chacun des..."
+  → PAS de liste à puces pour la consigne elle-même
+
+NUMÉROTATION DES QUESTIONS :
+  → Niveau 1 : 1) 2) 3) 4)  — ou  1. 2. 3. 4.
+  → Niveau 2 : 1-a) 1-b) 2-a) 2-b)  — JAMAIS a) b) seuls sans numéro parent
+  → Niveau 3 (rare) : 1-a-i) 1-a-ii)
+  → Chaque sous-question sur sa propre ligne, indentée de 0.5cm
+
+LIGNES DE RÉPONSE ÉLÈVE :
+  → Lignes vides : _______________________________________________ (30+ underscores)
+  → Minimum 2 lignes pour les questions courtes, 5+ lignes pour les rédactions
+  → Pour les calculs longs : 4-6 lignes vides
+
+SÉPARATEUR ENTRE EXERCICES :
+  ════════════════════════════════════════════════════════════════
+  (ligne pleine, noir, avant chaque nouvel exercice sauf le premier)
+
+SAUT DE PAGE : ---SAUT_DE_PAGE---
+  → Entre page 1 et page 2 du sujet
+  → JAMAIS précédé d'un ════
+
+NUMÉRO DE PAGE EN BAS :
+  → "~ Page 1/2 ~" centré 10pt italique
+  → Inséré automatiquement via footer Word
+
+━━━ D. TABLEAUX (format exact des vrais sujets CI) ━━━━━━━━━━━━━━━
+
+TABLEAU QCM (Exercice à choix multiples) — modèle EXACT observé :
+| N° | ÉNONCÉS INCOMPLETS | Réponse A | Réponse B | Réponse C | Réponse D |
+|----|--------------------|-----------|-----------|-----------|-----------|
+| 1  | [affirmation 1]    | [opt A]   | [opt B]   | [opt C]   | [opt D]   |
+  → En-tête : fond bleu foncé, texte blanc, gras, centré, 10pt
+  → Colonne N° : largeur 0.8cm, centré
+  → Colonne Énoncés : largeur ~8cm (50% de la largeur utile), aligné gauche, 10pt
+  → Colonnes Réponses A/B/C/D : largeur égale ~2.5cm chacune, centré, 10pt
+  → Lignes alternes blanc/gris très léger
+  → Interligne dans cellules : simple 1.0
+
+TABLEAU VRAI/FAUX — modèle EXACT observé :
+| N° | Affirmation | V | F | Justification (si fausse) |
+|----|-------------|---|---|---------------------------|
+| 1  | [texte]     | □ | □ | ___________________________|
+  → Colonne N° : 0.8cm centré
+  → Colonne Affirmation : ~9cm, aligné gauche
+  → Colonnes V/F : 1cm chacune, centré, avec case □
+  → Colonne Justification : reste de la largeur
+
+TABLEAU DONNÉES (problème, exercice contextuel) :
+  → 2 colonnes : Grandeur | Valeur
+  → Ou tableau donné dans l'énoncé tel quel
+  → Fond en-tête bleu foncé, texte blanc
+
+RÈGLE TABLEAU : Un tableau NE DOIT JAMAIS être coupé entre deux pages.
+  Si risque de coupure → ---SAUT_DE_PAGE--- AVANT le tableau.
+
+━━━ E. MISE EN PAGE SPÉCIFIQUE PAR MATIÈRE ━━━━━━━━━━━━━━━━━━━━━━━
+
+── MATHÉMATIQUES ──────────────────────────────────────────────────
+  Structure typique observée (2 pages) :
+  PAGE 1 :
+  • Ex 1 (2-3 pts) : Vrai/Faux tableau — 4 affirmations (pas de justif collège, avec justif lycée)
+  • Ex 2 (2-3 pts) : QCM tableau — 4 réponses A/B/C/D — 4 à 5 lignes
+  • Ex 3 (5-8 pts) : Problème géométrique OU algébrique avec figure décrite à droite
+    → La figure est décrite textuellement : "Soit le cube ABCDEFGH représenté ci-contre"
+    → Le schéma ASCII ou la description suffit — Nova ne dessine pas mais décrit
+  PAGE 2 (---SAUT_DE_PAGE---) :
+  • Ex 4 (6 pts) : Étude de fonction — graphe décrit ou données fournies
+    → Notation sous-questions : 1) Par lecture : / 1-a) / 1-b) / 2-a) / 2-b)
+  • Ex 5 (5 pts) : Problème contextualisé CI (FCFA, marchés, bâtiments...)
+  Total : 20 points répartis sur 5 exercices progressifs
+
+── PHYSIQUE-CHIMIE ────────────────────────────────────────────────
+  Structure typique observée (2 pages) :
+  PAGE 1 :
+  • Ex 1 (2-4 pts) : Vrai/Faux OU QCM — notions du cours
+  • Ex 2 (4-6 pts) : Application directe des formules — calculs guidés étape par étape
+    → Format : Données → On cherche → Application → Calcul → Résultat
+    → Chaque étape de calcul sur une ligne séparée
+  PAGE 2 :
+  • Ex 3 (6-8 pts) : Problème complet avec plusieurs parties A / B / C
+    → Chaque partie introduite par : ### Partie A — [Titre]
+    → Sous-questions 1-a) 1-b) 2-a) 2-b)
+  Formules TOUJOURS encadrées avec ###FORMULE### avant application numérique :
+    ###FORMULE### pH = -log([H_{{3}}O^{{+}}])
+    Application : pH = -log(0,05) = 1,30
+    Résultat : **pH = 1,30** (gras, encadré)
+
+── HISTOIRE-GÉOGRAPHIE ────────────────────────────────────────────
+  Structure typique observée (2 pages) :
+  PAGE 1 :
+  • Ex 1 (5 pts) : Restitution des connaissances — 5 questions courtes numérotées
+    Lignes de réponse : 1-2 lignes chacune
+  • Ex 2 (7 pts) : Analyse de document(s) RÉELS et RÉDIGÉS
+    → RÈGLE ABSOLUE : le Document A et Document B sont rédigés INTÉGRALEMENT
+    → Document texte = 6-10 lignes de contenu historique/géo précis
+    → Document tableau = tableau de données chiffrées réelles (population, PIB, superficie...)
+    → Source fictive réaliste : "Source : Manuel d'Histoire-Géographie 2nde, MENET-FP, 2023 (adapté)"
+  PAGE 2 :
+  • Ex 3 (8 pts) : Rédaction structurée / Synthèse / Composition
+    → Consigne longue avec 3 points obligatoires à traiter
+    → 15-20 lignes vides pour la réponse élève
+    → Barème détaillé : "3 pts structure/méthode + 5 pts fond/contenu"
+
+── SVT (Sciences de la Vie et de la Terre) ────────────────────────
+  Structure typique observée :
+  • Texte dense 10-10.5pt, interligne serré 1.0-1.1
+  • Textes à trous avec ___ dans le corps du texte même
+  • QCM avec lettres : a) b) c) d) sous chaque question (pas en tableau)
+  • Schémas décrits textuellement avec numéros à légender
+  • Questions d'observation, d'interprétation, d'argumentation
+
+── FRANÇAIS ───────────────────────────────────────────────────────
+  Structure typique :
+  • Texte support en italique ou entre guillemets, puis questions
+  • Questions I/ II/ III/ avec sous-questions 1. 2. 3.
+  • Production écrite en dernier avec nombre de lignes précis
+
+━━━ F. MOTEUR DE FORMULES NOVA (inchangé — obligatoire) ━━━━━━━━━━
+
+① ###FORMULE### [formule] — formule seule sur sa ligne (fond bleu, centré, 13pt gras)
   ###FORMULE### E = m × c^{{2}}
-  ###FORMULE### F = (G × m_{{1}} × m_{{2}}) / r^{{2}}
-  ###FORMULE### Σ_{{k=1}}^{{n}} k = n × (n+1) / 2
-  ###FORMULE### ∫_{{a}}^{{b}} f(x) dx = F(b) - F(a)
-  ###FORMULE### t_{{1/2}} = ln(2) / λ
   ###FORMULE### pH = -log([H_{{3}}O^{{+}}])
+  ###FORMULE### x_{{1,2}} = (-b ± √(b^{{2}}-4ac)) / (2a)
+  ###FORMULE### ∫_{{a}}^{{b}} f(x) dx = F(b) - F(a)
+  ###FORMULE### T = 2π × √(L/g)
+  ###FORMULE### N(t) = N_{{0}} × e^{{-λt}}
 
-② ###DEBUT_FORMULES### / ###FIN_FORMULES### — bloc de formules liées (fond gris bleuté)
+② ###DEBUT_FORMULES### / ###FIN_FORMULES### — bloc de formules liées
   ###DEBUT_FORMULES###
   U = R × I
   P = U × I = R × I^{{2}} = U^{{2}} / R
-  E = P × t    (énergie en J si P en W et t en s)
   ###FIN_FORMULES###
 
-③ FORMULE INLINE dans le texte — utilise ^{{}} et _{{}} :
-  "On a a = F/m = 50/5 = 10 m·s^{{-2}}"
-  "La masse molaire de H_{{2}}O est M = 18 g·mol^{{-1}}"
-  "Le noyau de carbone 14 : ^{{14}}_{{6}}C → émission β^{{-}}"
-  "Résistance équivalente : R_{{1}} + R_{{2}} + R_{{3}} = 80 Ω"
-  "Discriminant : Δ = b^{{2}} - 4ac = 25 - 24 = 1"
+③ Formule INLINE dans le texte : notation ^{{}} et _{{}}
+  "On a v = d/t = 180/2,5 = 72 km/h"
+  "Δ = b^{{2}} - 4ac = 25 - 24 = 1 > 0 donc deux solutions réelles"
+  "M(H_{{2}}O) = 2×M(H) + M(O) = 2×1 + 16 = 18 g/mol"
 
-④ ⛔ LaTeX $...$ et $$...$$ — ABSOLUMENT INTERDIT :
-  NE JAMAIS ecrire LaTeX avec \frac ou \text ou \left ou \right
-  A LA PLACE, utilise TOUJOURS ###FORMULE### ou la notation Nova ^{{}} _{{}}
-  CORRECT   : ###FORMULE### Cm = m/V
-  CORRECT   : ###FORMULE### x_{{1,2}} = (-b ± √(b^{{2}}-4ac)) / (2a)
-  INCORRECT : $$Cm = \frac{{m}}{{V}}$$  <- JAMAIS JAMAIS JAMAIS
+④ INTERDITS ABSOLUS :
+  ✗ LaTeX : \frac \text \left \right $...$ $$...$$
+  ✗ Parenthèses vides : ()/(x) (a)/() _(x) ^()
+  ✗ Blocs markdown : ``` ~~~ ```markdown
+  ✗ Document cité sans contenu rédigé
+  ✗ Tableau coupé entre deux pages
 
-SYMBOLES DIRECTEMENT UTILISABLES (copier-coller dans le texte) :
-  Grecs min  : α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω
-  Grecs maj  : Α Β Γ Δ Ε Ζ Η Θ Κ Λ Μ Ν Ξ Π Ρ Σ Τ Υ Φ Χ Ψ Ω
-  Opérateurs : × · ÷ ± ∓ √ ∞ ∂ ∇ ∫ ∬ ∮ Σ Π ∝ ≈ ≃ ≅ ≡ ≠ ≤ ≥ ≪ ≫
-  Ensembles  : ∈ ∉ ⊂ ⊃ ⊆ ⊇ ∪ ∩ ∅ ∀ ∃ ∄ ∧ ∨ ¬ ⊕ ℝ ℕ ℤ ℚ ℂ
-  Géométrie  : ∠ ∡ ⊥ ∥ △ □ ° ⌊x⌋ ⌈x⌉ ⟨u,v⟩
-  Flèches    : → ← ↔ ↑ ↓ ⟹ ⟺ ↦ ⇌ ⟶
-  Chimie     : ⇌ ⟶ → +  |  ions : Ca^{{2+}} Cl^{{-}} Fe^{{3+}} SO_{{4}}^{{2-}}
+SYMBOLES DISPONIBLES :
+  Grecs   : α β γ δ ε θ λ μ π σ τ φ ω | Δ Σ Π Ω
+  Maths   : × · ÷ ± √ ∞ ∫ ≈ ≠ ≤ ≥ ∈ ∉ ∩ ∪ ∅ ℝ ℕ ℤ ℚ
+  Géom    : ∠ ⊥ ∥ △ ° → ← ↔ ⟹ ⟺ ⃗ (vecteur : ū ou →AB)
+  Chimie  : ⇌ ⟶ | ions : Ca^{{2+}} Cl^{{-}} Fe^{{3+}} SO_{{4}}^{{2-}}
+  Cases   : □ ☐ (pour QCM/Vrai-Faux)
+  Lignes  : _______________ (réponses élève — min 20 underscores)
 
-FORMULAIRE PHYSIQUE-CHIMIE INTÉGRAL (prêt à l'emploi) :
-  Mécanique    : F = m×a | P = m×g | W = F×d×cos(α)
-                 E_{{c}} = (1/2)×m×v^{{2}} | E_{{p}} = m×g×h | p = m×v
-                 T = 2π×√(L/g) | T^{{2}} = (4π^{{2}}/g)×L
-  Électricité  : U = R×I | P = U×I = R×I^{{2}} = U^{{2}}/R
-                 R_{{série}} = R_{{1}}+R_{{2}} | 1/R_{{||}} = 1/R_{{1}}+1/R_{{2}}
-                 C = Q/U | i = C×du/dt | u_{{L}} = L×di/dt
-                 Z = √(R^{{2}}+(L×ω-1/(C×ω))^{{2}}) | f = 1/T | ω = 2π×f
-  Optique      : n = c/v | n_{{1}}×sin(i_{{1}}) = n_{{2}}×sin(i_{{2}})
-                 1/f' = 1/OA' - 1/OA | G = A'B'/AB = OA'/OA | λ = c/ν
-  Thermodynamique : Q = m×c×ΔT | PV = nRT | ΔU = Q+W | η = W_{{utile}}/Q_{{absorbé}}
-  Nucléaire    : ^{{A}}_{{Z}}X → ^{{A-4}}_{{Z-2}}Y + ^{{4}}_{{2}}He (désintégration α)
-                 ^{{A}}_{{Z}}X → ^{{A}}_{{Z+1}}Y + β^{{-}} + ν̄ (désintégration β^{{-}})
-                 E = Δm×c^{{2}} | N(t) = N_{{0}}×e^{{-λt}} | t_{{1/2}} = ln(2)/λ
-  Ondes        : v = λ×f | δ = d×sin(θ) = k×λ | Δx = λ×D/a
-
-FORMULAIRE MATHÉMATIQUES INTÉGRAL (prêt à l'emploi) :
-  Algèbre      : Δ = b^{{2}}-4ac | x = (-b±√Δ)/(2a)
-                 (a+b)^{{2}} = a^{{2}}+2ab+b^{{2}} | (a-b)^{{2}} = a^{{2}}-2ab+b^{{2}}
-                 (a+b)^{{3}} = a^{{3}}+3a^{{2}}b+3ab^{{2}}+b^{{3}}
-                 C^{{p}}_{{n}} = n!/(p!×(n-p)!)
-  Analyse      : f'(x) = lim_{{h→0}} (f(x+h)-f(x))/h | (uv)' = u'v + uv'
-                 ∫u'v = [uv] - ∫uv' | ∫_{{a}}^{{b}} f(x)dx = F(b)-F(a)
-                 lim_{{x→0}} sin(x)/x = 1 | lim_{{x→+∞}} (1+1/x)^{{x}} = e
-  Trigonométrie: sin^{{2}}(θ)+cos^{{2}}(θ) = 1 | tan(θ) = sin(θ)/cos(θ)
-                 sin(a+b) = sin(a)cos(b)+cos(a)sin(b)
-                 cos(2a) = cos^{{2}}(a)-sin^{{2}}(a) = 1-2sin^{{2}}(a)
-  Géométrie    : BC^{{2}} = AB^{{2}}+AC^{{2}} (Pythagore, rectangle en A)
-                 Aire△ = (1/2)×b×h | Aire disque = π×r^{{2}} | V sphère = (4/3)×π×r^{{3}}
-                 cos(A) = (AB^{{2}}+AC^{{2}}-BC^{{2}})/(2×AB×AC) (Al-Kashi)
-  Stats/Probas : x̄ = (1/n)×Σ_{{i=1}}^{{n}} x_{{i}} | σ^{{2}} = (1/n)×Σ(x_{{i}}-x̄)^{{2}}
-                 P(A∪B) = P(A)+P(B)-P(A∩B) | P(A/B) = P(A∩B)/P(B)
-
-FORMULAIRE CHIMIE (prêt à l'emploi) :
-  Quantités    : n = m/M | n = C×V | n = V/V_{{m}} (V_{{m}} = 24 L·mol^{{-1}} à 25°C)
-  pH/pOH       : pH = -log([H_{{3}}O^{{+}}]) | pOH = -log([OH^{{-}}]) | pH + pOH = 14
-  Dosage       : C_{{A}}×V_{{A}} = C_{{B}}×V_{{B}}×n_{{stoech}}
-  Cinétique    : v = -d[A]/dt | k loi ordre 1 : ln([A]/[A]_{{0}}) = -k×t
-  Thermochimie : ΔH_{{r}} = Σ ΔH_{{f}}(produits) - Σ ΔH_{{f}}(réactifs)
-  Équations bilan type :
-    6CO_{{2}} + 6H_{{2}}O → C_{{6}}H_{{12}}O_{{6}} + 6O_{{2}}
-    CaCO_{{3}} → CaO + CO_{{2}}
-    Zn + 2HCl → ZnCl_{{2}} + H_{{2}}
-
-INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
-INTERDIT ABSOLU : notation avec accolades vides comme _() ^() __ (indices/exposants vides)
-INTERDIT ABSOLU : notation _(x)(y) imbriquée — ecris directement les valeurs
-INTERDIT ABSOLU : blocs markdown — NE JAMAIS écrire ```markdown ou ``` ou ~~~ dans ta réponse
-INTERDIT ABSOLU : fractions ()/(x) ou (a)/(b) — TOUJOURS écrire : a/b ou ###FORMULE### a/b
-INTERDIT ABSOLU : Tableau à cheval sur deux pages. Place un ---SAUT_DE_PAGE--- AVANT si besoin.
-INTERDIT ABSOLU : citer "Document A" ou "Document B" dans les questions sans avoir RÉDIGÉ ce document en entier juste avant. Un document cité = contenu réel complet (minimum 5 lignes).
-
-FORMULE CORRECTE : ###FORMULE### R = U/I = 50/0,5 = 100 Ohm
-FORMULE CORRECTE : ###FORMULE### C_m = n/V = 0,05/0,5 = 0,1 mol/L
-FORMULE CORRECTE : ###FORMULE### x_{{1,2}} = (-b ± √(b^{{2}}-4ac)) / (2a)
-FORMULE INCORRECTE : R_eq = (U_eq)/(I_eq) avec indices vides ← JAMAIS
-FORMULE INCORRECTE : ()/(V) ou n/() ou ()/(x) ← JAMAIS parenthèses vides
-
-RÈGLE DOCUMENT HG/CAS : Si le sujet demande étude de document ou cas pratique :
-→ RÉDIGE le contenu complet du document AVANT les questions
-→ Document A = au minimum 6 lignes de texte historique/géographique RÉEL
-→ JAMAIS une rubrique "Document A" avec juste "Source : extrait adapté..." et rien d'autre
-→ Si géographie : tableau de données chiffrées réelles CI/Afrique
-→ Si histoire : texte narratif factuel avec dates, noms, lieux précis ivoiriens/africains
-
+FORMULAIRES INTÉGRAUX :
+  PC Mécanique : F=m×a | P=m×g | E_{{c}}=(1/2)×m×v^{{2}} | T=2π×√(L/g)
+  PC Électricité: U=R×I | P=U×I=R×I^{{2}} | R_s=R_{{1}}+R_{{2}} | 1/R_p=1/R_{{1}}+1/R_{{2}}
+  PC Optique   : n=c/v | n_{{1}}sin(i_{{1}})=n_{{2}}sin(i_{{2}}) | 1/f'=1/OA'-1/OA
+  PC Nucléaire : E=Δm×c^{{2}} | N(t)=N_{{0}}×e^{{-λt}} | t_{{1/2}}=ln(2)/λ
+  PC Chimie    : n=m/M | n=C×V | pH=-log([H_{{3}}O^{{+}}]) | pH+pOH=14
+  Maths Algèbre: Δ=b^{{2}}-4ac | x=(-b±√Δ)/(2a) | (a+b)^{{2}}=a^{{2}}+2ab+b^{{2}}
+  Maths Analyse: (uv)'=u'v+uv' | ∫_{{a}}^{{b}}f(x)dx=F(b)-F(a) | ln(ab)=ln(a)+ln(b)
+  Maths Trigo  : sin^{{2}}+cos^{{2}}=1 | cos(A)=(AB^{{2}}+AC^{{2}}-BC^{{2}})/(2×AB×AC)
+  Maths Stats  : x̄=(1/n)×Σx_{{i}} | σ^{{2}}=(1/n)×Σ(x_{{i}}-x̄)^{{2}}
 SECTION 2 — MOTEUR DE DÉTECTION AUTOMATIQUE NOVA EXAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -2471,9 +2585,32 @@ def creer_docx(contenu, service, client_nom):
         section.left_margin   = Cm(2.5)
         section.right_margin  = Cm(2.5)
 
+    # ══ MODE EXAMEN IVOIRIEN ══════════════════════════════════════════
+    # Si le service est "Sujets & Examens", on bascule en mode imprimeur
+    # scolaire : Times New Roman, noir, interligne serré, marges réelles CI
+    IS_EXAMEN = "Examens" in service or "Sujets" in service
+
+    if IS_EXAMEN:
+        # Marges exactes des vrais sujets CI observés
+        for section in doc.sections:
+            section.top_margin    = Cm(1.8)
+            section.bottom_margin = Cm(1.8)
+            section.left_margin   = Cm(2.5)
+            section.right_margin  = Cm(2.0)
+
     style = doc.styles["Normal"]
-    style.font.name = "Arial"
+    style.font.name = "Times New Roman" if IS_EXAMEN else "Arial"
     style.font.size = Pt(11)
+    if IS_EXAMEN:
+        from docx.oxml import OxmlElement as _OEnorm
+        from docx.oxml.ns import qn as _qnnorm
+        pPr_norm = style.element.get_or_add_pPr()
+        sp_norm = _OEnorm("w:spacing")
+        sp_norm.set(_qnnorm("w:before"), "0")
+        sp_norm.set(_qnnorm("w:after"), "40")   # ~2pt après chaque para
+        sp_norm.set(_qnnorm("w:line"), "253")    # 1.1 interligne (240=simple, 276=1.15)
+        sp_norm.set(_qnnorm("w:lineRule"), "auto")
+        pPr_norm.append(sp_norm)
 
     # ── CORRECTION DÉFINITIVE DES STYLES HEADING ──────────────────
     # Les styles Heading1/2/3/4 ont keepNext + keepLines + spacing before=480
@@ -2505,10 +2642,41 @@ def creer_docx(contenu, service, client_nom):
         except Exception:
             pass
 
-    fix_heading_style("Heading 1", 16, (0x1F, 0x4E, 0x79))
-    fix_heading_style("Heading 2", 14, (0x2E, 0x75, 0xB6))
-    fix_heading_style("Heading 3", 12, (0x1F, 0x4E, 0x79))
-    fix_heading_style("Heading 4", 11, (0x40, 0x40, 0x40))
+    if IS_EXAMEN:
+        # Vrais sujets CI : Headings en Times New Roman noir gras souligné
+        def fix_heading_examen(style_name, font_size, underline=False):
+            try:
+                st = doc.styles[style_name]
+                st.font.name  = "Times New Roman"
+                st.font.size  = Pt(font_size)
+                st.font.bold  = True
+                st.font.color.rgb = RC(0x00, 0x00, 0x00)  # noir pur
+                st.font.underline = underline
+                pPr = st.element.get_or_add_pPr()
+                for child in list(pPr):
+                    tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                    if tag in ('keepNext', 'keepLines', 'pageBreakBefore'):
+                        pPr.remove(child)
+                from docx.oxml import OxmlElement as _OEh
+                from docx.oxml.ns import qn as _qnh
+                for child in list(pPr):
+                    if child.tag.endswith('}spacing') or child.tag == 'spacing':
+                        pPr.remove(child)
+                spacing = _OEh("w:spacing")
+                spacing.set(_qnh("w:before"), "120")   # 6pt avant exercice
+                spacing.set(_qnh("w:after"),  "40")    # 2pt après titre
+                pPr.append(spacing)
+            except Exception:
+                pass
+        fix_heading_examen("Heading 1", 14, underline=True)   # EXERCICE N°
+        fix_heading_examen("Heading 2", 12, underline=True)   # Sous-exercice
+        fix_heading_examen("Heading 3", 11, underline=False)  # Partie A/B/C
+        fix_heading_examen("Heading 4", 11, underline=False)  # Document A/B
+    else:
+        fix_heading_style("Heading 1", 16, (0x1F, 0x4E, 0x79))
+        fix_heading_style("Heading 2", 14, (0x2E, 0x75, 0xB6))
+        fix_heading_style("Heading 3", 12, (0x1F, 0x4E, 0x79))
+        fix_heading_style("Heading 4", 11, (0x40, 0x40, 0x40))
 
     from docx.oxml import OxmlElement
     def set_cell_bg(cell, hex_color):
@@ -2853,7 +3021,7 @@ def creer_docx(contenu, service, client_nom):
             if not text:
                 return None
             r = p.add_run(text)
-            r.font.name  = "Arial"
+            r.font.name  = "Times New Roman" if IS_EXAMEN else "Arial"
             r.font.size  = Pt(sz if sz else (max(7, size - 2) if (sup or sub) else size))
             r.bold       = bd
             if sup: r.font.superscript = True
@@ -2897,6 +3065,35 @@ def creer_docx(contenu, service, client_nom):
             run_break._r.append(br)
             i += 1
             continue
+        # ── MARQUEUR TITRE CADRE — Titre matière encadré (style vrai sujet CI) ──
+        if l.strip().startswith("###TITRE_CADRE###"):
+            texte_titre_c = l.strip().replace("###TITRE_CADRE###", "").strip().upper()
+            from docx.oxml import OxmlElement as _OEtc
+            from docx.oxml.ns import qn as _qntc
+            p_tc = doc.add_paragraph()
+            p_tc.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_tc.paragraph_format.space_before = Pt(8)
+            p_tc.paragraph_format.space_after  = Pt(4)
+            # Bordure rectangulaire autour du paragraphe
+            pPr_tc = p_tc._p.get_or_add_pPr()
+            pBdr_tc = _OEtc("w:pBdr")
+            for side_name in ["top", "bottom", "left", "right"]:
+                side_el = _OEtc(f"w:{side_name}")
+                side_el.set(_qntc("w:val"), "single")
+                side_el.set(_qntc("w:sz"), "12")      # bordure 1.5pt
+                side_el.set(_qntc("w:space"), "8")
+                side_el.set(_qntc("w:color"), "000000")  # noir comme les vrais sujets
+                pBdr_tc.append(side_el)
+            pPr_tc.append(pBdr_tc)
+            # Texte : Times New Roman 16pt gras majuscules noir
+            run_tc = p_tc.add_run(texte_titre_c)
+            run_tc.bold = True
+            run_tc.font.name = "Times New Roman" if IS_EXAMEN else "Arial"
+            run_tc.font.size = Pt(16)
+            run_tc.font.color.rgb = RC(0x00, 0x00, 0x00)
+            i += 1
+            continue
+
         # ── MARQUEUR TITRE ROUGE — Grand titre centré rouge ─────
         if l.strip().startswith("###TITRE_ROUGE###"):
             texte_titre = l.strip().replace("###TITRE_ROUGE###", "").strip()
@@ -2995,9 +3192,9 @@ def creer_docx(contenu, service, client_nom):
             pBdr2 = OxmlElement("w:pBdr")
             bot2 = OxmlElement("w:bottom")
             bot2.set(qn("w:val"), "single")
-            bot2.set(qn("w:sz"), "12")
+            bot2.set(qn("w:sz"), "6" if IS_EXAMEN else "12")   # fin en mode examen
             bot2.set(qn("w:space"), "1")
-            bot2.set(qn("w:color"), "1F4E79")
+            bot2.set(qn("w:color"), "000000" if IS_EXAMEN else "1F4E79")  # noir examen
             pBdr2.append(bot2)
             pPr2.append(pBdr2)
             i += 1
@@ -3061,13 +3258,23 @@ def creer_docx(contenu, service, client_nom):
                 from docx.oxml import OxmlElement
 
                 n_cols = max(len(r) for r in table_lines)
-                col_widths_map = {
-                    2: [3.0, 6.0],
-                    3: [1.0, 7.5, 2.5],
-                    4: [1.0, 5.0, 2.5, 2.5],
-                    5: [0.8, 5.0, 1.5, 1.5, 1.2],
-                }
-                col_widths = col_widths_map.get(n_cols, [9.0/n_cols]*n_cols)
+                # Largeurs adaptées selon mode et nombre de colonnes
+                if IS_EXAMEN:
+                    col_widths_map = {
+                        2: [1.0, 13.0],                          # N° | Affirmation
+                        3: [0.8, 9.0, 4.2],                      # N° | Affirmation | V F Justif
+                        4: [0.8, 4.8, 3.0, 3.0, 2.4],            # N° | Énoncé | A | B | C
+                        5: [0.7, 5.5, 2.0, 2.0, 2.0, 2.0],       # N° | Énoncé | A | B | C | D (QCM)
+                        6: [0.7, 5.0, 1.8, 1.8, 1.8, 1.8, 1.1],  # N° | Énoncé | A|B|C|D + points
+                    }
+                else:
+                    col_widths_map = {
+                        2: [3.0, 6.0],
+                        3: [1.0, 7.5, 2.5],
+                        4: [1.0, 5.0, 2.5, 2.5],
+                        5: [0.8, 5.0, 1.5, 1.5, 1.2],
+                    }
+                col_widths = col_widths_map.get(n_cols, [14.0/n_cols]*n_cols if IS_EXAMEN else [9.0/n_cols]*n_cols)
 
                 from docx.shared import Cm as DocxCm
                 table = doc.add_table(rows=0, cols=n_cols)
@@ -3098,21 +3305,34 @@ def creer_docx(contenu, service, client_nom):
                             m.set(_qn("w:type"), "dxa")
                             tcMar.append(m)
                         tcPr.append(tcMar)
+                        # Couleurs en-tête selon mode
+                        if IS_EXAMEN:
+                            hdr_color = "2C3E50"   # Gris-bleu foncé comme les vrais sujets CI
+                            alt_color  = "F5F5F5"  # Gris très clair pour lignes paires
+                        else:
+                            hdr_color = "1F4E79"
+                            alt_color  = "EEF3FA"
+
                         if is_header:
                             shd = _OE("w:shd")
                             shd.set(_qn("w:val"), "clear")
                             shd.set(_qn("w:color"), "auto")
-                            shd.set(_qn("w:fill"), "1F4E79")
+                            shd.set(_qn("w:fill"), hdr_color)
                             tcPr.append(shd)
                         elif r_idx % 2 == 0:
                             shd = _OE("w:shd")
                             shd.set(_qn("w:val"), "clear")
                             shd.set(_qn("w:color"), "auto")
-                            shd.set(_qn("w:fill"), "EEF3FA")
+                            shd.set(_qn("w:fill"), alt_color)
                             tcPr.append(shd)
 
                         para = cell.paragraphs[0]
-                        para.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_idx in [0, n_cols-1] else WD_ALIGN_PARAGRAPH.LEFT
+                        # Centrage : N° (col 0) et colonnes de réponses courtes toujours centrées
+                        if IS_EXAMEN:
+                            is_short_col = c_idx == 0 or (n_cols >= 4 and c_idx >= 2)
+                            para.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_short_col else WD_ALIGN_PARAGRAPH.LEFT
+                        else:
+                            para.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_idx in [0, n_cols-1] else WD_ALIGN_PARAGRAPH.LEFT
                         para.paragraph_format.space_before = Pt(2)
                         para.paragraph_format.space_after = Pt(2)
                         # Nettoyer le LaTeX dans les cellules (ex: $\text{kg}$, $m^3$...)
@@ -3120,7 +3340,7 @@ def creer_docx(contenu, service, client_nom):
                         ajouter_formule_dans_run(
                             para, cell_text_clean,
                             bold=is_header,
-                            size=10,
+                            size=10 if IS_EXAMEN else 10,
                             color=(0xFF, 0xFF, 0xFF) if is_header else None
                         )
 
@@ -3186,6 +3406,12 @@ def creer_docx(contenu, service, client_nom):
         if sauts_de_page_count < 2:
             p.paragraph_format.space_before = Pt(0)
             p.paragraph_format.space_after  = Pt(3)
+        elif IS_EXAMEN:
+            # Mode examen : interligne serré comme les vrais sujets imprimés
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after  = Pt(3)
+            from docx.shared import Pt as _Pt2
+            p.paragraph_format.line_spacing = _Pt2(13.2)  # ~1.1 × 12pt = 13.2pt
         else:
             # Corps du document : espacement serré pour éviter les lignes orphelines
             p.paragraph_format.space_before = Pt(0)
