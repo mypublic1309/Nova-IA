@@ -26,9 +26,10 @@ def _show_splash(service_key: str, duree: float = 1.2):
     cfg = _SPLASH_CONFIG.get(service_key)
     if not cfg:
         return
-    if st.session_state.get("_splash_last_service") == service_key:
+    key = f"_splash_done_{service_key}"
+    if key in st.session_state:
         return
-    st.session_state["_splash_last_service"] = service_key
+    st.session_state[key] = True
     _ph = st.empty()
     _ph.markdown(f'''
     <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;
@@ -340,7 +341,7 @@ Connectez-vous à la console admin pour traiter cette mission.
         st.toast(f"❌ Email échoué : {e}", icon="⚠️")
 
 def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, demande_complete=""):
-    """Email envoyé quand Nova Platform a généré le doc automatiquement — pour info admin."""
+    """Email admin quand Gemini a généré — + notif client si email dispo."""
     try:
         import resend
         resend.api_key = st.secrets["RESEND_API_KEY"]
@@ -350,7 +351,7 @@ def envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {demande_complete.strip()}
 """ if demande_complete.strip() else ""
-        corps = f"""
+        corps_admin = f"""
 ✅ ARSÈNE AI A DÉJÀ RÉPONDU — AUCUNE ACTION REQUISE
 
 👤 Client      : {client_nom}
@@ -366,10 +367,81 @@ Vous n'avez rien à faire pour cette commande.
             "from": "Nova Platform <onboarding@resend.dev>",
             "to": [st.secrets["EMAIL_RECEIVER"]],
             "subject": f"✅ Nova Platform — {service} ({client_nom})",
-            "text": corps
+            "text": corps_admin
         })
     except Exception:
-        pass  # Silencieux — l'email d'info admin n'est pas critique
+        pass
+
+def envoyer_notif_client_email(client_nom, client_email, service, nom_fichier):
+    """Envoie un email HTML au CLIENT quand son fichier est prêt."""
+    if not client_email or client_email == "Non renseigné" or "@" not in client_email:
+        return
+    try:
+        import resend
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        corps_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:16px;overflow:hidden;border:1px solid #222;">
+          <div style="background:linear-gradient(135deg,#0d1f0d,#0a0a0a);padding:28px 30px 18px;text-align:center;border-bottom:1px solid #1a3a1a;">
+            <div style="font-size:2.2rem;margin-bottom:6px;">⚡</div>
+            <div style="font-family:Arial Black,sans-serif;font-size:1.5rem;font-weight:900;color:#4dff88;letter-spacing:2px;">NOVA PLATFORM</div>
+            <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;letter-spacing:1px;margin-top:4px;">L'IA Bureautique de Côte d'Ivoire</div>
+          </div>
+          <div style="padding:28px 30px;">
+            <div style="color:rgba(255,255,255,0.85);font-size:1rem;margin-bottom:18px;">
+              Bonjour <strong style="color:#4dff88;">{client_nom}</strong> 👋
+            </div>
+            <div style="background:#0d1f0d;border:1px solid #1a5c30;border-radius:12px;padding:18px 20px;margin-bottom:20px;text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+              <div style="font-family:Arial Black,sans-serif;font-size:1.2rem;font-weight:900;color:#ffffff;">Votre fichier est prêt !</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-top:6px;">Généré automatiquement par l'IA Nova Platform</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+              <tr>
+                <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;border-bottom:1px solid #1a1a1a;">🛠️ Service</td>
+                <td style="padding:8px 0;color:#ffffff;font-size:0.82rem;font-weight:700;text-align:right;border-bottom:1px solid #1a1a1a;">{service}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;border-bottom:1px solid #1a1a1a;">📄 Fichier</td>
+                <td style="padding:8px 0;color:#4dff88;font-size:0.82rem;font-weight:700;text-align:right;border-bottom:1px solid #1a1a1a;">{nom_fichier}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:rgba(255,255,255,0.35);font-size:0.82rem;">⏰ Livré le</td>
+                <td style="padding:8px 0;color:#ffffff;font-size:0.82rem;text-align:right;">{datetime.now().strftime("%d/%m/%Y à %H:%M")}</td>
+              </tr>
+            </table>
+            <div style="background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:14px 16px;margin-bottom:20px;text-align:center;">
+              <div style="color:rgba(255,255,255,0.4);font-size:0.75rem;letter-spacing:1px;margin-bottom:4px;">RETROUVEZ VOTRE FICHIER SUR</div>
+              <div style="color:#ffffff;font-size:0.88rem;">👉 Votre interface Nova Platform</div>
+            </div>
+            <div style="text-align:center;padding-top:8px;border-top:1px solid #1a1a1a;">
+              <div style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin-bottom:6px;">Un problème ? Contactez-nous sur WhatsApp</div>
+              <div style="font-family:monospace;font-size:1rem;font-weight:700;color:#25d366;">+225 01 71 54 25 05</div>
+            </div>
+          </div>
+          <div style="background:#050505;padding:14px 30px;text-align:center;border-top:1px solid #111;">
+            <div style="color:rgba(255,255,255,0.2);font-size:0.72rem;">Nova Platform · Abidjan, Côte d'Ivoire 🇨🇮</div>
+          </div>
+        </div>
+        """
+        resend.Emails.send({
+            "from": "Nova Platform <onboarding@resend.dev>",
+            "to": [client_email],
+            "subject": f"✅ Votre fichier est prêt — {service} | Nova Platform",
+            "html": corps_html
+        })
+    except Exception as _e_client_mail:
+        try:
+            supabase.table("config").upsert({
+                "key": "email_client_last_error",
+                "value": f"{type(_e_client_mail).__name__}: {str(_e_client_mail)[:400]} | dest={client_email}"
+            }).execute()
+        except:
+            pass
+
+def notifier_livraison_gemini(client_nom, client_wa, client_email, service, nom_fichier, demande_complete=""):
+    """Point d'entrée unique — notifie admin ET client à chaque livraison Gemini."""
+    envoyer_notification_gemini_ok(client_nom, client_wa, service, nom_fichier, demande_complete)
+    envoyer_notif_client_email(client_nom, client_email, service, nom_fichier)
 
 PLANS_PREMIUM = {
     "Journalier": {"jours": 1,  "prix": "600 FC",  "emoji": "🌅", "generations": 2},
@@ -1341,9 +1413,23 @@ FORMULAIRE CHIMIE (prêt à l'emploi) :
 INTERDIT ABSOLU : HTML | "[à compléter]" | ════ avant ---SAUT_DE_PAGE---
 INTERDIT ABSOLU : notation avec accolades vides comme _() ^() __ (indices/exposants vides)
 INTERDIT ABSOLU : notation _(x)(y) imbriquée — ecris directement les valeurs
+INTERDIT ABSOLU : blocs markdown — NE JAMAIS écrire ```markdown ou ``` ou ~~~ dans ta réponse
+INTERDIT ABSOLU : fractions ()/(x) ou (a)/(b) — TOUJOURS écrire : a/b ou ###FORMULE### a/b
+INTERDIT ABSOLU : Tableau à cheval sur deux pages. Place un ---SAUT_DE_PAGE--- AVANT si besoin.
+INTERDIT ABSOLU : citer "Document A" ou "Document B" dans les questions sans avoir RÉDIGÉ ce document en entier juste avant. Un document cité = contenu réel complet (minimum 5 lignes).
+
 FORMULE CORRECTE : ###FORMULE### R = U/I = 50/0,5 = 100 Ohm
-FORMULE INCORRECTE : R_eq = (U_eq)/(I_eq) = (50)/(0,5) avec indices vides <- JAMAIS
-INTERDIT ABSOLU : Tableau à cheval sur deux pages. Si un tableau est long, place un ---SAUT_DE_PAGE--- AVANT lui. Un tableau doit TOUJOURS commencer et se terminer sur la MÊME page.
+FORMULE CORRECTE : ###FORMULE### C_m = n/V = 0,05/0,5 = 0,1 mol/L
+FORMULE CORRECTE : ###FORMULE### x_{{1,2}} = (-b ± √(b^{{2}}-4ac)) / (2a)
+FORMULE INCORRECTE : R_eq = (U_eq)/(I_eq) avec indices vides ← JAMAIS
+FORMULE INCORRECTE : ()/(V) ou n/() ou ()/(x) ← JAMAIS parenthèses vides
+
+RÈGLE DOCUMENT HG/CAS : Si le sujet demande étude de document ou cas pratique :
+→ RÉDIGE le contenu complet du document AVANT les questions
+→ Document A = au minimum 6 lignes de texte historique/géographique RÉEL
+→ JAMAIS une rubrique "Document A" avec juste "Source : extrait adapté..." et rien d'autre
+→ Si géographie : tableau de données chiffrées réelles CI/Afrique
+→ Si histoire : texte narratif factuel avec dates, noms, lieux précis ivoiriens/africains
 
 SECTION 2 — MOTEUR DE DÉTECTION AUTOMATIQUE NOVA EXAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1879,6 +1965,32 @@ RÈGLE 15 — CORRIGÉ EXHAUSTIF (si demandé) :
 
 ### ✦ Exercice 2 — [Titre] — Corrigé détaillé
 [Pour les calculs : toutes les étapes + formules + unités + résultat encadré]
+
+⚠️ RAPPELS FINAUX AVANT GÉNÉRATION — VÉRIFIER AVANT D'ÉCRIRE LA PREMIÈRE LIGNE :
+
+1. FORMULES MATHS/PC : Chaque formule = ###FORMULE### ou notation ^{{}} _{{}}.
+   JAMAIS de (x)/() ou ()/(y) ou parenthèses vides.
+   CORRECT : ###FORMULE### C_m = n/V    INCORRECT : C_m = ()/(V)
+
+2. FRACTIONS dans le texte : écrire a/b en clair, pas (a)/(b).
+   CORRECT : "La fraction 3/4"    INCORRECT : "La fraction (3)/(4)"
+
+3. DOCUMENTS HG / CAS PRATIQUE : Si tu cites "Document A" ou "Document B" dans tes questions,
+   tu DOIS avoir rédigé le CONTENU COMPLET de ce document juste avant.
+   Un document vide ou avec juste une source = ERREUR GRAVE.
+
+4. AUCUN BLOC MARKDOWN : Ne jamais écrire \`\`\`markdown ou \`\`\` ou ~~~ nulle part.
+   Le texte est directement converti en Word — les blocs de code s'impriment tels quels.
+
+5. MATHS 2nde/3ème — exercices de calcul : toujours donner des valeurs NUMÉRIQUES réelles.
+   Éviter les "soit x tel que..." sans données concrètes. Toujours contextualiser en FCFA/CI.
+
+6. PHYSIQUE-CHIMIE : chaque calcul numérique doit montrer les étapes :
+   Données → Application de la formule → Calcul → Résultat avec unité et encadré.
+
+7. HISTOIRE-GÉOGRAPHIE : les questions d'analyse de document ne doivent JAMAIS
+   référencer un document qui n'a pas été fourni. Si pas de document réel à fournir,
+   remplacer l'exercice par des questions de cours classiques.
 
 Rédige maintenant le sujet COMPLET en te basant STRICTEMENT sur cette demande client :
 
@@ -4369,15 +4481,19 @@ def show_auth_page():
             new_wa = "".join(c for c in new_wa_raw if c.isdigit())
             if new_wa_raw != new_wa and new_wa_raw:
                 st.warning("⚠️ Le numéro WhatsApp ne doit contenir que des chiffres.")
+            new_email = st.text_input("📧 Email (optionnel — pour recevoir vos fichiers par email)", placeholder="Ex: monmail@gmail.com")
+            if new_email and "@" not in new_email:
+                st.warning("⚠️ Adresse email invalide.")
             if st.form_submit_button("💎 REJOINDRE NOVA PLATFORM"):
                 if new_uid and new_wa:
                     db = st.session_state["db"]
                     if new_uid not in db["users"]:
-                        succes = save_user(new_uid, normalize_wa(new_wa))
+                        email_val = new_email.strip() if new_email and "@" in new_email else "Non renseigné"
+                        succes = save_user(new_uid, normalize_wa(new_wa), email=email_val)
                         if succes:
                             db["users"][new_uid] = {
                                 "whatsapp": normalize_wa(new_wa),
-                                "email": "Non renseigné",
+                                "email": email_val,
                                 "joined": str(datetime.now()),
                                 "premium": False,
                                 "premium_plan": None,
@@ -4880,8 +4996,9 @@ def main_dashboard():
                 # Marquer la demande comme traitée et la supprimer
                 supabase.table("demandes").update({"status": "auto_done"}).eq("id", _req_id).execute()
                 delete_demande(_req_id)
-                # Email admin
-                envoyer_email_auto_gratuit(_client_req, _wa_req, _service_req, _nom_auto, _desc_req)
+                # Notifier admin + client (auto-gratuit)
+                _email_auto = st.session_state["db"]["users"].get(_client_req, {}).get("email", "")
+                notifier_livraison_gemini(_client_req, _wa_req, _email_auto, _service_req, _nom_auto, demande_complete=_desc_req)
         except Exception as _e_auto:
             # Log l'erreur globale pour debug
             try:
@@ -6396,9 +6513,10 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                             save_lien(user, service, _url_local, datetime.now().strftime("%d/%m/%Y"))
                         else:
                             save_lien(user, service, f"__local__{result_holder['nom']}", datetime.now().strftime("%d/%m/%Y"))
-                        # Email admin — Gemini a déjà répondu
+                        # Notifier admin + client (livraison Gemini premium)
                         wa_display_local = st.session_state["db"]["users"].get(user, {}).get("whatsapp", "—")
-                        envoyer_notification_gemini_ok(user, wa_display_local, service, result_holder["nom"], demande_complete=prompt)
+                        _email_client = st.session_state["db"]["users"].get(user, {}).get("email", "")
+                        notifier_livraison_gemini(user, wa_display_local, _email_client, service, result_holder["nom"], demande_complete=prompt)
                         st.session_state["premium_livrable"] = {
                             "buf":     result_holder["buf"],
                             "nom":     result_holder["nom"],
@@ -6817,6 +6935,18 @@ Action requise si le problème n'est pas résolu.
             with admin_tab1:
                 st.markdown("### 🛡️ Panneau de contrôle Nova")
 
+                # ── DEBUG EMAIL CLIENT ─────────────────────────────────────
+                try:
+                    _err_row = supabase.table("config").select("value").eq("key", "email_client_last_error").execute().data
+                    if _err_row:
+                        st.error(f"📧 Dernière erreur email client : {_err_row[0]['value']}")
+                        if st.button("🗑️ Effacer l'erreur email", key="clear_email_err"):
+                            supabase.table("config").delete().eq("key", "email_client_last_error").execute()
+                            st.rerun()
+                except:
+                    pass
+                # ──────────────────────────────────────────────────────────
+
                 # ── TOGGLE RÉPONSE AUTOMATIQUE PLAN GRATUIT ───────────────
                 col_toggle_l, col_toggle_r = st.columns([3, 1])
                 with col_toggle_l:
@@ -7040,6 +7170,10 @@ Action requise si le problème n'est pas résolu.
                                         delete_demande(req["id"])
                                         if req_id in st.session_state["gemini_results"]:
                                             del st.session_state["gemini_results"][req_id]
+                                        # Notifier admin + client
+                                        _email_c = st.session_state["db"]["users"].get(client_nom, {}).get("email", "")
+                                        _wa_c = st.session_state["db"]["users"].get(client_nom, {}).get("whatsapp", "—")
+                                        notifier_livraison_gemini(client_nom, _wa_c, _email_c, service, nom_fichier)
                                         st.session_state["db"] = load_db()
                                         st.success(f"✅ Fichier livré directement dans les livrables de {client_nom} !")
                                         st.rerun()
@@ -7054,6 +7188,10 @@ Action requise si le problème n'est pas résolu.
                             delete_demande(req['id'])
                             if req_id in st.session_state["gemini_results"]:
                                 del st.session_state["gemini_results"][req_id]
+                            # Notifier admin + client
+                            _email_c = st.session_state["db"]["users"].get(req['user'], {}).get("email", "")
+                            _wa_c = st.session_state["db"]["users"].get(req['user'], {}).get("whatsapp", "—")
+                            notifier_livraison_gemini(req['user'], _wa_c, _email_c, req['service'], "Votre fichier")
                             st.session_state["db"] = load_db()
                             st.success(f"✅ Mission livrée à {client_nom} !")
                             st.rerun()
