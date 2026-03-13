@@ -2551,6 +2551,363 @@ Messages du client :
         return False
 
 
+
+def creer_page_garde_expose(doc, titre_expose, noms_exposants, matiere, annee_scolaire, filiere, niveau, logo_ecole_path=None):
+    """
+    Génère la page de garde style GROUPE EICG avec :
+    - Bordure de page dorée
+    - horizontalScroll orange pour le titre
+    - ribbon2 orange pour EXPOSÉ
+    - verticalScroll orange pour les noms
+    - Logos officiels CI
+    Basé sur l'analyse exacte du docx original (positions, couleurs, géométries).
+    """
+    from docx.shared import Pt, Cm, RGBColor, Inches, Emu
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    import os
+
+    # Couleurs thème (extraites du docx original)
+    C_ORANGE  = "ED7D31"   # accent2 — parchemins, rubans
+    C_YELLOW  = "FFC000"   # accent4 — cadre Filière/Niveau
+    C_GREEN   = "70AD47"   # accent6 — cadre NOM DES EXPOSANTS
+    C_BLUE    = "1A3A5C"   # titre texte
+    C_DARK    = "44546A"   # texte foncé
+    C_WHITE   = "FFFFFF"
+
+    # ── BORDURE DE PAGE ──────────────────────────────────────────
+    # Bordure dorée/orange sur toute la page (natif Word)
+    sect = doc.sections[0]
+    sectPr = sect._sectPr
+    pgBorders = OxmlElement("w:pgBorders")
+    pgBorders.set(qn("w:offsetFrom"), "page")
+    pgBorders.set(qn("w:display"), "allPages")
+    for side in ["top", "left", "bottom", "right"]:
+        border = OxmlElement(f"w:{side}")
+        border.set(qn("w:val"), "wave")        # style décoratif
+        border.set(qn("w:sz"), "24")           # épaisseur
+        border.set(qn("w:space"), "24")        # espace avec le bord
+        border.set(qn("w:color"), "ED7D31")    # orange comme l'original
+        pgBorders.append(border)
+    # Retirer ancienne bordure si elle existe
+    for old in sectPr.findall(qn("w:pgBorders")):
+        sectPr.remove(old)
+    sectPr.append(pgBorders)
+
+    # ── HELPER : créer une forme flottante (drawingML) ─────────────
+    def add_shape(doc, prst_geom, x_cm, y_cm, w_cm, h_cm,
+                  fill_color=None, border_color=None, border_pt=0,
+                  text_lines=None, font_size=12, bold=False,
+                  text_color="000000", text_align="center",
+                  font_name="Times New Roman", italic=False, no_fill=False,
+                  z_order=1000000):
+        """Ajoute une forme flottante positionnée en centimètres depuis le coin supérieur gauche de la page."""
+        from docx.oxml import OxmlElement as OE
+        from docx.oxml.ns import qn, nsmap
+        import lxml.etree as etree
+
+        EMU = 914400  # 1 inch = 914400 EMU ; 1 cm = 360000 EMU
+        def cm2emu(v): return int(v * 360000)
+
+        # Créer un paragraphe porteur
+        p_anchor = doc.add_paragraph()
+        p_anchor.paragraph_format.space_before = Pt(0)
+        p_anchor.paragraph_format.space_after  = Pt(0)
+
+        # XML de la forme
+        NS = {
+            "wp":  "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
+            "a":   "http://schemas.openxmlformats.org/drawingml/2006/main",
+            "wps": "http://schemas.microsoft.com/office/word/2010/wordprocessingShape",
+            "r":   "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+        }
+
+        fill_xml = ""
+        if no_fill:
+            fill_xml = "<a:noFill/>"
+        elif fill_color:
+            fill_xml = f'''<a:solidFill><a:srgbClr val="{fill_color}"/></a:solidFill>'''
+        else:
+            fill_xml = "<a:noFill/>"
+
+        if border_pt > 0 and border_color:
+            ln_xml = f'''<a:ln w="{int(border_pt * 12700)}"><a:solidFill><a:srgbClr val="{border_color}"/></a:solidFill></a:ln>'''
+        else:
+            ln_xml = '<a:ln><a:noFill/></a:ln>'
+
+        # Construire les paragraphes de texte à l'intérieur
+        text_body = ""
+        if text_lines:
+            for line_text in text_lines:
+                align_map = {"center": "ctr", "left": "l", "right": "r"}
+                a_align = align_map.get(text_align, "ctr")
+                bold_tag = "<w:b/>" if bold else ""
+                italic_tag = "<w:i/>" if italic else ""
+                text_body += f'''
+                <w:p>
+                  <w:pPr><w:jc w:val="{text_align}"/></w:pPr>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="{font_name}" w:hAnsi="{font_name}" w:cs="{font_name}"/>
+                      {bold_tag}{italic_tag}
+                      <w:sz w:val="{int(font_size*2)}"/>
+                      <w:szCs w:val="{int(font_size*2)}"/>
+                      <w:color w:val="{text_color}"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">{line_text}</w:t>
+                  </w:r>
+                </w:p>'''
+        else:
+            text_body = "<w:p/>"
+
+        shape_xml = f'''<w:drawing xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <wp:anchor distT="0" distB="0" distL="114300" distR="114300"
+             simplePos="0" relativeHeight="{z_order}" behindDoc="0"
+             locked="0" layoutInCell="1" allowOverlap="1"
+             xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+    <wp:simplePos x="0" y="0"/>
+    <wp:positionH relativeFrom="page"><wp:posOffset>{cm2emu(x_cm)}</wp:posOffset></wp:positionH>
+    <wp:positionV relativeFrom="page"><wp:posOffset>{cm2emu(y_cm)}</wp:posOffset></wp:positionV>
+    <wp:extent cx="{cm2emu(w_cm)}" cy="{cm2emu(h_cm)}"/>
+    <wp:effectExtent l="0" t="0" r="0" b="0"/>
+    <wp:wrapNone/>
+    <wp:docPr id="1" name="shape"/>
+    <wp:cNvGraphicFramePr/>
+    <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+      <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+        <wps:wsp xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+          <wps:cNvSpPr txBox="1"/>
+          <wps:spPr>
+            <a:xfrm><a:off x="0" y="0"/><a:ext cx="{cm2emu(w_cm)}" cy="{cm2emu(h_cm)}"/></a:xfrm>
+            <a:prstGeom prst="{prst_geom}"><a:avLst/></a:prstGeom>
+            {fill_xml}
+            {ln_xml}
+          </wps:spPr>
+          <wps:txbx>
+            <w:txbxContent xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+              {text_body}
+            </w:txbxContent>
+          </wps:txbx>
+          <wps:bodyPr vert="horz" wrap="square" anchor="ctr" anchorCtr="1">
+            <a:prstTxWarp prst="textNoShape"><a:avLst/></a:prstTxWarp>
+            <a:noAutofit/>
+          </wps:bodyPr>
+        </wps:wsp>
+      </a:graphicData>
+    </a:graphic>
+  </wp:anchor>
+</w:drawing>'''
+
+        import lxml.etree as etree
+        drawing_el = etree.fromstring(shape_xml)
+        # Injecter dans le run du paragraphe
+        r_el = OE("w:r")
+        rpr = OE("w:rPr")
+        nopr = OE("w:noProof")
+        rpr.append(nopr)
+        r_el.append(rpr)
+        r_el.append(drawing_el)
+        p_anchor._p.append(r_el)
+        return p_anchor
+
+    # ── HELPER : insérer une image flottante ──────────────────────
+    def add_image_float(doc, img_path, x_cm, y_cm, w_cm, h_cm, z_order=2000000):
+        """Insère une image à position absolue sur la page."""
+        if not os.path.exists(img_path):
+            return
+        from docx.oxml import OxmlElement as OE
+        import lxml.etree as etree
+
+        def cm2emu(v): return int(v * 360000)
+
+        # Ajouter l'image via python-docx pour obtenir le rId
+        p_img = doc.add_paragraph()
+        p_img.paragraph_format.space_before = Pt(0)
+        p_img.paragraph_format.space_after  = Pt(0)
+
+        # Utiliser la méthode standard pour obtenir rId
+        from docx.parts.image import ImagePart
+        from docx.opc.constants import RELATIONSHIP_TYPE as RT
+        img_part = doc.part.new_pic_inline(img_path, width=Cm(w_cm))
+        # Récupérer rId
+        rId = doc.part.relate_to(
+            doc.part._package.part_related_by(img_path) if hasattr(doc.part._package, 'part_related_by') else None,
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+        ) if False else None
+
+        # Méthode directe : add inline puis convertir en anchor
+        inline_run = p_img.add_run()
+        inline_run.add_picture(img_path, width=Cm(w_cm), height=Cm(h_cm))
+
+        # Récupérer le drawing inline créé
+        drawing = p_img._p.find(
+            ".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing"
+        ) or p_img._p.xpath(".//w:drawing", namespaces={"w":"http://schemas.openxmlformats.org/wordprocessingml/2006/main"})
+
+        # Accéder au inline et modifier en anchor
+        inline_el = p_img._p.xpath(
+            ".//wp:inline",
+            namespaces={"wp":"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"}
+        )
+        if inline_el:
+            inline = inline_el[0]
+            inline.tag = inline.tag.replace("inline", "anchor")
+            inline.set("distT", "0"); inline.set("distB", "0")
+            inline.set("distL", "114300"); inline.set("distR", "114300")
+            inline.set("simplePos", "0")
+            inline.set("relativeHeight", str(z_order))
+            inline.set("behindDoc", "0"); inline.set("locked", "0")
+            inline.set("layoutInCell", "1"); inline.set("allowOverlap", "1")
+            # Ajouter simplePos, positionH, positionV, wrapNone
+            sp = OE("wp:simplePos"); sp.set("x","0"); sp.set("y","0")
+            pH = OE("wp:positionH"); pH.set("relativeFrom","page")
+            pHo = OE("wp:posOffset"); pHo.text = str(cm2emu(x_cm))
+            pH.append(pHo)
+            pV = OE("wp:positionV"); pV.set("relativeFrom","page")
+            pVo = OE("wp:posOffset"); pVo.text = str(cm2emu(y_cm))
+            pV.append(pVo)
+            wrapNone = OE("wp:wrapNone")
+            # Insérer au bon endroit (avant extent)
+            ext_el = inline.find("{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}extent")
+            if ext_el is not None:
+                idx = list(inline).index(ext_el)
+                inline.insert(0, sp)
+                inline.insert(1, pH)
+                inline.insert(2, pV)
+            else:
+                inline.insert(0, sp); inline.insert(1, pH); inline.insert(2, pV)
+            # Remplacer wrapSquare par wrapNone
+            for old_wrap in inline.findall("{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}wrapSquare"):
+                inline.remove(old_wrap)
+            inline.append(wrapNone)
+        return p_img
+
+    # ── LOGOS EN HAUT À GAUCHE ───────────────────────────────────
+    # Logo Ministère Enseignement Supérieur (si université/BTS)
+    logo_min_path = "/home/claude/enseignement_sup.png"
+    logo_ci_path  = "/home/claude/armoiries_ci.png"
+
+    # Sauvegarder les logos depuis les uploads
+    import shutil
+    if os.path.exists("/mnt/user-data/uploads/enseignement_superieur_exposer.png"):
+        shutil.copy("/mnt/user-data/uploads/enseignement_superieur_exposer.png", logo_min_path)
+    if os.path.exists("/mnt/user-data/uploads/tof_de_garde_.png"):
+        shutil.copy("/mnt/user-data/uploads/tof_de_garde_.png", logo_ci_path)
+
+    # ── ZONE LOGOS HAUT GAUCHE ───────────────────────────────────
+    add_image_float(doc, logo_min_path, x_cm=0.5, y_cm=0.8, w_cm=4.0, h_cm=1.5, z_order=3000000)
+
+    # ── LOGO ÉCOLE (si fourni) ───────────────────────────────────
+    if logo_ecole_path and os.path.exists(logo_ecole_path):
+        add_image_float(doc, logo_ecole_path, x_cm=0.5, y_cm=2.4, w_cm=4.5, h_cm=1.5, z_order=3000001)
+
+    # ── LOGO CI (armoiries) HAUT DROITE ─────────────────────────
+    add_image_float(doc, logo_ci_path, x_cm=13.5, y_cm=0.5, w_cm=4.5, h_cm=3.5, z_order=3000002)
+
+    # ── TEXTE REPUBLIQUE HAUT GAUCHE ────────────────────────────
+    add_shape(doc, "rect", x_cm=0.3, y_cm=0.4, w_cm=6.6, h_cm=1.1,
+              no_fill=True,
+              text_lines=["REPUBLIQUE DE COTE D'IVOIRE"],
+              font_size=10, bold=True, text_color="000000", text_align="left",
+              font_name="Times New Roman")
+
+    # UNION-DISCIPLINE-TRAVAIL
+    add_shape(doc, "rect", x_cm=1.0, y_cm=0.2, w_cm=5.0, h_cm=0.7,
+              no_fill=True,
+              text_lines=["UNION-DISCIPLINE-TRAVAIL"],
+              font_size=9, bold=True, text_color="000000", text_align="left",
+              font_name="Times New Roman")
+
+    # Ministère Éducation Nationale
+    add_shape(doc, "rect", x_cm=0.0, y_cm=1.9, w_cm=6.9, h_cm=0.7,
+              no_fill=True,
+              text_lines=["Ministère de l'Éducation Nationale"],
+              font_size=9, bold=True, text_color="000000", text_align="left",
+              font_name="Times New Roman")
+
+    # ── GRAND PARCHEMIN HORIZONTAL (titre de l'exposé) ──────────
+    # horizontalScroll orange — pos=(1.0, 9.0) size=16.8×7.0cm
+    add_shape(doc, "horizontalScroll", x_cm=1.0, y_cm=9.0, w_cm=16.8, h_cm=7.0,
+              fill_color=C_ORANGE, z_order=1000000)
+
+    # Texte titre par-dessus le parchemin
+    titre_lines = []
+    if titre_expose:
+        # Couper en lignes de ~35 chars
+        words = titre_expose.upper().split()
+        line = ""
+        for w in words:
+            if len(line) + len(w) < 32:
+                line += (" " if line else "") + w
+            else:
+                if line: titre_lines.append(line)
+                line = w
+        if line: titre_lines.append(line)
+    add_shape(doc, "rect", x_cm=2.4, y_cm=10.2, w_cm=14.8, h_cm=4.6,
+              no_fill=True,
+              text_lines=titre_lines,
+              font_size=22, bold=True, text_color=C_BLUE, text_align="center",
+              font_name="Times New Roman")
+
+    # ── RUBAN "EXPOSÉ" ───────────────────────────────────────────
+    # ribbon2 orange — pos=(4.3, 6.9) size=10.8×2.7cm
+    add_shape(doc, "ribbon2", x_cm=4.3, y_cm=6.9, w_cm=10.8, h_cm=2.7,
+              fill_color=C_ORANGE, z_order=1000001)
+    # Texte EXPOSÉ
+    add_shape(doc, "rect", x_cm=4.3, y_cm=6.9, w_cm=10.8, h_cm=2.7,
+              no_fill=True,
+              text_lines=["EXPOSÉ"],
+              font_size=28, bold=True, text_color=C_ORANGE, text_align="center",
+              font_name="Times New Roman", z_order=1000002)
+
+    # ── PARCHEMIN VERTICAL (noms des exposants) ──────────────────
+    # verticalScroll orange — pos=(10.6, 16.9) size=7.5×8.3cm
+    add_shape(doc, "verticalScroll", x_cm=10.6, y_cm=16.9, w_cm=7.5, h_cm=8.3,
+              fill_color=C_ORANGE, z_order=1000010)
+    # En-tête NOM DES EXPOSANTS
+    add_shape(doc, "rect", x_cm=11.4, y_cm=15.8, w_cm=6.4, h_cm=1.1,
+              fill_color=C_GREEN,
+              text_lines=["NOM DES EXPOSANTS"],
+              font_size=9, bold=True, text_color=C_WHITE, text_align="center",
+              font_name="Times New Roman", z_order=1000011)
+    # Noms
+    noms_lines = []
+    noms_list = noms_exposants if isinstance(noms_exposants, list) else [noms_exposants]
+    for j in range(1, 8):
+        nom = noms_list[j-1] if j-1 < len(noms_list) else ""
+        noms_lines.append(f"{j}- {nom}")
+    add_shape(doc, "rect", x_cm=11.2, y_cm=17.2, w_cm=6.5, h_cm=7.5,
+              no_fill=True,
+              text_lines=noms_lines,
+              font_size=10, bold=False, text_color="000000", text_align="left",
+              font_name="Times New Roman", z_order=1000012)
+
+    # ── CADRE MATIÈRE / ANNÉE (bas gauche) ───────────────────────
+    # rect avec fond transparent — pos=(3.8, 19.4) size=4.0×1.9cm
+    add_shape(doc, "rect", x_cm=3.8, y_cm=19.4, w_cm=4.0, h_cm=1.9,
+              fill_color=None, border_color="000000", border_pt=1.5,
+              text_lines=[f"Matière : {matiere}", f"Année scolaire : {annee_scolaire}"],
+              font_size=10, bold=False, text_color="000000", text_align="center",
+              font_name="Times New Roman", z_order=1000020)
+
+    # ── CADRE FILIÈRE / NIVEAU (bas gauche) ──────────────────────
+    # rect jaune accent4 — pos=(1.3, 22.0) size=9.0×2.0cm
+    add_shape(doc, "rect", x_cm=1.3, y_cm=22.0, w_cm=9.0, h_cm=2.0,
+              fill_color=C_YELLOW,
+              text_lines=[f"Filière : {filiere}", f"Niveau : {niveau}"],
+              font_size=11, bold=False, text_color="000000", text_align="center",
+              font_name="Times New Roman", z_order=1000021)
+
+    # Paragraphe espaceur pour remplir la page
+    for _ in range(35):
+        p_esp = doc.add_paragraph()
+        p_esp.paragraph_format.space_before = Pt(0)
+        p_esp.paragraph_format.space_after  = Pt(0)
+        p_esp.paragraph_format.line_spacing = Pt(8)
+
+    return doc
+
 def creer_docx(contenu, service, client_nom):
     from docx import Document
     from docx.shared import Pt, RGBColor, Cm
@@ -6047,9 +6404,33 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
                 placeholder="Ex: Insister sur le rôle de la Côte d'Ivoire, Niveau très basique, Inclure des statistiques récentes...",
                 key="exp_notes")
 
+            # ── PAGE DE GARDE ──────────────────────────────────────────
+            with st.expander("🎨 Page de garde personnalisée (optionnel)", expanded=False):
+                st.markdown("<small style='color:#aaa'>Ajoutez vos infos pour une page de garde style EICG avec bordure, parchemin et logos officiels CI</small>", unsafe_allow_html=True)
+                col_pg1, col_pg2 = st.columns(2)
+                with col_pg1:
+                    exp_filiere   = st.text_input("🏛️ Filière", placeholder="Ex: Génie Civil – Option Bâtiment", key="exp_filiere")
+                    exp_noms      = st.text_area("👥 Noms des exposants (un par ligne)", height=100,
+                        placeholder="Konan Yao\nAmélie Kouassi\nDiarra Moussa", key="exp_noms")
+                with col_pg2:
+                    exp_annee_pg  = st.text_input("📅 Année scolaire", value="2025-2026", key="exp_annee_pg")
+                    exp_logo_ecole = st.file_uploader("🏫 Logo de votre école (PNG/JPG)", type=["png","jpg","jpeg"], key="exp_logo_ecole")
+                    if exp_logo_ecole:
+                        import tempfile, os
+                        _logo_tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                        _logo_tmp.write(exp_logo_ecole.read())
+                        _logo_tmp.close()
+                        st.session_state["logo_ecole_path"] = _logo_tmp.name
+                        st.success("✅ Logo chargé")
+                    elif "logo_ecole_path" not in st.session_state:
+                        st.session_state["logo_ecole_path"] = None
+
             # Construire le prompt
             _exp_niveau_val  = exp_niveau  if not exp_niveau.startswith("──")  else ""
             _exp_matiere_val = exp_matiere if not exp_matiere.startswith("──") else ""
+            _exp_noms_val    = st.session_state.get("exp_noms", "")
+            _exp_filiere_val = st.session_state.get("exp_filiere", "") if "exp_filiere" in st.session_state else ""
+            _exp_annee_val   = st.session_state.get("exp_annee_pg", "2025-2026") if "exp_annee_pg" in st.session_state else "2025-2026"
             prompt = f"""FICHE DE COMMANDE NOVA EXPOSÉ :
 🎯 SUJET            : {exp_sujet.strip() or "Non précisé"}
 🎓 NIVEAU           : {_exp_niveau_val or "Non précisé"}
@@ -6058,6 +6439,9 @@ RÈGLES GÉNÉRALES POUR TOUS LES NIVEAUX :
 📏 PAGES            : {exp_pages}
 🌍 LANGUE           : {exp_langue}
 🏢 ÉTABLISSEMENT    : {exp_etablissement.strip() or "Non précisé"}
+🏛️ FILIÈRE          : {_exp_filiere_val or "Non précisée"}
+📅 ANNÉE SCOLAIRE   : {_exp_annee_val}
+👥 NOMS EXPOSANTS   : {_exp_noms_val.replace(chr(10), " ; ") if _exp_noms_val else "Non précisés"}
 💬 INSTRUCTIONS     : {exp_notes.strip() or "Aucune"}
 """
             if _exp_niveau_val and _exp_matiere_val and exp_sujet.strip():
@@ -6688,6 +7072,74 @@ Si DEVOIR_COMPLET → Vrai devoir ivoirien COMPLET : applique EXACTEMENT la Sect
                                 mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             else:
                                 buf  = creer_docx(contenu, service, user)
+                                # ── PAGE DE GARDE EXPOSÉ ─────────────────────────────
+                                if "Expos" in service or "exposé" in service.lower():
+                                    try:
+                                        from docx import Document as _DocPDG
+                                        from io import BytesIO as _BytesPDG
+                                        import re as _re_pdg
+                                        # Extraire les métadonnées depuis la description
+                                        _titre = ""
+                                        _mat   = ""
+                                        _annee = "2025-2026"
+                                        _fil   = ""
+                                        _niv   = ""
+                                        _noms  = []
+                                        for _line in prompt.split("\n"):
+                                            _l = _line.strip().lower()
+                                            if "matière" in _l or "matiere" in _l:
+                                                _mat = _line.split(":")[-1].strip() if ":" in _line else _mat
+                                            elif "année" in _l or "annee" in _l:
+                                                _annee = _line.split(":")[-1].strip() if ":" in _line else _annee
+                                            elif "filière" in _l or "filiere" in _l:
+                                                _fil = _line.split(":")[-1].strip() if ":" in _line else _fil
+                                            elif "niveau" in _l or "classe" in _l:
+                                                _niv = _line.split(":")[-1].strip() if ":" in _line else _niv
+                                            elif "nom" in _l and "exposant" in _l:
+                                                _noms_raw = _line.split(":")[-1].strip() if ":" in _line else ""
+                                                _noms = [n.strip() for n in _noms_raw.replace(",",";").split(";") if n.strip()]
+                                            elif "sujet" in _l or "thème" in _l or "theme" in _l or "titre" in _l:
+                                                _titre = _line.split(":")[-1].strip() if ":" in _line else _titre
+                                        # Si titre pas trouvé, prendre depuis la description directe
+                                        if not _titre:
+                                            _titre = description[:80] if len(description) < 80 else description[:80] + "..."
+                                        # Logo école uploadé ?
+                                        _logo_ecole = None
+                                        if hasattr(st.session_state, "logo_ecole_path") and st.session_state.logo_ecole_path:
+                                            _logo_ecole = st.session_state.logo_ecole_path
+                                        # Créer un nouveau doc avec la page de garde
+                                        _doc_pdg = _DocPDG()
+                                        _doc_pdg = creer_page_garde_expose(
+                                            _doc_pdg,
+                                            titre_expose=_titre,
+                                            noms_exposants=_noms if _noms else [],
+                                            matiere=_mat or "—",
+                                            annee_scolaire=_annee,
+                                            filiere=_fil or "—",
+                                            niveau=_niv or "—",
+                                            logo_ecole_path=_logo_ecole
+                                        )
+                                        # Ajouter saut de page puis le contenu principal
+                                        from docx.oxml import OxmlElement as _OEpdg
+                                        from docx.oxml.ns import qn as _qnpdg
+                                        _p_br = _doc_pdg.add_paragraph()
+                                        _r_br = _p_br.add_run()
+                                        _br_el = _OEpdg("w:br")
+                                        _br_el.set(_qnpdg("w:type"), "page")
+                                        _r_br._r.append(_br_el)
+                                        # Ajouter le contenu de l'exposé depuis buf
+                                        buf.seek(0)
+                                        _doc_contenu = _DocPDG(buf)
+                                        for _elem in _doc_contenu.element.body:
+                                            from copy import deepcopy as _dc
+                                            _doc_pdg.element.body.append(_dc(_elem))
+                                        # Sauvegarder
+                                        _buf_pdg = _BytesPDG()
+                                        _doc_pdg.save(_buf_pdg)
+                                        _buf_pdg.seek(0)
+                                        buf = _buf_pdg
+                                    except Exception as _e_garde:
+                                        pass  # Si erreur page garde → garder le buf original
                                 type_suffix = f"_{type_sujet_selectionne}" if type_sujet_selectionne else ""
                                 nom  = f"{user}_{service[:20].strip()}{type_suffix}.docx".replace(" ", "_").replace("/", "-")
                                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
